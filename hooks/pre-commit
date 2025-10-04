@@ -9,7 +9,27 @@
 
 set -e  # Exit on first error
 
-HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# ========================================
+# Resolve Symlink for macOS/Linux Compatibility
+# ========================================
+# If this script is executed via symlink (e.g., .git/hooks/pre-commit -> ../../hooks/pre-commit),
+# we need to resolve it to find the actual validators directory
+
+if [ -L "${BASH_SOURCE[0]}" ]; then
+    # Follow symlink
+    HOOK_SCRIPT="$(readlink "${BASH_SOURCE[0]}")"
+    if [[ "$HOOK_SCRIPT" != /* ]]; then
+        # Relative path, resolve it relative to the symlink location
+        SYMLINK_DIR=$(dirname "${BASH_SOURCE[0]}")
+        TARGET_DIR=$(dirname "$HOOK_SCRIPT")
+        REAL_TARGET_DIR=$(cd "$SYMLINK_DIR" && cd "$TARGET_DIR" && pwd)
+        HOOK_SCRIPT="$REAL_TARGET_DIR/$(basename "$HOOK_SCRIPT")"
+    fi
+else
+    HOOK_SCRIPT="${BASH_SOURCE[0]}"
+fi
+
+HOOKS_DIR="$(cd "$(dirname "$HOOK_SCRIPT")" && pwd)"
 VALIDATORS_DIR="$HOOKS_DIR/validators"
 PROJECT_ROOT="$(cd "$HOOKS_DIR/.." && pwd)"
 

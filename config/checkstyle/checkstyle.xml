@@ -29,6 +29,7 @@
         <property name="format" value="@OneToMany|@ManyToOne|@OneToOne|@ManyToMany"/>
         <property name="message" value="JPA relationship annotations (@OneToMany, @ManyToOne, @OneToOne, @ManyToMany) are STRICTLY PROHIBITED. Use foreign key Long fields instead."/>
         <property name="fileExtensions" value="java"/>
+        <property name="ignoreComments" value="true"/>
     </module>
 
     <module name="RegexpSingleline">
