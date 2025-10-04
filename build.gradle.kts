@@ -50,6 +50,7 @@ subprojects {
     dependencies {
         // Test Dependencies (All Modules)
         testImplementation(rootProject.libs.junit.jupiter)
+        testRuntimeOnly(rootProject.libs.junit.platform.launcher)
         testImplementation(rootProject.libs.assertj.core)
         testImplementation(rootProject.libs.mockito.core)
         testImplementation(rootProject.libs.mockito.junit)
