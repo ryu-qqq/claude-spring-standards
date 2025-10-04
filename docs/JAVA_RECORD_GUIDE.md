@@ -448,6 +448,10 @@ public final class UploadPolicy {
     public void updateVersion() {
         this.version++;
     }
+
+    public PolicyStatus status() {
+        return this.status;
+    }
 }
 ```
 

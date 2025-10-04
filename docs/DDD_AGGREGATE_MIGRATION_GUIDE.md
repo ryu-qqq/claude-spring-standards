@@ -218,33 +218,7 @@ void valueObjectsMustBeImmutable() {
 }
 ```
 
-### 2. 도메인 패키지 구조 규칙 완화
-
-**변경 전:**
-```java
-@Test
-void domainModelMustBeInCorrectPackage() {
-    ArchRule rule = classes()
-        .that().resideInAPackage("..domain..")
-        .should().resideInAPackage("..domain.model..")  // ❌ Technical Concern만 허용
-        .orShould().resideInAPackage("..domain..vo..")
-        .orShould().resideInAPackage("..domain..service..");
-}
-```
-
-**변경 후:**
-```java
-@Test
-void domainPackageStructureShouldBeValid() {
-    // ✅ Technical Concern과 DDD Aggregate 모두 허용
-    ArchRule rule = classes()
-        .that().resideInAPackage("..domain..")
-        .should().resideInAPackage("..domain..")
-        .because("Domain classes can follow either Technical Concern or DDD Aggregate structure");
-}
-```
-
-### 3. Aggregate 순환 의존성 검증 추가
+### 2. Aggregate 순환 의존성 검증 추가
 
 ```java
 @Test

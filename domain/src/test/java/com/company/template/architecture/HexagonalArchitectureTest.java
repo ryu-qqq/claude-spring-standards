@@ -326,23 +326,6 @@ class HexagonalArchitectureTest {
         }
 
         @Test
-        @DisplayName("Domain package structure should follow hexagonal principles")
-        void domainPackageStructureShouldBeValid() {
-            // This test allows both Technical Concern and DDD Aggregate patterns
-            // Technical Concern: domain.model, domain.vo, domain.service, domain.exception
-            // DDD Aggregate: domain.{aggregate}.vo, domain.{aggregate}.event, etc.
-            ArchRule rule = classes()
-                .that().resideInAPackage("..domain..")
-                .and().areNotInterfaces()
-                .and().areNotEnums()
-                .and().areNotAnnotations()
-                .should().resideInAPackage("..domain..")
-                .because("Domain classes must reside within domain package following either Technical Concern or DDD Aggregate structure");
-
-            rule.check(domainClasses);
-        }
-
-        @Test
         @DisplayName("Aggregates should not have cyclic dependencies (DDD pattern)")
         void aggregatesShouldNotHaveCyclicDependencies() {
             // Only applies when using DDD Aggregate structure (domain.{aggregate})
