@@ -1,0 +1,1090 @@
+# 🎯 Hexagonal Architecture Coding Standards
+
+이 문서는 **엔터프라이즈급 Spring Boot 프로젝트**의 코딩 표준을 정의합니다.
+모든 레이어는 **Hexagonal Architecture (Ports & Adapters)** 원칙을 엄격히 준수해야 합니다.
+
+---
+
+## 📐 아키텍처 원칙
+
+### 의존성 방향 (Dependency Rule)
+
+```
+Bootstrap → Adapter → Application → Domain
+               ↓           ↓
+           (구현)      (인터페이스)
+```
+
+#### ✅ 허용되는 의존성
+- **Domain**: 아무것도 의존하지 않음 (완전 독립)
+- **Application**: Domain만 의존
+- **Adapter-In**: Application(Port) + Domain 의존
+- **Adapter-Out**: Application(Port) + Domain 의존
+- **Bootstrap**: 모든 레이어 의존 (조립 목적)
+
+#### ❌ 금지되는 의존성
+- Adapter → Adapter (Adapter 간 직접 의존 절대 금지)
+- Application → Adapter (구체 구현 의존 금지)
+- Domain → 모든 외부 의존성 (완전 순수성)
+- 모든 레이어의 순환 의존성
+
+---
+
+## 🏛️ Domain Layer 규칙
+
+### 1. 완전한 순수성 (Purity)
+
+#### ❌ 금지 사항
+```java
+// ❌ Spring Framework 의존
+import org.springframework.*;
+
+// ❌ JPA/Hibernate 의존
+import jakarta.persistence.*;
+import org.hibernate.*;
+
+// ❌ Lombok
+import lombok.*;
+
+// ❌ 인프라 라이브러리
+import com.amazonaws.*;
+import org.apache.http.*;
+```
+
+#### ✅ 허용 사항
+```java
+// ✅ Java 표준 라이브러리
+import java.util.*;
+import java.time.*;
+
+// ✅ Jakarta Validation (표준)
+import jakarta.validation.*;
+
+// ✅ 순수 유틸리티
+import org.apache.commons.lang3.StringUtils;
+```
+
+### 2. 불변성 (Immutability)
+
+#### ❌ Bad
+```java
+public class Order {
+    private Long id;
+    private String status;
+
+    // ❌ Setter 금지
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
+```
+
+#### ✅ Good
+```java
+public class Order {
+    private final OrderId id;
+    private final OrderStatus status;
+
+    private Order(OrderId id, OrderStatus status) {
+        this.id = id;
+        this.status = status;
+    }
+
+    // ✅ 수정은 새 객체 반환
+    public Order confirm() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new InvalidOrderStateException("Cannot confirm non-pending order");
+        }
+        return new Order(this.id, OrderStatus.CONFIRMED);
+    }
+
+    // ✅ Getter만
+    public OrderId getId() { return id; }
+    public OrderStatus getStatus() { return status; }
+}
+```
+
+### 3. 생성 규칙
+
+#### ❌ Bad
+```java
+// ❌ Public 생성자 금지
+public class Order {
+    public Order(Long id, String status) { }
+}
+```
+
+#### ✅ Good
+```java
+public class Order {
+    // ✅ Private 생성자
+    private Order(OrderId id, OrderStatus status) {
+        this.id = Objects.requireNonNull(id, "Order ID cannot be null");
+        this.status = Objects.requireNonNull(status, "Status cannot be null");
+    }
+
+    // ✅ 정적 팩토리 메서드
+    public static Order create(OrderId id, List<OrderItem> items) {
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("Order must have at least one item");
+        }
+        return new Order(id, OrderStatus.PENDING);
+    }
+
+    // ✅ 재구성용 (영속성 계층에서 복원 시)
+    public static Order reconstitute(OrderId id, OrderStatus status, LocalDateTime createdAt) {
+        Order order = new Order(id, status);
+        // 추가 복원 로직
+        return order;
+    }
+}
+```
+
+### 4. 비즈니스 로직 위치
+
+#### ✅ 규칙
+- 모든 비즈니스 규칙은 **Domain 객체 내부**에 위치
+- 도메인 서비스는 **여러 Aggregate 간 로직**만 담당
+- 계산, 검증, 상태 전이는 **Domain 객체 메서드**로
+
+#### ✅ Good
+```java
+public class Order {
+    public Money calculateTotal() {
+        return items.stream()
+            .map(OrderItem::getSubtotal)
+            .reduce(Money.ZERO, Money::add);
+    }
+
+    public Order cancel() {
+        if (this.status == OrderStatus.SHIPPED) {
+            throw new OrderAlreadyShippedException("Cannot cancel shipped order");
+        }
+        return new Order(this.id, OrderStatus.CANCELLED);
+    }
+}
+```
+
+### 5. Value Object
+
+#### ✅ Record 사용 권장
+```java
+// ✅ 식별자가 없는 값 객체는 record
+public record Money(BigDecimal amount, Currency currency) {
+    public Money {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+    }
+
+    public Money add(Money other) {
+        if (!this.currency.equals(other.currency)) {
+            throw new IllegalArgumentException("Cannot add different currencies");
+        }
+        return new Money(this.amount.add(other.amount), this.currency);
+    }
+}
+
+public record OrderId(Long value) {
+    public OrderId {
+        if (value == null || value <= 0) {
+            throw new IllegalArgumentException("Order ID must be positive");
+        }
+    }
+}
+```
+
+### 6. 예외 처리
+
+#### ✅ Domain 전용 예외
+```java
+// ✅ 도메인 예외 계층
+public abstract class DomainException extends RuntimeException {
+    protected DomainException(String message) {
+        super(message);
+    }
+}
+
+public class InvalidOrderStateException extends DomainException {
+    public InvalidOrderStateException(String message) {
+        super(message);
+    }
+}
+
+public class OrderNotFoundException extends DomainException {
+    public OrderNotFoundException(OrderId orderId) {
+        super("Order not found: " + orderId);
+    }
+}
+```
+
+---
+
+## 🔧 Application Layer 규칙
+
+### 1. Port 정의
+
+#### ✅ Input Port (UseCase)
+```java
+package application.order.port.in;
+
+// ✅ 인터페이스로 정의, 단일 메서드 권장
+public interface CreateOrderUseCase {
+    CreateOrderResult execute(CreateOrderCommand command);
+}
+```
+
+#### ✅ Output Port
+```java
+package application.order.port.out;
+
+// ✅ 영속성 추상화
+public interface SaveOrderPort {
+    Order save(Order order);
+}
+
+public interface LoadOrderPort {
+    Optional<Order> loadById(OrderId orderId);
+}
+
+// ✅ 외부 시스템 추상화
+public interface SendOrderEventPort {
+    void send(OrderCreatedEvent event);
+}
+```
+
+### 2. 트랜잭션 관리
+
+#### ❌ Bad - Adapter에 @Transactional
+```java
+// ❌ 절대 금지
+@Component
+public class OrderPersistenceAdapter implements SaveOrderPort {
+    @Transactional  // ❌ Adapter에 트랜잭션 금지!
+    public Order save(Order order) { }
+}
+```
+
+#### ✅ Good - Application에 @Transactional
+```java
+// ✅ Application UseCase에만 트랜잭션
+@UseCase
+@Transactional
+public class CreateOrderService implements CreateOrderUseCase {
+    private final LoadUserPort loadUserPort;
+    private final SaveOrderPort saveOrderPort;
+    private final SendOrderEventPort sendEventPort;
+
+    public CreateOrderService(
+        LoadUserPort loadUserPort,
+        SaveOrderPort saveOrderPort,
+        SendOrderEventPort sendEventPort
+    ) {
+        this.loadUserPort = loadUserPort;
+        this.saveOrderPort = saveOrderPort;
+        this.sendEventPort = sendEventPort;
+    }
+
+    @Override
+    public CreateOrderResult execute(CreateOrderCommand command) {
+        // 1. Domain 객체 로드
+        User user = loadUserPort.loadById(command.userId())
+            .orElseThrow(() -> new UserNotFoundException(command.userId()));
+
+        // 2. Domain 로직 실행
+        Order order = Order.create(user.getId(), command.items());
+
+        // 3. 저장
+        Order savedOrder = saveOrderPort.save(order);
+
+        // 4. 이벤트 발행
+        sendEventPort.send(new OrderCreatedEvent(savedOrder.getId()));
+
+        return CreateOrderResult.from(savedOrder);
+    }
+}
+
+// ✅ Read 전용은 readOnly = true
+@UseCase
+@Transactional(readOnly = true)
+public class GetOrderService implements GetOrderUseCase {
+    // ...
+}
+```
+
+### 3. UseCase DTO
+
+#### ✅ Command/Query/Result 패턴
+```java
+// ✅ Command (쓰기 작업)
+public record CreateOrderCommand(
+    UserId userId,
+    List<OrderItem> items
+) {
+    public CreateOrderCommand {
+        Objects.requireNonNull(userId, "User ID required");
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("Items required");
+        }
+    }
+}
+
+// ✅ Query (읽기 작업)
+public record GetOrderQuery(
+    OrderId orderId
+) {
+    public GetOrderQuery {
+        Objects.requireNonNull(orderId, "Order ID required");
+    }
+}
+
+// ✅ Result
+public record CreateOrderResult(
+    OrderId orderId,
+    OrderStatus status,
+    Money total,
+    LocalDateTime createdAt
+) {
+    public static CreateOrderResult from(Order order) {
+        return new CreateOrderResult(
+            order.getId(),
+            order.getStatus(),
+            order.calculateTotal(),
+            order.getCreatedAt()
+        );
+    }
+}
+```
+
+### 4. 의존성 규칙
+
+#### ❌ Bad
+```java
+// ❌ JPA Repository 직접 의존
+@Service
+public class OrderService {
+    @Autowired
+    private OrderRepository orderRepository;  // ❌ 구체 구현 의존
+}
+
+// ❌ JPA Entity 사용
+@Service
+public class OrderService {
+    public OrderEntity getOrder(Long id) {  // ❌ Entity 노출
+        return orderRepository.findById(id);
+    }
+}
+```
+
+#### ✅ Good
+```java
+// ✅ Port 인터페이스만 의존
+@UseCase
+@Transactional
+public class CreateOrderService implements CreateOrderUseCase {
+    private final LoadUserPort loadUserPort;      // ✅ 추상화된 Port
+    private final SaveOrderPort saveOrderPort;    // ✅ 추상화된 Port
+
+    // ✅ Domain 객체만 사용
+    public CreateOrderResult execute(CreateOrderCommand command) {
+        User user = loadUserPort.loadById(command.userId());
+        Order order = Order.create(user.getId(), command.items());
+        Order savedOrder = saveOrderPort.save(order);
+        return CreateOrderResult.from(savedOrder);
+    }
+}
+```
+
+---
+
+## 💾 Persistence Adapter 규칙
+
+### 1. JPA Entity 설계
+
+#### ❌ Bad - 연관관계 사용
+```java
+// ❌ JPA 연관관계 절대 금지
+@Entity
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    @ManyToOne  // ❌ 금지!
+    private UserEntity user;
+
+    @OneToMany  // ❌ 금지!
+    private List<OrderItemEntity> items;
+
+    public void setStatus(String status) {  // ❌ Setter 금지!
+        this.status = status;
+    }
+}
+```
+
+#### ✅ Good - 외래키만 사용
+```java
+@Entity
+@Table(name = "orders")
+public class OrderEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // ✅ 외래키는 Long 타입 필드로만
+    @Column(nullable = false)
+    private Long userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
+
+    @Column(nullable = false)
+    private BigDecimal totalAmount;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // ✅ JPA 전용 기본 생성자 (protected)
+    protected OrderEntity() {}
+
+    // ✅ Private 생성자
+    private OrderEntity(Long userId, OrderStatus status, BigDecimal totalAmount) {
+        this.userId = userId;
+        this.status = status;
+        this.totalAmount = totalAmount;
+    }
+
+    // ✅ 정적 팩토리 - 새 엔티티 생성
+    public static OrderEntity create(Long userId, OrderStatus status, BigDecimal totalAmount) {
+        return new OrderEntity(userId, status, totalAmount);
+    }
+
+    // ✅ 정적 팩토리 - DB에서 복원
+    public static OrderEntity reconstitute(Long id, Long userId, OrderStatus status, BigDecimal totalAmount, LocalDateTime createdAt) {
+        OrderEntity entity = new OrderEntity(userId, status, totalAmount);
+        entity.id = id;
+        entity.createdAt = createdAt;
+        return entity;
+    }
+
+    // ✅ Getter만 (Setter 금지)
+    public Long getId() { return id; }
+    public Long getUserId() { return userId; }
+    public OrderStatus getStatus() { return status; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+}
+```
+
+### 2. Entity ↔ Domain 매핑
+
+#### ✅ Mapper 클래스 사용
+```java
+@Component
+class OrderEntityMapper {
+
+    // ✅ Entity → Domain
+    public Order toDomain(OrderEntity entity) {
+        return Order.reconstitute(
+            OrderId.of(entity.getId()),
+            UserId.of(entity.getUserId()),
+            entity.getStatus(),
+            Money.of(entity.getTotalAmount()),
+            entity.getCreatedAt()
+        );
+    }
+
+    // ✅ Domain → Entity
+    public OrderEntity toEntity(Order domain) {
+        if (domain.getId() == null) {
+            // 신규 생성
+            return OrderEntity.create(
+                domain.getUserId().value(),
+                domain.getStatus(),
+                domain.getTotal().amount()
+            );
+        } else {
+            // 기존 엔티티 복원
+            return OrderEntity.reconstitute(
+                domain.getId().value(),
+                domain.getUserId().value(),
+                domain.getStatus(),
+                domain.getTotal().amount(),
+                domain.getCreatedAt()
+            );
+        }
+    }
+}
+```
+
+### 3. Repository 구현
+
+#### ✅ Package-Private JpaRepository
+```java
+// ✅ package-private (외부 노출 금지)
+interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
+    // QueryDSL 사용 권장
+}
+
+// ✅ Port 구현 클래스만 public
+@Component
+public class OrderPersistenceAdapter implements SaveOrderPort, LoadOrderPort {
+
+    private final OrderJpaRepository jpaRepository;
+    private final OrderEntityMapper mapper;
+
+    public OrderPersistenceAdapter(
+        OrderJpaRepository jpaRepository,
+        OrderEntityMapper mapper
+    ) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
+
+    @Override
+    public Order save(Order order) {
+        OrderEntity entity = mapper.toEntity(order);
+        OrderEntity savedEntity = jpaRepository.save(entity);
+        return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<Order> loadById(OrderId orderId) {
+        return jpaRepository.findById(orderId.value())
+            .map(mapper::toDomain);
+    }
+}
+```
+
+### 4. QueryDSL 사용
+
+#### ❌ Bad - JPQL 문자열
+```java
+// ❌ 문자열 쿼리 금지 (타입 안전성 없음)
+@Query("SELECT o FROM OrderEntity o WHERE o.userId = :userId")
+List<OrderEntity> findByUserId(@Param("userId") Long userId);
+```
+
+#### ✅ Good - QueryDSL
+```java
+@Repository
+public class OrderQueryRepository {
+    private final JPAQueryFactory queryFactory;
+
+    public List<Order> findByUserId(UserId userId) {
+        QOrderEntity order = QOrderEntity.orderEntity;
+
+        return queryFactory
+            .selectFrom(order)
+            .where(order.userId.eq(userId.value()))
+            .fetch()
+            .stream()
+            .map(mapper::toDomain)
+            .toList();
+    }
+}
+```
+
+### 5. 예외 처리
+
+#### ✅ JPA 예외 → Domain 예외 변환
+```java
+@Component
+public class OrderPersistenceAdapter implements LoadOrderPort {
+
+    @Override
+    public Order loadById(OrderId orderId) {
+        try {
+            return jpaRepository.findById(orderId.value())
+                .map(mapper::toDomain)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+        } catch (DataAccessException e) {
+            throw new PersistenceException("Failed to load order", e);
+        }
+    }
+}
+```
+
+---
+
+## 🌐 Controller Adapter (Adapter-In-Web) 규칙
+
+### 1. Controller 구조
+
+#### ❌ Bad
+```java
+// ❌ 내부 클래스 금지
+@RestController
+public class OrderController {
+
+    @PostMapping("/orders")
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
+        // ...
+    }
+
+    // ❌ 내부 클래스 금지!
+    public static class OrderRequest {
+        public Long userId;
+        public List<String> items;
+    }
+
+    // ❌ 내부 클래스 금지!
+    public static class OrderResponse {
+        public Long orderId;
+        public String status;
+    }
+}
+```
+
+#### ✅ Good
+```java
+// ✅ Controller는 얇게 유지
+@RestController
+@RequestMapping("/api/v1/orders")
+public class OrderController {
+
+    private final CreateOrderUseCase createOrderUseCase;
+    private final GetOrderUseCase getOrderUseCase;
+
+    // ✅ Constructor Injection
+    public OrderController(
+        CreateOrderUseCase createOrderUseCase,
+        GetOrderUseCase getOrderUseCase
+    ) {
+        this.createOrderUseCase = createOrderUseCase;
+        this.getOrderUseCase = getOrderUseCase;
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public CreateOrderResponse createOrder(
+        @Valid @RequestBody CreateOrderRequest request
+    ) {
+        CreateOrderCommand command = request.toCommand();
+        CreateOrderResult result = createOrderUseCase.execute(command);
+        return CreateOrderResponse.from(result);
+    }
+
+    @GetMapping("/{orderId}")
+    public GetOrderResponse getOrder(@PathVariable Long orderId) {
+        GetOrderQuery query = new GetOrderQuery(OrderId.of(orderId));
+        GetOrderResult result = getOrderUseCase.execute(query);
+        return GetOrderResponse.from(result);
+    }
+}
+```
+
+### 2. Request/Response DTO
+
+#### ✅ Record 필수
+```java
+// ✅ 별도 파일: CreateOrderRequest.java
+public record CreateOrderRequest(
+    @NotNull(message = "User ID is required")
+    Long userId,
+
+    @NotEmpty(message = "Items cannot be empty")
+    @Valid
+    List<OrderItemRequest> items
+) {
+    // ✅ Compact Constructor에서 추가 검증
+    public CreateOrderRequest {
+        if (userId != null && userId <= 0) {
+            throw new IllegalArgumentException("User ID must be positive");
+        }
+    }
+
+    // ✅ Domain Command로 변환
+    public CreateOrderCommand toCommand() {
+        return new CreateOrderCommand(
+            UserId.of(userId),
+            items.stream()
+                .map(OrderItemRequest::toDomain)
+                .toList()
+        );
+    }
+}
+
+// ✅ 별도 파일: CreateOrderResponse.java
+public record CreateOrderResponse(
+    Long orderId,
+    String status,
+    BigDecimal totalAmount,
+    LocalDateTime createdAt
+) {
+    public static CreateOrderResponse from(CreateOrderResult result) {
+        return new CreateOrderResponse(
+            result.orderId().value(),
+            result.status().name(),
+            result.total().amount(),
+            result.createdAt()
+        );
+    }
+}
+```
+
+### 3. 전역 예외 처리
+
+#### ✅ @RestControllerAdvice
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleOrderNotFound(OrderNotFoundException e) {
+        return new ErrorResponse("ORDER_NOT_FOUND", e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidOrderStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidOrderState(InvalidOrderStateException e) {
+        return new ErrorResponse("INVALID_ORDER_STATE", e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidationErrors(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+            .map(FieldError::getDefaultMessage)
+            .collect(Collectors.joining(", "));
+        return new ErrorResponse("VALIDATION_ERROR", message);
+    }
+}
+
+public record ErrorResponse(
+    String code,
+    String message,
+    LocalDateTime timestamp
+) {
+    public ErrorResponse(String code, String message) {
+        this(code, message, LocalDateTime.now());
+    }
+}
+```
+
+---
+
+## ☁️ External System Adapter 규칙
+
+### 1. AWS S3 Adapter 예제
+
+#### ✅ Good
+```java
+@Component
+public class S3FileStorageAdapter implements FileStoragePort {
+
+    private final S3Client s3Client;
+    private final S3Properties properties;
+
+    public S3FileStorageAdapter(S3Client s3Client, S3Properties properties) {
+        this.s3Client = s3Client;
+        this.properties = properties;
+    }
+
+    @Override
+    public FileUrl upload(FileData fileData) {
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(properties.bucket())
+                .key(fileData.path())
+                .contentType(fileData.contentType())
+                .build();
+
+            s3Client.putObject(request, fileData.content());
+
+            String url = buildUrl(fileData.path());
+            return FileUrl.of(url);
+
+        } catch (S3Exception e) {
+            throw new FileStorageException("Failed to upload file", e);
+        }
+    }
+
+    private String buildUrl(String key) {
+        return String.format("https://%s.s3.%s.amazonaws.com/%s",
+            properties.bucket(),
+            properties.region(),
+            key
+        );
+    }
+}
+
+// ✅ Configuration Properties
+@ConfigurationProperties(prefix = "aws.s3")
+public record S3Properties(
+    @NotBlank String bucket,
+    @NotBlank String region
+) {
+    public S3Properties {
+        if (bucket == null || bucket.isBlank()) {
+            throw new IllegalArgumentException("S3 bucket is required");
+        }
+        if (region == null || region.isBlank()) {
+            throw new IllegalArgumentException("S3 region is required");
+        }
+    }
+}
+```
+
+---
+
+## 🔧 공통 규칙
+
+### 1. 패키지 구조 (기능별 수직 슬라이싱)
+
+```
+com.example.project
+├── domain/
+│   ├── order/                      # 기능별 분리
+│   │   ├── Order.java              # Aggregate Root
+│   │   ├── OrderId.java            # Value Object
+│   │   ├── OrderItem.java          # Entity
+│   │   ├── OrderStatus.java        # Enum
+│   │   ├── OrderDomainService.java # Domain Service
+│   │   └── exception/
+│   │       └── OrderException.java
+│   └── user/
+│       ├── User.java
+│       └── UserId.java
+│
+├── application/
+│   ├── order/
+│   │   ├── port/
+│   │   │   ├── in/
+│   │   │   │   ├── CreateOrderUseCase.java
+│   │   │   │   └── GetOrderUseCase.java
+│   │   │   └── out/
+│   │   │       ├── LoadOrderPort.java
+│   │   │       ├── SaveOrderPort.java
+│   │   │       └── SendOrderEventPort.java
+│   │   └── service/
+│   │       ├── CreateOrderService.java
+│   │       └── GetOrderService.java
+│   └── user/
+│       └── ...
+│
+├── adapter/
+│   ├── in/
+│   │   └── web/
+│   │       └── order/
+│   │           ├── OrderController.java
+│   │           ├── CreateOrderRequest.java
+│   │           ├── CreateOrderResponse.java
+│   │           └── GlobalExceptionHandler.java
+│   └── out/
+│       ├── persistence/
+│       │   └── order/
+│       │       ├── OrderPersistenceAdapter.java
+│       │       ├── OrderEntity.java
+│       │       ├── OrderJpaRepository.java
+│       │       ├── OrderEntityMapper.java
+│       │       └── OrderQueryRepository.java
+│       ├── aws/
+│       │   ├── s3/
+│       │   │   ├── S3FileStorageAdapter.java
+│       │   │   └── S3Properties.java
+│       │   └── sqs/
+│       │       └── SqsEventPublisher.java
+│       └── external/
+│           └── payment/
+│               └── PaymentGatewayAdapter.java
+│
+└── bootstrap/
+    └── config/
+        ├── Application.java
+        ├── JpaConfig.java
+        ├── SecurityConfig.java
+        └── AwsConfig.java
+```
+
+### 2. 명명 규칙
+
+| 유형 | 패턴 | 예제 |
+|------|------|------|
+| Domain Entity | `{명사}` | `Order`, `User`, `Product` |
+| Value Object | `{명사}` | `OrderId`, `Money`, `Email` |
+| UseCase Interface | `{동사}{명사}UseCase` | `CreateOrderUseCase`, `GetUserUseCase` |
+| UseCase Impl | `{동사}{명사}Service` | `CreateOrderService`, `GetUserService` |
+| Input Port | `{동사}{명사}UseCase` | `CreateOrderUseCase` |
+| Output Port | `{동사}{명사}Port` | `LoadOrderPort`, `SaveOrderPort` |
+| Adapter | `{시스템}{기능}Adapter` | `OrderPersistenceAdapter`, `S3FileStorageAdapter` |
+| Controller | `{리소스}Controller` | `OrderController`, `UserController` |
+| JPA Entity | `{명사}Entity` | `OrderEntity`, `UserEntity` |
+| DTO | `{동작}{리소스}Request/Response` | `CreateOrderRequest`, `GetOrderResponse` |
+
+### 3. Annotation 규칙
+
+| 레이어 | 허용 Annotations | 금지 Annotations |
+|--------|------------------|------------------|
+| **Domain** | 없음 (순수 Java) | `@Component`, `@Service`, `@Entity`, `@Data` 등 모든 프레임워크 애노테이션 |
+| **Application** | `@UseCase`, `@Transactional` | `@Component`, `@Service`, `@Repository` |
+| **Adapter** | `@Component`, `@RestController`, `@Repository` | `@Transactional` (Application에서만) |
+| **DTO** | `@NotNull`, `@Valid`, `@Email` (Bean Validation만) | `@Data`, `@Builder` (Lombok 금지) |
+
+### 4. 의존성 주입
+
+#### ❌ Bad
+```java
+// ❌ Field Injection 금지
+@Service
+public class OrderService {
+    @Autowired
+    private OrderRepository repository;
+}
+
+// ❌ Setter Injection 금지
+@Service
+public class OrderService {
+    private OrderRepository repository;
+
+    @Autowired
+    public void setRepository(OrderRepository repository) {
+        this.repository = repository;
+    }
+}
+```
+
+#### ✅ Good
+```java
+// ✅ Constructor Injection만 사용
+@UseCase
+@Transactional
+public class CreateOrderService implements CreateOrderUseCase {
+    private final LoadUserPort loadUserPort;
+    private final SaveOrderPort saveOrderPort;
+
+    // ✅ 단일 생성자는 @Autowired 생략
+    public CreateOrderService(
+        LoadUserPort loadUserPort,
+        SaveOrderPort saveOrderPort
+    ) {
+        this.loadUserPort = loadUserPort;
+        this.saveOrderPort = saveOrderPort;
+    }
+}
+```
+
+### 5. Lombok 정책
+
+#### ❌ 전 프로젝트 완전 금지
+```java
+// ❌ 모든 Lombok 애노테이션 금지
+@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+```
+
+#### ✅ 수동 작성
+```java
+// ✅ Getter 수동 작성
+public class Order {
+    private final OrderId id;
+
+    public OrderId getId() {
+        return id;
+    }
+}
+
+// ✅ Builder 대신 정적 팩토리
+public static Order create(OrderId id, List<OrderItem> items) {
+    return new Order(id, OrderStatus.PENDING, items);
+}
+```
+
+---
+
+## 🔒 금지 사항 종합
+
+### Domain Layer
+- ❌ Spring Framework 의존성
+- ❌ JPA/Hibernate 의존성
+- ❌ Lombok
+- ❌ 인프라 라이브러리
+- ❌ Setter 메서드
+- ❌ Public 생성자
+
+### Application Layer
+- ❌ Adapter 구체 클래스 의존
+- ❌ JPA Entity 사용
+- ❌ Repository 인터페이스 직접 의존
+- ❌ HTTP, AWS SDK 등 인프라 라이브러리
+
+### Adapter Layer
+- ❌ `@Transactional` (Application에서만)
+- ❌ 다른 Adapter 의존
+- ❌ Domain 객체 외부 노출
+- ❌ 비즈니스 로직
+
+### Persistence Adapter
+- ❌ JPA 연관관계 (`@OneToMany`, `@ManyToOne`, `@OneToOne`, `@ManyToMany`)
+- ❌ Entity에 Setter
+- ❌ Entity에 Public 생성자
+- ❌ Entity에 비즈니스 로직
+
+### Controller Adapter
+- ❌ 내부 클래스
+- ❌ Domain 객체 직접 반환
+- ❌ Repository/Entity 직접 의존
+
+### 전체 프로젝트
+- ❌ Lombok 사용
+- ❌ Field Injection
+- ❌ Setter Injection
+- ❌ 순환 의존성
+
+---
+
+## ✅ 체크리스트
+
+### Domain Layer
+- [ ] 모든 필드는 `private final`인가?
+- [ ] Setter 메서드가 없는가?
+- [ ] Public 생성자가 없는가?
+- [ ] 정적 팩토리 메서드를 사용하는가?
+- [ ] 비즈니스 로직이 Domain 객체 내부에 있는가?
+- [ ] Spring, JPA, Lombok 의존성이 없는가?
+
+### Application Layer
+- [ ] `@Transactional`이 UseCase 구현체에 있는가?
+- [ ] Port 인터페이스만 의존하는가?
+- [ ] Domain 객체만 사용하는가?
+- [ ] UseCase별 Command/Query/Result DTO를 정의했는가?
+
+### Persistence Adapter
+- [ ] JPA 연관관계 애노테이션이 없는가?
+- [ ] 외래키가 Long 타입 필드인가?
+- [ ] Entity에 Setter가 없는가?
+- [ ] Entity에 Public 생성자가 없는가?
+- [ ] Mapper 클래스를 사용하는가?
+- [ ] `@Transactional`이 없는가?
+
+### Controller Adapter
+- [ ] 내부 클래스가 없는가?
+- [ ] Request/Response가 record 타입인가?
+- [ ] Record 생성자에 validation이 있는가?
+- [ ] Domain 객체를 직접 반환하지 않는가?
+- [ ] UseCase(Port)만 의존하는가?
+
+### 공통
+- [ ] Lombok을 사용하지 않는가?
+- [ ] Constructor Injection을 사용하는가?
+- [ ] 순환 의존성이 없는가?
+- [ ] 레이어 의존성 방향을 준수하는가?
+
+---
+
+## 📚 참고 문서
+
+- [VERSION_MANAGEMENT_GUIDE.md](VERSION_MANAGEMENT_GUIDE.md) - Gradle Version Catalog 사용법
+- [EXAMPLES.md](EXAMPLES.md) - Good vs Bad 패턴 예제
+- [DYNAMIC_HOOKS_GUIDE.md](DYNAMIC_HOOKS_GUIDE.md) - Claude Code 동적 훅 시스템
+- [README.md](README.md) - 프로젝트 전체 가이드
+
+---
+
+**🎯 이 문서의 모든 규칙은 ArchUnit 테스트, Git 훅, Checkstyle로 자동 검증됩니다.**
