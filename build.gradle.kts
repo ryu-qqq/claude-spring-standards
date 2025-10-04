@@ -84,7 +84,7 @@ subprojects {
     // ========================================
     // SpotBugs Configuration
     // ========================================
-    spotbugs {
+    configure<com.github.spotbugs.snom.SpotBugsExtension> {
         toolVersion.set(rootProject.libs.versions.spotbugs.get())
         effort.set(com.github.spotbugs.snom.Effort.MAX)
         reportLevel.set(com.github.spotbugs.snom.Confidence.LOW)
@@ -100,13 +100,56 @@ subprojects {
         toolVersion = rootProject.libs.versions.jacoco.get()
     }
 
-    tasks.jacocoTestReport {
+    tasks.named<JacocoReport>("jacocoTestReport") {
         dependsOn(tasks.test)
 
         reports {
             xml.required.set(true)
             html.required.set(true)
         }
+    }
+
+    // ========================================
+    // JaCoCo Coverage Verification
+    // ========================================
+    tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+        dependsOn(tasks.named("jacocoTestReport"))
+
+        violationRules {
+            rule {
+                enabled = true
+
+                limit {
+                    minimum = when {
+                        project.name == "domain" -> "0.90".toBigDecimal()
+                        project.name == "application" -> "0.80".toBigDecimal()
+                        project.name.startsWith("adapter-") -> "0.70".toBigDecimal()
+                        else -> "0.70".toBigDecimal()
+                    }
+                }
+            }
+
+            rule {
+                enabled = true
+                element = "CLASS"
+
+                limit {
+                    counter = "LINE"
+                    value = "COVEREDRATIO"
+                    minimum = "0.50".toBigDecimal()
+                }
+
+                excludes = listOf(
+                    "*.config.*",
+                    "*.Application",
+                    "*.Q*" // QueryDSL generated classes
+                )
+            }
+        }
+    }
+
+    tasks.named("build") {
+        dependsOn(tasks.named("jacocoTestCoverageVerification"))
     }
 
     // ========================================

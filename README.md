@@ -1,8 +1,8 @@
-# 🏛️ Enterprise Spring Boot Hexagonal Architecture Template
+# 🏛️ Spring Boot Hexagonal Architecture Standards
 
 **표준화된 Spring Boot 3.3.x + Java 21 헥사고날 아키텍처 템플릿**
 
-이 템플릿은 엔터프라이즈급 Spring Boot 애플리케이션을 위한 표준화된 구조와 엄격한 품질 게이트를 제공합니다.
+이 템플릿은 Spring Boot 애플리케이션을 위한 표준화된 구조와 엄격한 품질 게이트를 제공합니다.
 
 ---
 
@@ -21,10 +21,10 @@
 - **Lombok 전체 금지**
 - 데드코드 자동 감지
 
-### 🎯 **테스트 커버리지**
-- Domain: 90%+
-- Application: 80%+
-- Adapter: 70%+
+### 🎯 **테스트 커버리지 (JaCoCo 자동 검증)**
+- Domain: 90% 이상 (빌드 시 자동 검증)
+- Application: 80% 이상 (빌드 시 자동 검증)
+- Adapter: 70% 이상 (빌드 시 자동 검증)
 
 ### 🚀 **기술 스택**
 - Java 21
@@ -92,7 +92,7 @@ spring-hexagonal-template/
 
 ---
 
-## 🚀 빠른 시작
+## 🚀 시작하기
 
 ### 1. Git Hooks 설치
 
@@ -119,6 +119,12 @@ chmod +x .git/hooks/pre-commit
 
 # SpotBugs 분석
 ./gradlew spotbugsMain
+
+# JaCoCo 커버리지 리포트 생성
+./gradlew jacocoTestReport
+
+# JaCoCo 커버리지 검증 (최소 커버리지 체크)
+./gradlew jacocoTestCoverageVerification
 ```
 
 ### 3. 애플리케이션 실행
@@ -377,9 +383,13 @@ management:
 - **[버전 관리 가이드](docs/VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog 사용법
 - **[동적 훅 가이드](docs/DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 동적 훅 시스템
 
+### 품질 도구 가이드
+- **[Checkstyle 설정 가이드](config/checkstyle/README.md)** - 코드 스타일 검증 규칙
+- **[SpotBugs 설정 가이드](config/spotbugs/README.md)** - 정적 분석 및 버그 탐지
+
 ### 설정 및 프롬프트
-- **[엔터프라이즈 Spring 표준 프롬프트](docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md)** - AI 코드 생성 표준
-- **[설정 요약](docs/SETUP_SUMMARY.md)** - 프로젝트 초기 설정 가이드
+- **[Spring 표준 프롬프트](docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md)** - AI 코드 생성 표준
+- **[설정 요약](docs/SETUP_SUMMARY.md)** - 프로젝트 설정 가이드
 
 ### 아키텍처 가이드 (계획)
 - [헥사고날 아키텍처 심화](docs/architecture/hexagonal-architecture.md) (TODO)

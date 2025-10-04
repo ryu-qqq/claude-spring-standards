@@ -1,11 +1,11 @@
-# Enterprise Spring Boot Standards Template - Brainstorming Session
+# Spring Boot Standards Template - Brainstorming Session
 
 ## Core Objective
 Create an enforceable standards template for Spring Boot 3.3.x projects using Java 21 that:
 - Implements pure Hexagonal Architecture (Ports & Adapters)
 - Enforces strict module boundaries with zero violations
 - Prevents scope creep (ONLY requested code gets written)
-- Maintains enterprise-level quality through automated gates
+- Maintains production-level quality through automated gates
 
 ## Technical Stack Requirements
 - Java 21 with modern features (records, pattern matching, virtual threads)

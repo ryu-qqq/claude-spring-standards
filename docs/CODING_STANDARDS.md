@@ -1,6 +1,6 @@
 # 🎯 Hexagonal Architecture Coding Standards
 
-이 문서는 **엔터프라이즈급 Spring Boot 프로젝트**의 코딩 표준을 정의합니다.
+이 문서는 **표준화된 Spring Boot 프로젝트**의 코딩 표준을 정의합니다.
 모든 레이어는 **Hexagonal Architecture (Ports & Adapters)** 원칙을 엄격히 준수해야 합니다.
 
 ---
