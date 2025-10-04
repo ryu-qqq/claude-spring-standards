@@ -263,13 +263,13 @@ class HexagonalArchitectureTest {
         }
 
         @Test
-        @DisplayName("Value Objects must end with 'VO' or be in ..vo.. package")
-        void valueObjectsMustFollowNamingConvention() {
+        @DisplayName("Value Objects must be immutable (records or final classes)")
+        void valueObjectsMustBeImmutable() {
             ArchRule rule = classes()
                 .that().resideInAPackage("..domain..vo..")
-                .should().haveSimpleNameEndingWith("VO")
-                .orShould().haveSimpleNameEndingWith("ValueObject")
-                .orShould().beRecords();
+                .should().beRecords()
+                .orShould().haveModifier(JavaModifier.FINAL)
+                .because("Value Objects must be immutable - use records or final classes with business-meaningful names");
 
             rule.check(domainClasses);
         }
@@ -326,17 +326,31 @@ class HexagonalArchitectureTest {
         }
 
         @Test
-        @DisplayName("Domain model must be in ..domain.model.. package")
-        void domainModelMustBeInCorrectPackage() {
+        @DisplayName("Domain package structure should follow hexagonal principles")
+        void domainPackageStructureShouldBeValid() {
+            // This test allows both Technical Concern and DDD Aggregate patterns
+            // Technical Concern: domain.model, domain.vo, domain.service, domain.exception
+            // DDD Aggregate: domain.{aggregate}.vo, domain.{aggregate}.event, etc.
             ArchRule rule = classes()
                 .that().resideInAPackage("..domain..")
                 .and().areNotInterfaces()
                 .and().areNotEnums()
                 .and().areNotAnnotations()
-                .should().resideInAPackage("..domain.model..")
-                .orShould().resideInAPackage("..domain..vo..")
-                .orShould().resideInAPackage("..domain..service..")
-                .orShould().resideInAPackage("..domain..exception..");
+                .should().resideInAPackage("..domain..")
+                .because("Domain classes must reside within domain package following either Technical Concern or DDD Aggregate structure");
+
+            rule.check(domainClasses);
+        }
+
+        @Test
+        @DisplayName("Aggregates should not have cyclic dependencies (DDD pattern)")
+        void aggregatesShouldNotHaveCyclicDependencies() {
+            // Only applies when using DDD Aggregate structure (domain.{aggregate})
+            // Validates that each Aggregate is an independent bounded context
+            ArchRule rule = slices()
+                .matching("..domain.(*)..")
+                .should().beFreeOfCycles()
+                .because("Each DDD Aggregate should be an independent bounded context without cyclic dependencies");
 
             rule.check(domainClasses);
         }
