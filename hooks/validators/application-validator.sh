@@ -45,9 +45,10 @@ for file in "$@"; do
 
     # Check for JPA usage (should be in adapter)
     # Filter out comments to avoid false positives
-    if grep -v '^\s*//' "$file" | grep -v '^\s*\*' | grep -q "@\(Entity\|Table\|Repository\)"; then
+    MATCHES=$(grep -n -E "@\(Entity|Table|Repository\)" "$file" | grep -v -E ':\s*(//|\*)')
+    if [ -n "$MATCHES" ]; then
         log_error "$file contains JPA annotations (JPA belongs in adapter-out-persistence)"
-        grep -v '^\s*//' "$file" | grep -v '^\s*\*' | grep -n "@\(Entity\|Table\|Repository\)" "$file"
+        echo "$MATCHES"
     fi
 
     # Check use case naming convention

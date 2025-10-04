@@ -20,7 +20,10 @@ if [ -L "${BASH_SOURCE[0]}" ]; then
     HOOK_SCRIPT="$(readlink "${BASH_SOURCE[0]}")"
     if [[ "$HOOK_SCRIPT" != /* ]]; then
         # Relative path, resolve it relative to the symlink location
-        HOOK_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd "$(dirname "$HOOK_SCRIPT")" && pwd)/$(basename "$HOOK_SCRIPT")"
+        SYMLINK_DIR=$(dirname "${BASH_SOURCE[0]}")
+        TARGET_DIR=$(dirname "$HOOK_SCRIPT")
+        REAL_TARGET_DIR=$(cd "$SYMLINK_DIR" && cd "$TARGET_DIR" && pwd)
+        HOOK_SCRIPT="$REAL_TARGET_DIR/$(basename "$HOOK_SCRIPT")"
     fi
 else
     HOOK_SCRIPT="${BASH_SOURCE[0]}"
