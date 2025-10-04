@@ -7,6 +7,8 @@
 // NO Lombok allowed
 // ========================================
 
+import java.time.Instant
+
 plugins {
     java
     alias(libs.plugins.spring.boot)
@@ -79,13 +81,13 @@ tasks.bootJar {
     archiveFileName.set("${project.rootProject.name}-web-api.jar")
 
     manifest {
-        attributes(
+        attributes(mapOf(
             "Implementation-Title" to project.rootProject.name,
             "Implementation-Version" to project.version,
             "Built-By" to System.getProperty("user.name"),
             "Built-JDK" to System.getProperty("java.version"),
-            "Build-Timestamp" to java.time.Instant.now().toString()
-        )
+            "Build-Timestamp" to Instant.now().toString()
+        ))
     }
 }
 

@@ -19,9 +19,8 @@
     <!-- ========================================
          Javadoc Requirements
          ======================================== -->
-    <module name="JavadocPackage">
-        <property name="allowLegacy" value="false"/>
-    </module>
+    <!-- JavadocPackage module removed (deprecated in Checkstyle 10.2+)
+         Package documentation is now validated by Git hooks -->
 
     <!-- ========================================
          Hexagonal Architecture Enforcement (Regex-based)
