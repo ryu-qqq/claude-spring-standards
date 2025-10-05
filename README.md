@@ -70,6 +70,16 @@ spring-hexagonal-template/
 │               ├── Application.java
 │               └── config/           # Spring 설정
 │
+├── .claude/                          # Claude Code 설정
+│   ├── README.md                     # Claude Code 가이드
+│   ├── commands/                     # 슬래시 커맨드
+│   │   └── gemini-review.md         # Gemini 리뷰 분석
+│   ├── hooks/                        # 동적 훅
+│   │   ├── user-prompt-submit.sh    # 코드 생성 전 규칙 주입
+│   │   └── after-tool-use.sh        # 코드 생성 후 검증
+│   └── agents/                       # 전문 에이전트
+│       └── prompt-engineer.md       # 프롬프트 최적화 전문가
+│
 ├── config/                           # 품질 게이트 설정
 │   ├── checkstyle/
 │   │   └── checkstyle.xml
@@ -383,6 +393,12 @@ management:
 - **[버전 관리 가이드](docs/VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog 사용법
 - **[동적 훅 가이드](docs/DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 동적 훅 시스템
 - **[Gemini 리뷰 분석 가이드](docs/GEMINI_REVIEW_GUIDE.md)** - AI 코드 리뷰 체계적 분석 및 리팩토링 전략
+
+### Claude Code 설정
+- **[Claude Code 가이드](.claude/README.md)** - 프로젝트별 Claude Code 설정 및 사용법
+- **[슬래시 커맨드](.claude/commands/)** - Gemini 리뷰 분석 등 자동화 커맨드
+- **[동적 훅](.claude/hooks/)** - 코드 생성 시 자동 규칙 주입 및 검증
+- **[전문 에이전트](.claude/agents/)** - 프롬프트 최적화 등 특화 에이전트
 
 ### 품질 도구 가이드
 - **[Checkstyle 설정 가이드](config/checkstyle/README.md)** - 코드 스타일 검증 규칙
