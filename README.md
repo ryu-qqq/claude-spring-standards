@@ -382,6 +382,7 @@ management:
 - **[코딩 표준 (87개 규칙)](docs/CODING_STANDARDS.md)** - Domain, Application, Adapter 계층별 상세 규칙
 - **[버전 관리 가이드](docs/VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog 사용법
 - **[동적 훅 가이드](docs/DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 동적 훅 시스템
+- **[Gemini 리뷰 분석 가이드](docs/GEMINI_REVIEW_GUIDE.md)** - AI 코드 리뷰 체계적 분석 및 리팩토링 전략
 
 ### 품질 도구 가이드
 - **[Checkstyle 설정 가이드](config/checkstyle/README.md)** - 코드 스타일 검증 규칙
