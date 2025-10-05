@@ -281,8 +281,9 @@ public class ActivateUploadPolicyService implements ActivateUploadPolicyUseCase 
     @Override
     public UploadPolicyResponse activatePolicy(PolicyKeyDto dto) {
         // ✅ Domain 예외 전파
-        UploadPolicy policy = loadPort.loadByKey(dto.toDomain())
-            .orElseThrow(() -> new PolicyNotFoundException(dto.toString()));
+        PolicyKey policyKey = dto.toDomain();
+        UploadPolicy policy = loadPort.loadByKey(policyKey)
+            .orElseThrow(() -> new PolicyNotFoundException(policyKey.getValue()));
 
         UploadPolicy activated = policy.activate();  // Domain에서 검증
         UploadPolicy saved = updatePort.update(activated);
@@ -448,10 +449,10 @@ public class GlobalExceptionHandler {
 public record ErrorResponse(
     String code,
     String message,
-    LocalDateTime timestamp
+    Instant timestamp
 ) {
     public static ErrorResponse of(String code, String message) {
-        return new ErrorResponse(code, message, LocalDateTime.now());
+        return new ErrorResponse(code, message, Instant.now());
     }
 }
 ```
@@ -461,7 +462,7 @@ public record ErrorResponse(
 {
   "code": "POLICY_NOT_FOUND",
   "message": "정책을 찾을 수 없습니다: tenant1/SELLER/IMAGE",
-  "timestamp": "2024-01-01T10:30:00"
+  "timestamp": "2024-01-01T10:30:00Z"
 }
 ```
 
@@ -518,7 +519,7 @@ throw new PolicyNotFoundException(
 
 ---
 
-## 🔄 완전한 예시: Policy 생성 Flow
+## 🔄 완전한 예시: Policy 활성화 Flow
 
 ### 1. Domain Exception 정의
 ```java
@@ -569,8 +570,9 @@ public class ActivateUploadPolicyService implements ActivateUploadPolicyUseCase 
 
     @Override
     public UploadPolicyResponse activatePolicy(PolicyKeyDto dto) {
-        UploadPolicy policy = loadPort.loadByKey(dto.toDomain())
-            .orElseThrow(() -> new PolicyNotFoundException(dto.toString()));
+        PolicyKey policyKey = dto.toDomain();
+        UploadPolicy policy = loadPort.loadByKey(policyKey)
+            .orElseThrow(() -> new PolicyNotFoundException(policyKey.getValue()));
 
         UploadPolicy activated = policy.activate();  // Domain에서 검증
         UploadPolicy saved = updatePort.update(activated);
@@ -594,9 +596,9 @@ public class UploadPolicyPersistenceAdapter implements UpdateUploadPolicyPort {
             PolicyEntity updated = repository.save(entity);
             return updated.toDomain();
         } catch (DataIntegrityViolationException e) {
-            throw new PolicyAlreadyExistsException(
-                policy.getPolicyKey().getValue(),
-                e
+            // ✅ Infrastructure 예외 → Domain 예외로 변환
+            throw new InvalidPolicyStateException(
+                "정책 업데이트 실패: 데이터 무결성 위반 - " + policy.getPolicyKey().getValue()
             );
         }
     }
@@ -621,7 +623,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidPolicyStateException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidState(
+    public ResponseEntity<ErrorResponse> handleInvalidPolicyState(
             InvalidPolicyStateException e
     ) {
         log.warn("정책 상태 오류: {}", e.getMessage());
