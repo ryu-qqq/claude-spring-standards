@@ -408,6 +408,33 @@ management:
 - **[Spring 표준 프롬프트](docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md)** - AI 코드 생성 표준
 - **[설정 요약](docs/SETUP_SUMMARY.md)** - 프로젝트 설정 가이드
 
+### 예외 관리 시스템
+
+⚠️ **현재 상태**: **미구현** (향후 개선 후보)
+
+현재 프로젝트에서 규칙 예외를 허용하려면 **validator 스크립트를 직접 수정**해야 합니다:
+- Git Hook Validators: `hooks/validators/*.sh`
+- Claude Code Hooks: `.claude/hooks/*.sh`
+
+**향후 개선 계획**:
+- `.claude/exceptions.json` 기반 예외 관리 시스템
+- 경로 패턴 기반 규칙 예외 허용
+- 예외 승인자 및 만료일 관리
+
+**현재 우회 방법**:
+```bash
+# 예시: JPA Entity에서 Lombok 허용이 필요한 경우
+# hooks/validators/domain-validator.sh 수정
+if [[ "$file" == *"/entity/"* ]]; then
+    echo "⚠️  JPA Entity 예외 허용"
+    continue
+fi
+```
+
+자세한 내용은 [factcheck-todo.md](factcheck-todo.md)의 "SECTION 3: 예외 관리 시스템" 참조
+
+---
+
 ### 아키텍처 가이드 (계획)
 - [헥사고날 아키텍처 심화](docs/architecture/hexagonal-architecture.md) (TODO)
 - [도메인 주도 설계 패턴](docs/architecture/ddd-patterns.md) (TODO)
