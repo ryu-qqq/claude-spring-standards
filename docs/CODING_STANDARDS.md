@@ -1395,8 +1395,9 @@ public class ImageFormat {
     private final String value;
 
     private ImageFormat(String value) {
+        java.util.Objects.requireNonNull(value, "Image format value cannot be null");
         // ✅ Locale.ROOT로 일관된 검증
-        String normalized = value.toLowerCase(Locale.ROOT).trim();
+        String normalized = value.toLowerCase(java.util.Locale.ROOT).trim();
         if (!ALLOWED_FORMATS.contains(normalized)) {
             throw new IllegalArgumentException("Invalid format: " + value);
         }
