@@ -377,6 +377,19 @@ public class PolicyKey {
         return new PolicyKey(tenantId, userType, serviceType);
     }
 
+    /**
+     * String 값으로부터 PolicyKey 객체 생성 (파싱)
+     * getValue()와 쌍을 이루는 메서드
+     */
+    public static PolicyKey from(String value) {
+        String[] parts = value.split("/");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid policyKey format: " + value);
+        }
+        // of() 메서드는 이미 검증 로직을 포함하고 있으므로 재사용합니다.
+        return PolicyKey.of(parts[0], parts[1], parts[2]);
+    }
+
     private static void validateNotBlank(String value, String fieldName) {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(
@@ -476,6 +489,11 @@ public record ImagePolicyDto(
     Long maxSizeMb,
     List<String> allowedFormats
 ) {
+    public ImagePolicyDto {
+        // 방어적 복사를 통해 DTO의 불변성을 보장합니다.
+        allowedFormats = List.copyOf(allowedFormats);
+    }
+
     /**
      * DTO → Domain 변환 (Domain에서 검증)
      */
@@ -507,6 +525,19 @@ public class PolicyKey {
         validateNotBlank(serviceType, "serviceType");
 
         return new PolicyKey(tenantId, userType, serviceType);
+    }
+
+    /**
+     * String 값으로부터 PolicyKey 객체 생성 (파싱)
+     * getValue()와 쌍을 이루는 메서드
+     */
+    public static PolicyKey from(String value) {
+        String[] parts = value.split("/");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid policyKey format: " + value);
+        }
+        // of() 메서드는 이미 검증 로직을 포함하고 있으므로 재사용합니다.
+        return PolicyKey.of(parts[0], parts[1], parts[2]);
     }
 
     private static void validateNotBlank(String value, String fieldName) {
