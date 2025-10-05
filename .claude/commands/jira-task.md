@@ -25,9 +25,12 @@ mcp__atlassian__getAccessibleAtlassianResources 도구 사용
 URL 또는 이슈 키에서 추출한 정보로 이슈를 조회합니다:
 ```
 mcp__atlassian__getJiraIssue 도구 사용
-- cloudId: 1단계에서 획득한 Cloud ID 또는 "ryuqqq"
+- cloudId: 1단계에서 획득한 Cloud ID 또는 URL에서 추출한 사이트명 (예: "ryuqqq.atlassian.net")
 - issueIdOrKey: 추출한 이슈 키 (예: KAN-6)
 - fields: ["summary", "description", "status", "issuetype", "parent", "subtasks", "customfield_*"]
+
+참고: cloudId는 프로젝트별로 다를 수 있으므로, URL에서 사이트명을 추출하거나
+getAccessibleAtlassianResources를 통해 동적으로 가져오는 것을 권장합니다.
 ```
 
 ### 3. Epic 정보 조회 (해당되는 경우)
@@ -50,14 +53,19 @@ parent 필드에 Epic이 있다면:
 브랜치 정보가 있는 경우:
 ```bash
 git fetch origin
-git checkout {branch-name} || git checkout -b {branch-name}
-git pull origin {branch-name}
+if git rev-parse --verify --quiet "origin/{branch-name}"; then
+  git checkout {branch-name}
+  git pull origin {branch-name}
+else
+  git checkout -b {branch-name}
+fi
 ```
 
 브랜치 정보가 없는 경우, 이슈 키 기반으로 제안:
 ```bash
 # 제안: feature/{ISSUE-KEY}-{요약-kebab-case}
-git checkout -b feature/{ISSUE-KEY}-description
+# 이슈 요약을 kebab-case로 변환하여 브랜치명 생성
+git checkout -b feature/{ISSUE-KEY}-{요약-kebab-case}
 ```
 
 ### 6. TodoList 생성
@@ -105,7 +113,7 @@ TodoWrite 도구를 사용하여 구조화된 작업 목록 생성:
 
 ## 에러 처리
 
-- **Cloud ID 없음**: "ryuqqq.atlassian.net" URL 사용
+- **Cloud ID 없음**: URL에서 사이트명 추출하여 사용 (예: "yoursite.atlassian.net")
 - **이슈 없음**: 이슈 키 확인 요청
 - **권한 없음**: 사용자에게 Jira 접근 권한 확인 요청
 - **브랜치 충돌**: 사용자에게 브랜치 전략 확인
@@ -120,6 +128,6 @@ TodoWrite 도구를 사용하여 구조화된 작업 목록 생성:
 ## 사용 예시
 
 ```bash
-/jira-task KAN-6
-/jira-task https://ryuqqq.atlassian.net/browse/KAN-6
+/jira-task AAA-6
+/jira-task https://ryuqqq.atlassian.net/browse/AAA-6
 ```

@@ -23,7 +23,9 @@
 
 ## 사용 가능한 커맨드
 
-### gemini-review
+> **참고**: 일부 커맨드는 `/sc:` 접두사를 사용합니다. 이는 SuperClaude 프레임워크의 표준 커맨드를 나타냅니다.
+
+### sc:gemini-review
 
 **설명**: Gemini 코드 리뷰 코멘트를 분석하고 체계적인 리팩토링 전략을 생성합니다.
 
@@ -244,7 +246,7 @@ personas: ["analyzer", "architect"]  # 활성화할 페르소나
 ## 추가 리소스
 
 - [Claude Code 문서](https://docs.claude.com/en/docs/claude-code)
-- [MCP 서버 가이드](../.claude/MCP_*.md)
+- [MCP 서버 가이드](../.claude/) - MCP 서버별 상세 문서 참조
 - [SuperClaude 프레임워크](../.claude/PRINCIPLES.md)
 
 ## 기여 가이드
