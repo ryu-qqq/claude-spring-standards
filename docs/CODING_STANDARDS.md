@@ -1337,6 +1337,98 @@ public static Order create(OrderId id, List<OrderItem> items) {
 }
 ```
 
+### 6. String Case Conversion
+
+**문제**: `String.toLowerCase()` 및 `toUpperCase()`는 기본 Locale에 의존하여 예상치 못한 결과를 초래할 수 있습니다.
+
+**대표적 예시 - Turkish Locale 문제**:
+```java
+// Turkish Locale 환경에서 실행 시
+String input = "IMAGE";
+String normalized = input.toLowerCase(); // "ımage" (소문자 i가 다름!)
+
+// 검증 실패 가능성
+Set<String> allowed = Set.of("image", "jpeg", "png");
+allowed.contains(normalized); // false! 보안 우회 위험
+```
+
+#### ❌ Bad
+```java
+// ❌ Locale 미지정 (기본 Locale 사용)
+String format = "IMAGE";
+String normalized = format.toLowerCase();
+
+// ❌ HTTP Header 처리
+String contentType = header.toUpperCase();
+```
+
+#### ✅ Good
+```java
+import java.util.Locale;
+
+// ✅ 내부 처리용 (비교, 검증) - Locale.ROOT 사용
+String normalized = format.toLowerCase(Locale.ROOT).trim();
+
+// ✅ 사용자 표시용 - Locale.getDefault() 사용
+String displayText = text.toLowerCase(Locale.getDefault());
+
+// ✅ 프로토콜/표준 (HTTP, SQL) - Locale.ENGLISH 사용
+String httpMethod = method.toUpperCase(Locale.ENGLISH);
+```
+
+#### 사용 케이스별 가이드
+
+| 사용 목적 | 권장 Locale | 이유 |
+|-----------|-------------|------|
+| 내부 처리 (비교, 검증) | `Locale.ROOT` | Locale 독립적 동작 보장 |
+| 사용자 표시용 | `Locale.getDefault()` | 사용자 언어 환경 반영 |
+| 프로토콜/표준 (HTTP, SQL) | `Locale.ENGLISH` | 국제 표준 준수 |
+
+#### 실제 예시
+
+```java
+// ✅ Domain: Value Object 검증
+public class ImageFormat {
+    private static final Set<String> ALLOWED_FORMATS =
+        Set.of("image", "jpeg", "png", "gif");
+
+    private final String value;
+
+    private ImageFormat(String value) {
+        java.util.Objects.requireNonNull(value, "Image format value cannot be null");
+        // ✅ Locale.ROOT로 일관된 검증
+        String normalized = value.toLowerCase(java.util.Locale.ROOT).trim();
+        if (!ALLOWED_FORMATS.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid format: " + value);
+        }
+        this.value = normalized;
+    }
+
+    public static ImageFormat of(String value) {
+        return new ImageFormat(value);
+    }
+}
+
+// ✅ Adapter: HTTP Header 처리
+@RestController
+public class FileController {
+    @PostMapping("/files")
+    public ResponseEntity<?> uploadFile(@RequestHeader("Content-Type") String contentType) {
+        // ✅ Locale.ENGLISH로 표준 프로토콜 처리
+        String normalized = contentType.toLowerCase(Locale.ENGLISH);
+
+        if (normalized.startsWith("image/")) {
+            // 이미지 처리
+        }
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+**SpotBugs 경고**: `reportLevel = LOW` 설정 시 `DM_CONVERT_CASE` 경고 발생
+- **해결**: 항상 명시적으로 Locale 지정
+- **참고**: [Turkish i18n Issue](https://haacked.com/archive/2012/07/05/turkish-i-problem-and-why-you-should-care.aspx/)
+
 ---
 
 ## 🔒 금지 사항 종합
