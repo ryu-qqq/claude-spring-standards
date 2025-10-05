@@ -17,7 +17,7 @@ personas: ["analyzer", "architect"]
 
 ## Usage
 ```
-/sc:gemini-review [pr-number] [--analyze-only] [--auto-refactor] [--priority high|medium|low]
+/sc:gemini-review [pr-number] [--analyze-only] [--auto-refactor] [--min-severity critical|improvement|suggestion]
 ```
 
 ## Behavioral Flow
@@ -71,11 +71,11 @@ Key behaviors:
 # Useful for understanding review feedback first
 ```
 
-### Auto-Refactor High Priority Items
+### Auto-Refactor Critical Items
 ```
-/sc:gemini-review --auto-refactor --priority high
+/sc:gemini-review --auto-refactor --min-severity critical
 # Analyzes reviews and automatically implements critical fixes
-# Only applies changes for high-priority items
+# Only applies changes for critical severity items
 ```
 
 ## Analysis Output Structure
