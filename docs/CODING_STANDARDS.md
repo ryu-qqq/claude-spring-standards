@@ -302,7 +302,7 @@ public class DeleteUploadPolicyService implements DeleteUploadPolicyUseCase {
         }
 
         // ✅ 단순 데이터 작업만 Port로 위임
-        deletePort.delete(policy.getPolicyKey());
+        deletePort.delete(command.policyKey());
     }
 }
 ```
@@ -623,9 +623,8 @@ public class UploadPolicyFixtures {
 
         @Override
         public UploadPolicy update(UploadPolicy policy) {
-            if (!storage.containsKey(policy.getPolicyKey())) {
-                throw new PolicyNotFoundException(policy.getPolicyKey());
-            }
+            // Application Service에서 존재 여부를 검증했다고 가정
+            // Test Double은 데이터 저장/수정 작업에만 집중
             storage.put(policy.getPolicyKey(), policy);
             return policy;
         }
