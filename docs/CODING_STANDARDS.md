@@ -222,7 +222,138 @@ public class OrderNotFoundException extends DomainException {
 
 ## 🔧 Application Layer 규칙
 
-### 1. Port 정의
+### 1. Port 책임 원칙 (Port Responsibility Principle)
+
+Port는 **레이어 간 인터페이스**로서 명확한 책임 범위를 가져야 합니다.
+
+#### Port 종류별 책임
+
+**Inbound Port (UseCase)**
+- **책임**: 비즈니스 유스케이스 정의만
+- **포함**: 메서드 시그니처, 입출력 DTO 정의
+- **제외**: 비즈니스 규칙, 검증 로직, 트랜잭션 관리
+
+**Outbound Port**
+- **책임**: 데이터 영속성 및 외부 시스템 연동 추상화만
+- **포함**: 저장, 조회, 삭제 같은 데이터 작업
+- **제외**: 비즈니스 규칙, 검증 로직, 상태 전이
+
+#### ❌ Bad - Port에 비즈니스 규칙 포함
+
+```java
+/**
+ * UploadPolicy 삭제를 위한 Outbound Port
+ */
+public interface DeleteUploadPolicyPort {
+    /**
+     * PolicyKey에 해당하는 UploadPolicy를 삭제합니다.
+     *
+     * 비즈니스 규칙:
+     * - 활성화된 정책은 삭제할 수 없습니다  ❌ Port의 책임 아님!
+     * - PolicyKey에 해당하는 정책이 존재하지 않으면 예외 발생  ❌
+     */
+    void delete(PolicyKey policyKey);
+}
+```
+
+**문제점:**
+- 비즈니스 규칙은 Application Service의 책임
+- Port는 순수 데이터 작업만 담당해야 함
+- 책임 경계가 모호해짐
+
+#### ✅ Good - Port는 순수 데이터 작업만
+
+```java
+/**
+ * UploadPolicy 삭제를 위한 Outbound Port
+ *
+ * <p>Persistence Adapter에서 구현하며, 데이터 영속성 작업만 수행합니다.
+ * 비즈니스 규칙 검증은 Application Service에서 처리합니다.</p>
+ *
+ * @see DeleteUploadPolicyService 비즈니스 규칙은 여기서 처리
+ */
+public interface DeleteUploadPolicyPort {
+    /**
+     * PolicyKey에 해당하는 UploadPolicy를 삭제합니다.
+     *
+     * @param policyKey 삭제할 정책의 키
+     * @throws IllegalArgumentException policyKey가 null인 경우
+     */
+    void delete(PolicyKey policyKey);
+}
+```
+
+```java
+// ✅ 비즈니스 규칙은 Application Service에서
+@UseCase
+@Transactional
+public class DeleteUploadPolicyService implements DeleteUploadPolicyUseCase {
+    private final LoadUploadPolicyPort loadPort;
+    private final DeleteUploadPolicyPort deletePort;
+
+    @Override
+    public void execute(DeletePolicyCommand command) {
+        // ✅ 비즈니스 규칙 검증
+        UploadPolicy policy = loadPort.loadByKey(command.policyKey())
+            .orElseThrow(() -> new PolicyNotFoundException(...));
+
+        if (policy.isActive()) {  // ✅ 비즈니스 규칙
+            throw new IllegalStateException("활성 정책은 삭제 불가");
+        }
+
+        // ✅ 단순 데이터 작업만 Port로 위임
+        deletePort.delete(command.policyKey());
+    }
+}
+```
+
+#### Port Javadoc 정책
+
+**모든 public Port 인터페이스는 클래스 레벨 Javadoc 필수:**
+
+```java
+/**
+ * UploadPolicy 생성을 위한 Inbound Port (Use Case)
+ *
+ * <p>외부(Web Adapter 등)에서 새로운 업로드 정책을 생성할 때 사용하는 인터페이스입니다.</p>
+ *
+ * @author your-name
+ * @since 1.0.0
+ */
+public interface CreateUploadPolicyUseCase {
+    UploadPolicyResponse execute(CreateUploadPolicyCommand command);
+}
+
+/**
+ * UploadPolicy 저장을 위한 Outbound Port
+ *
+ * <p>Persistence Adapter에서 구현하며, UploadPolicy 엔티티의 저장을 담당합니다.
+ * 비즈니스 규칙 검증은 Application Service에서 수행됩니다.</p>
+ *
+ * @see UploadPolicy
+ * @see CreateUploadPolicyService
+ */
+public interface SaveUploadPolicyPort {
+    /**
+     * UploadPolicy를 저장합니다.
+     *
+     * @param policy 저장할 정책 (null 불가)
+     * @return 저장된 정책 (ID 포함)
+     * @throws IllegalArgumentException policy가 null인 경우
+     */
+    UploadPolicy save(UploadPolicy policy);
+}
+```
+
+**Javadoc 필수 항목:**
+- Port의 목적과 책임 범위
+- Adapter Layer 구현 위치 언급
+- 비즈니스 규칙 처리 위치 명시 (Service)
+- 관련 Domain 객체 참조 (`@see`)
+
+---
+
+### 2. Port 정의
 
 #### ✅ Input Port (UseCase)
 ```java
@@ -394,6 +525,185 @@ public class CreateOrderService implements CreateOrderUseCase {
     }
 }
 ```
+
+### 5. Test Double 작성 가이드
+
+Port를 테스트하기 위한 Test Double(테스트 대역) 작성 패턴입니다.
+
+#### 패턴 1: Inner Static Class (권장 - 단순한 경우)
+
+```java
+@DisplayName("CreateUploadPolicyService 단위 테스트")
+class CreateUploadPolicyServiceTest {
+
+    private CreateUploadPolicyService service;
+    private TestLoadUploadPolicyPort loadPort;
+    private TestSaveUploadPolicyPort savePort;
+
+    @BeforeEach
+    void setUp() {
+        loadPort = new TestLoadUploadPolicyPort();
+        savePort = new TestSaveUploadPolicyPort();
+        service = new CreateUploadPolicyService(loadPort, savePort);
+    }
+
+    @Test
+    @DisplayName("정책 생성 시 기존 정책이 없으면 성공")
+    void createPolicy_WhenNoPreviousPolicy_ShouldSucceed() {
+        // given
+        loadPort.setPolicy(null);  // 기존 정책 없음
+        CreatePolicyCommand command = new CreatePolicyCommand(...);
+
+        // when
+        PolicyResponse response = service.execute(command);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(savePort.getSavedPolicy()).isNotNull();
+    }
+
+    // ✅ Inner Static Class로 Test Double 구현
+    static class TestLoadUploadPolicyPort implements LoadUploadPolicyPort {
+        private UploadPolicy policy;
+
+        void setPolicy(UploadPolicy policy) {
+            this.policy = policy;
+        }
+
+        @Override
+        public Optional<UploadPolicy> loadByKey(PolicyKey policyKey) {
+            return Optional.ofNullable(policy);
+        }
+    }
+
+    static class TestSaveUploadPolicyPort implements SaveUploadPolicyPort {
+        private UploadPolicy savedPolicy;
+
+        @Override
+        public UploadPolicy save(UploadPolicy uploadPolicy) {
+            this.savedPolicy = uploadPolicy;
+            return uploadPolicy;
+        }
+
+        UploadPolicy getSavedPolicy() {
+            return savedPolicy;
+        }
+    }
+}
+```
+
+#### 패턴 2: 별도 Fixture Class (복잡한 경우)
+
+```java
+// test/.../fixture/UploadPolicyFixtures.java
+public class UploadPolicyFixtures {
+
+    /**
+     * 여러 Port 구현을 통합한 In-Memory Test Double
+     * 복잡한 상태 관리가 필요한 경우 사용
+     */
+    public static class InMemoryUploadPolicyPort implements
+            LoadUploadPolicyPort,
+            SaveUploadPolicyPort,
+            UpdateUploadPolicyPort,
+            DeleteUploadPolicyPort {
+
+        private final Map<PolicyKey, UploadPolicy> storage = new HashMap<>();
+
+        @Override
+        public Optional<UploadPolicy> loadByKey(PolicyKey key) {
+            return Optional.ofNullable(storage.get(key));
+        }
+
+        @Override
+        public UploadPolicy save(UploadPolicy policy) {
+            storage.put(policy.getPolicyKey(), policy);
+            return policy;
+        }
+
+        @Override
+        public UploadPolicy update(UploadPolicy policy) {
+            // Application Service에서 존재 여부를 검증했다고 가정
+            // Test Double은 데이터 저장/수정 작업에만 집중
+            storage.put(policy.getPolicyKey(), policy);
+            return policy;
+        }
+
+        @Override
+        public void delete(PolicyKey key) {
+            storage.remove(key);
+        }
+
+        // 테스트 편의 메서드
+        public void clear() {
+            storage.clear();
+        }
+
+        public int size() {
+            return storage.size();
+        }
+    }
+}
+
+// 테스트 클래스에서 사용
+@DisplayName("UploadPolicy 통합 테스트")
+class UploadPolicyIntegrationTest {
+    private InMemoryUploadPolicyPort policyPort;
+
+    @BeforeEach
+    void setUp() {
+        policyPort = new InMemoryUploadPolicyPort();
+    }
+
+    @Test
+    void multipleOperations() {
+        // given
+        UploadPolicy policy = createTestPolicy();
+
+        // when
+        policyPort.save(policy);
+        UploadPolicy loaded = policyPort.loadByKey(policy.getPolicyKey()).orElseThrow();
+        policyPort.delete(policy.getPolicyKey());
+
+        // then
+        assertThat(loaded).isEqualTo(policy);
+        assertThat(policyPort.size()).isZero();
+    }
+}
+```
+
+#### 패턴 선택 기준
+
+| 상황 | 권장 패턴 | 이유 |
+|------|-----------|------|
+| 단일 테스트 클래스에서만 사용 | Inner Static Class | 응집도 높음, 간단한 로직 |
+| 여러 테스트 클래스에서 공유 | 별도 Fixture Class | 재사용성, 일관성 |
+| 간단한 상태 관리 | Inner Static Class | 불필요한 복잡도 방지 |
+| 복잡한 상태 관리 (CRUD) | 별도 Fixture Class | 상태 관리 로직 집중화 |
+| Port 1-2개 | Inner Static Class | 코드 간결성 |
+| Port 3개 이상 | 별도 Fixture Class | 통합 관리 용이 |
+
+#### ❌ Mockito 사용 지양
+
+```java
+// ❌ 가능하면 피할 것
+@Test
+void shouldCreateOrder() {
+    LoadOrderPort loadPort = Mockito.mock(LoadOrderPort.class);
+    Mockito.when(loadPort.loadById(any())).thenReturn(Optional.of(order));
+    // ...
+}
+```
+
+**이유:**
+- Mockito는 구현 세부사항에 의존하게 만듦
+- 진짜 객체(Test Double)가 더 신뢰성 높음
+- 리팩토링 시 테스트가 깨지기 쉬움
+
+**예외적으로 허용:**
+- 외부 시스템 연동 Port (AWS, 결제 게이트웨이 등)
+- 복잡한 설정이 필요한 Port
+- 테스트 대역 작성이 과도하게 복잡한 경우
 
 ---
 
@@ -832,25 +1142,39 @@ public record S3Properties(
 
 ## 🔧 공통 규칙
 
-### 1. 패키지 구조 (기능별 수직 슬라이싱)
+### 1. 패키지 구조 (Aggregate별 수직 슬라이싱)
+
+**모든 레이어에 Aggregate별 서브패키지를 일관되게 적용합니다.**
+자세한 내용은 [DDD_AGGREGATE_MIGRATION_GUIDE.md](DDD_AGGREGATE_MIGRATION_GUIDE.md)를 참조하세요.
 
 ```
 com.example.project
 ├── domain/
-│   ├── order/                      # 기능별 분리
+│   ├── order/                      # Order Aggregate
 │   │   ├── Order.java              # Aggregate Root
 │   │   ├── OrderId.java            # Value Object
 │   │   ├── OrderItem.java          # Entity
 │   │   ├── OrderStatus.java        # Enum
-│   │   ├── OrderDomainService.java # Domain Service
-│   │   └── exception/
-│   │       └── OrderException.java
-│   └── user/
+│   │   ├── vo/                     # Value Objects
+│   │   │   ├── Money.java
+│   │   │   └── Quantity.java
+│   │   ├── event/                  # Domain Events
+│   │   │   ├── OrderPlacedEvent.java
+│   │   │   └── OrderCancelledEvent.java
+│   │   ├── exception/              # Domain Exceptions
+│   │   │   └── InvalidOrderException.java
+│   │   └── service/                # Domain Services
+│   │       └── OrderDomainService.java
+│   └── user/                       # User Aggregate
 │       ├── User.java
-│       └── UserId.java
+│       ├── UserId.java
+│       └── vo/
 │
 ├── application/
-│   ├── order/
+│   ├── order/                      # Order Aggregate
+│   │   ├── dto/
+│   │   │   ├── CreateOrderCommand.java
+│   │   │   └── CreateOrderResult.java
 │   │   ├── port/
 │   │   │   ├── in/
 │   │   │   │   ├── CreateOrderUseCase.java
@@ -862,25 +1186,35 @@ com.example.project
 │   │   └── service/
 │   │       ├── CreateOrderService.java
 │   │       └── GetOrderService.java
-│   └── user/
-│       └── ...
+│   └── user/                       # User Aggregate
+│       ├── dto/
+│       ├── port/
+│       └── service/
 │
 ├── adapter/
-│   ├── in/
-│   │   └── web/
-│   │       └── order/
-│   │           ├── OrderController.java
-│   │           ├── CreateOrderRequest.java
-│   │           ├── CreateOrderResponse.java
-│   │           └── GlobalExceptionHandler.java
+│   ├── in/web/
+│   │   ├── order/                  # Order Aggregate
+│   │   │   ├── controller/
+│   │   │   │   └── OrderController.java
+│   │   │   ├── request/
+│   │   │   │   └── CreateOrderRequest.java
+│   │   │   └── response/
+│   │   │       └── CreateOrderResponse.java
+│   │   ├── user/                   # User Aggregate
+│   │   └── common/                 # 공통 컴포넌트
+│   │       └── GlobalExceptionHandler.java
 │   └── out/
 │       ├── persistence/
-│       │   └── order/
-│       │       ├── OrderPersistenceAdapter.java
-│       │       ├── OrderEntity.java
-│       │       ├── OrderJpaRepository.java
-│       │       ├── OrderEntityMapper.java
-│       │       └── OrderQueryRepository.java
+│       │   ├── order/              # Order Aggregate
+│       │   │   ├── entity/
+│       │   │   │   └── OrderEntity.java
+│       │   │   ├── repository/
+│       │   │   │   └── OrderJpaRepository.java
+│       │   │   ├── mapper/
+│       │   │   │   └── OrderEntityMapper.java
+│       │   │   ├── OrderPersistenceAdapter.java
+│       │   │   └── OrderQueryRepository.java
+│       │   └── user/               # User Aggregate
 │       ├── aws/
 │       │   ├── s3/
 │       │   │   ├── S3FileStorageAdapter.java
@@ -898,6 +1232,13 @@ com.example.project
         ├── SecurityConfig.java
         └── AwsConfig.java
 ```
+
+**패키지 구조 원칙:**
+1. **모든 레이어 일관성**: Domain, Application, Adapter 모두 동일한 Aggregate 기준 적용
+2. **비즈니스 경계 명확화**: Aggregate 단위로 코드가 그룹화되어 도메인 경계 가시화
+3. **확장성**: 새 Aggregate 추가 시 명확한 위치 파악 가능
+4. **응집도**: 관련 코드가 한 Aggregate 디렉토리 내에 모임
+5. **공통 컴포넌트**: `common/` 디렉토리에 별도 배치
 
 ### 2. 명명 규칙
 
@@ -1080,10 +1421,17 @@ public static Order create(OrderId id, List<OrderItem> items) {
 
 ## 📚 참고 문서
 
-- [VERSION_MANAGEMENT_GUIDE.md](VERSION_MANAGEMENT_GUIDE.md) - Gradle Version Catalog 사용법
-- [EXAMPLES.md](EXAMPLES.md) - Good vs Bad 패턴 예제
-- [DYNAMIC_HOOKS_GUIDE.md](DYNAMIC_HOOKS_GUIDE.md) - Claude Code 동적 훅 시스템
-- [README.md](README.md) - 프로젝트 전체 가이드
+- **[DDD_AGGREGATE_MIGRATION_GUIDE.md](DDD_AGGREGATE_MIGRATION_GUIDE.md)** - DDD Aggregate 패턴 전환 가이드
+  - Domain 레이어 Aggregate 구조
+  - Application/Adapter 레이어 Aggregate별 구조
+  - Technical Concern vs DDD Aggregate 패턴 비교
+- **[VERSION_MANAGEMENT_GUIDE.md](VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog 사용법
+- **[DYNAMIC_HOOKS_GUIDE.md](DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 동적 훅 시스템
+- **[JAVA_RECORD_GUIDE.md](JAVA_RECORD_GUIDE.md)** - Java Record 활용 가이드
+- **[README.md](README.md)** - 프로젝트 전체 가이드
+- **GitHub Issues**:
+  - [#13: Port & Interface 설계 가이드](https://github.com/ryu-qqq/claude-spring-standards/issues/13)
+  - [#12: 패키지 구조 개선](https://github.com/ryu-qqq/claude-spring-standards/issues/12)
 
 ---
 
