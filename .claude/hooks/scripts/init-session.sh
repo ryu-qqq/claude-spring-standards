@@ -7,32 +7,11 @@ set -euo pipefail
 
 # ===== 브랜치 및 Jira 태스크 파싱 =====
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-JIRA_TASK=$(echo "$BRANCH" | grep -oE 'FF-[0-9]+' || echo "")
+JIRA_TASK=$(echo "$BRANCH" | grep -oE '[A-Z][A-Z0-9]*-[0-9]+' || echo "")
 
 # ===== 규칙 문서 경로 =====
 RULES_DOC="docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md"
 SESSION_CONTEXT="/tmp/claude-session-context.md"
-
-# ===== 핵심 규칙 추출 함수 =====
-extract_critical_rules() {
-    if [ ! -f "$RULES_DOC" ]; then
-        echo "⚠️ 경고: $RULES_DOC 파일을 찾을 수 없습니다."
-        return 1
-    fi
-
-    # Domain Layer 핵심 규칙 (🔴 CRITICAL만 추출)
-    DOMAIN_RULES=$(grep -A 2 "^### D-.*🔴 CRITICAL" "$RULES_DOC" | grep "^###" | head -5 | sed 's/^### /- /')
-
-    # Application Layer 핵심 규칙
-    APP_RULES=$(grep -A 2 "^### A-.*🔴 CRITICAL" "$RULES_DOC" | grep "^###" | head -5 | sed 's/^### /- /')
-
-    # Adapter Layer 핵심 규칙
-    ADAPTER_RULES=$(grep -A 2 "^### A[IO]-.*🔴 CRITICAL" "$RULES_DOC" | grep "^###" | head -5 | sed 's/^### /- /')
-
-    echo "$DOMAIN_RULES"
-    echo "$APP_RULES"
-    echo "$ADAPTER_RULES"
-}
 
 # ===== 세션 컨텍스트 생성 =====
 cat > "$SESSION_CONTEXT" <<CONTEXT
@@ -40,7 +19,7 @@ cat > "$SESSION_CONTEXT" <<CONTEXT
 
 ## 📋 현재 작업 정보
 - **Git Branch**: \`$BRANCH\`
-- **Jira Task**: ${JIRA_TASK:-"N/A (브랜치명에 FF-XXX 패턴 없음)"}
+- **Jira Task**: ${JIRA_TASK:-"N/A (브랜치명에 Jira 패턴 없음)"}
 - **Project**: claude-spring-standards (Hexagonal Architecture)
 - **Stack**: Spring Boot 3.3.x + Java 21
 
@@ -122,7 +101,7 @@ echo "📋 브랜치: $BRANCH"
 if [ -n "$JIRA_TASK" ]; then
     echo "🎫 Jira Task: $JIRA_TASK"
 else
-    echo "⚠️  Jira Task: 없음 (브랜치명에 FF-XXX 패턴 필요)"
+    echo "⚠️  Jira Task: 없음 (브랜치명에 PROJ-123 형식 패턴 필요)"
 fi
 echo "📄 세션 컨텍스트: $SESSION_CONTEXT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
