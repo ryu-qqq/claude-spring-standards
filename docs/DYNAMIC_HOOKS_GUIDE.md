@@ -399,3 +399,129 @@ set -x  # 스크립트 상단에 추가
 - **커밋 전**: Git Hook으로 최종 확인
 
 **이제 Claude는 항상 프로젝트 규칙을 따릅니다!** 🚀
+
+---
+
+## ⚠️ USE AT YOUR OWN RISK
+
+### 🔒 Security Considerations
+
+Dynamic Hook 스크립트는 **사용자 권한으로 실행**되므로 보안에 주의해야 합니다.
+
+**중요 원칙**:
+- ✅ **Hook scripts execute with your user permissions** - 파일 시스템 접근, 네트워크 호출 등 모든 권한 보유
+- ✅ **Review all hook scripts before activation** - 실행 전 스크립트 내용을 반드시 검토
+- ✅ **Never run hooks from untrusted sources** - 신뢰할 수 없는 출처의 Hook 절대 실행 금지
+- ✅ **Validate script content before chmod +x** - 실행 권한 부여 전 스크립트 검증
+
+### 🛡️ Best Practices
+
+#### 1. Version Control
+```bash
+# Hook 스크립트를 버전 관리에 포함
+git add .claude/hooks/*.sh
+git commit -m "Add hook scripts"
+
+# 변경 이력 추적
+git log -- .claude/hooks/
+```
+
+#### 2. Code Review
+```bash
+# Hook 변경사항은 반드시 코드 리뷰
+# Pull Request에서 다른 팀원의 승인 필요
+
+# .claude/hooks/ 디렉토리 변경 시 알림 설정 권장
+```
+
+#### 3. Safe Testing Environment
+```bash
+# 1. 테스트 브랜치에서 먼저 검증
+git checkout -b test/new-hook
+# ... hook 수정 ...
+# ... 안전성 검증 ...
+
+# 2. 스크립트 문법 검증
+bash -n .claude/hooks/user-prompt-submit.sh
+shellcheck .claude/hooks/user-prompt-submit.sh
+
+# 3. 안전한 환경에서 실행 테스트
+# (예: 격리된 디렉토리, Docker 컨테이너 등)
+```
+
+#### 4. Principle of Least Privilege
+```bash
+# Hook 스크립트는 최소한의 권한만 사용
+# - 읽기 전용 작업 선호
+# - 파일 수정은 명시적 확인 후에만
+# - 외부 네트워크 호출 최소화
+
+# Bad Example: ❌
+rm -rf /some/path  # Dangerous!
+
+# Good Example: ✅
+echo "Validation failed" >&2
+exit 1
+```
+
+### 🚨 Security Warnings
+
+**절대 하지 말아야 할 것**:
+- ❌ Hook에서 민감한 정보(API 키, 비밀번호) 하드코딩
+- ❌ Hook에서 외부 URL로 코드 다운로드 후 실행
+- ❌ Hook에서 sudo 권한 요구
+- ❌ 검증되지 않은 사용자 입력 직접 실행 (`eval`, `exec` 등)
+
+**권장 사항**:
+- ✅ Hook 스크립트는 읽기 전용 검증만 수행
+- ✅ 환경 변수를 통한 설정 관리
+- ✅ 로그 파일은 안전한 위치에 저장
+- ✅ 정기적인 보안 감사
+
+### 🔍 Hook Script Validation Checklist
+
+Hook 스크립트를 추가/수정하기 전 확인:
+
+```bash
+# 1. 스크립트 문법 검증
+bash -n script.sh
+
+# 2. ShellCheck으로 잠재적 문제 탐지
+shellcheck script.sh
+
+# 3. 실행 권한 확인
+ls -la .claude/hooks/*.sh
+
+# 4. 스크립트 내용 리뷰
+cat .claude/hooks/script.sh | less
+
+# 5. 위험한 명령어 검색
+grep -E "(rm -rf|sudo|curl.*\| bash|eval|exec)" .claude/hooks/*.sh
+```
+
+### 📋 Incident Response
+
+Hook 스크립트에서 문제 발견 시:
+
+1. **즉시 실행 권한 제거**
+   ```bash
+   chmod -x .claude/hooks/suspicious-script.sh
+   ```
+
+2. **Git에서 제거 (필요시)**
+   ```bash
+   git rm .claude/hooks/suspicious-script.sh
+   git commit -m "Remove suspicious hook script"
+   ```
+
+3. **팀에 알림**
+   - 다른 개발자들에게 즉시 공유
+   - 잠재적 영향 범위 분석
+
+4. **검증 후 재도입**
+   - 문제 해결 후 코드 리뷰
+   - 안전성 재확인 후 추가
+
+---
+
+**⚠️ 결론**: Dynamic Hook은 강력한 도구이지만, 보안에 항상 주의해야 합니다. 신뢰할 수 있는 소스의 스크립트만 사용하고, 정기적으로 검토하세요.
