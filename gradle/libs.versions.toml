@@ -44,6 +44,8 @@ checkstyle = "10.14.0"
 spotbugs = "4.8.3"
 spotbugsPlugin = "6.0.9"
 jacoco = "0.8.11"
+pmd = "7.0.0"
+pmdPlugin = "6.55.0"
 
 # ========================================
 # API Documentation
@@ -201,3 +203,4 @@ observability = [
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugsPlugin" }
+pmd = { id = "net.ltgt.errorprone", version.ref = "pmdPlugin" }
