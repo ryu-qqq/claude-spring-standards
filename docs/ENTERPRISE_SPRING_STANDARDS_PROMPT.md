@@ -995,6 +995,184 @@ class OrderTest {
 
 ---
 
+### D-031: Domain classes MUST have ≤ 7 public methods (SRP)
+
+**레벨**: 🔴 CRITICAL
+**검증**: ArchUnit + PMD GodClass rule
+
+**규칙**:
+Domain 클래스는 최대 7개의 public 메서드만 가져야 합니다. 많은 메서드는 여러 책임을 의미합니다.
+
+**Good Example**:
+```java
+public class Order {
+    // Public methods: 6개 (SRP 준수)
+    public OrderId getId() { }
+    public Money getTotal() { }
+    public void addLine(OrderLine line) { }
+    public void removeLine(OrderLineId lineId) { }
+    public void cancel() { }
+    public OrderStatus getStatus() { }
+}
+```
+
+**Bad Example**:
+```java
+public class Order {
+    // Public methods: 10개 (SRP 위반)
+    public OrderId getId() { }
+    public Money getTotal() { }
+    public void addLine(...) { }
+    public void removeLine(...) { }
+    public void cancel() { }
+    public void approve() { }
+    public void ship() { }
+    public void deliver() { }
+    public void refund() { }
+    public void archive() { }
+}
+```
+
+**위반 시**:
+- ArchUnit: `SingleResponsibilityTest.java` 실패
+- PMD: GodClass rule 검출
+
+---
+
+### D-032: Domain classes MUST have ≤ 5 instance fields (SRP)
+
+**레벨**: 🔴 CRITICAL
+**검증**: ArchUnit
+
+**규칙**:
+Domain 클래스는 최대 5개의 instance 필드만 가져야 합니다. 많은 필드는 여러 관심사를 의미합니다.
+
+**Good Example**:
+```java
+public class Order {
+    private final OrderId id;
+    private final CustomerId customerId;
+    private final List<OrderLine> lines;
+    private final OrderStatus status;
+    private final Money total;
+    // 5개 필드 - SRP 준수
+}
+```
+
+**Bad Example**:
+```java
+public class Order {
+    private final OrderId id;
+    private final CustomerId customerId;
+    private final List<OrderLine> lines;
+    private final OrderStatus status;
+    private final Money total;
+    private final Address shippingAddress;
+    private final Address billingAddress;
+    private final PaymentMethod paymentMethod;
+    // 8개 필드 - SRP 위반, 너무 많은 관심사
+}
+```
+
+**위반 시**:
+- ArchUnit: `SingleResponsibilityTest.java` 실패
+
+---
+
+### D-033: Domain MUST provide delegation methods (Law of Demeter)
+
+**레벨**: 🔴 CRITICAL
+**검증**: ArchUnit + PMD DomainLayerDemeterStrict rule
+
+**규칙**:
+Domain 객체는 내부 구조를 노출하지 않고 위임 메서드를 통해 기능을 제공해야 합니다.
+
+**Good Example**:
+```java
+public class Order {
+    private final Customer customer;
+
+    // ✅ 위임 메서드 제공 (Tell, Don't Ask)
+    public String getCustomerName() {
+        return customer.getName();
+    }
+
+    public boolean isVipCustomer() {
+        return customer.isVip();
+    }
+}
+```
+
+**Bad Example**:
+```java
+public class Order {
+    private final Customer customer;
+
+    // ❌ getter만 제공 (Law of Demeter 위반)
+    public Customer getCustomer() {
+        return customer;
+    }
+}
+
+// 호출부에서 체이닝 발생
+order.getCustomer().getName(); // ❌ Train Wreck
+order.getCustomer().isVip();   // ❌ Train Wreck
+```
+
+**위반 시**:
+- ArchUnit: `LawOfDemeterTest.java` - `provideBusinessMethods()` 조건 실패
+- PMD: DomainLayerDemeterStrict XPath 규칙 검출
+
+---
+
+### D-034: NO getter chaining in Domain (Law of Demeter)
+
+**레벨**: 🔴 CRITICAL
+**검증**: PMD DomainLayerDemeterStrict XPath rule
+
+**규칙**:
+Domain에서 getter 체이닝(Train Wreck) 절대 금지. 2단계 이상의 메서드 체이닝은 Law of Demeter 위반입니다.
+
+**Good Example**:
+```java
+public class OrderService {
+    public Money calculateDiscount(Order order) {
+        // ✅ 위임 메서드 사용
+        Money customerDiscount = order.getCustomerDiscount();
+        return order.getTotal().multiply(customerDiscount);
+    }
+}
+```
+
+**Bad Example**:
+```java
+public class OrderService {
+    public Money calculateDiscount(Order order) {
+        // ❌ getter 체이닝 (Law of Demeter 위반)
+        Money discount = order.getCustomer().getDiscountRate();
+
+        // ❌ 3단계 체이닝
+        String city = order.getCustomer().getAddress().getCity();
+
+        return order.getTotal().multiply(discount);
+    }
+}
+```
+
+**허용 패턴**:
+- ✅ Builder 패턴: `Order.builder().id(...).total(...).build()`
+- ✅ Stream API: `list.stream().filter(...).map(...).collect(...)`
+- ✅ StringBuilder: `new StringBuilder().append(...).append(...).toString()`
+
+**위반 시**:
+- PMD: DomainLayerDemeterStrict XPath 규칙 검출
+  ```xml
+  <!-- PMD ruleset: 2단계 이상 체이닝 금지 -->
+  //PrimaryExpression[count(PrimarySuffix) > 1]
+  ```
+
+---
+
 ## Application Layer Rules
 
 ### A-001: Application CAN depend on Domain ONLY
@@ -1675,6 +1853,106 @@ public class CreateOrderUseCase {
 
 ---
 
+### A-026: UseCases MUST have ≤ 5 public methods (SRP)
+
+**레벨**: 🔴 CRITICAL
+**검증**: ArchUnit
+
+**규칙**:
+UseCase 클래스는 최대 5개의 public 메서드만 가져야 합니다. 하나의 UseCase는 하나의 작업만 수행해야 합니다.
+
+**Good Example**:
+```java
+@Service
+public class CreateOrderUseCase {
+    // Public methods: 1개 (이상적)
+    public OrderId execute(CreateOrderCommand command) {
+        validateCommand(command);
+        return createOrder(command);
+    }
+
+    // Private helper methods
+    private void validateCommand(CreateOrderCommand command) { }
+    private OrderId createOrder(CreateOrderCommand command) { }
+}
+```
+
+**Bad Example**:
+```java
+@Service
+public class OrderUseCase {
+    // Public methods: 6개 (SRP 위반 - 여러 책임)
+    public OrderId createOrder(CreateOrderCommand cmd) { }
+    public void updateOrder(UpdateOrderCommand cmd) { }
+    public void cancelOrder(CancelOrderCommand cmd) { }
+    public void approveOrder(ApproveOrderCommand cmd) { }
+    public void shipOrder(ShipOrderCommand cmd) { }
+    public void deliverOrder(DeliverOrderCommand cmd) { }
+}
+```
+
+**위반 시**:
+- ArchUnit: `SingleResponsibilityTest.java` 실패
+- 하나의 UseCase로 분리 필요
+
+---
+
+### A-027: UseCases SHOULD have single @Transactional method (SRP)
+
+**레벨**: 🟡 IMPORTANT
+**검증**: ArchUnit
+
+**규칙**:
+UseCase는 보통 하나의 트랜잭션 메서드만 가져야 합니다. 여러 개의 @Transactional 메서드는 여러 책임을 의심해야 합니다.
+
+**Good Example**:
+```java
+@Service
+public class CreateOrderUseCase {
+    @Transactional // ✅ 단일 트랜잭션 메서드
+    public OrderId execute(CreateOrderCommand command) {
+        Order order = orderService.create(command);
+        orderRepository.save(order);
+        return order.getId();
+    }
+
+    // 조회 메서드는 @Transactional(readOnly = true) 가능
+    @Transactional(readOnly = true)
+    public OrderDto getOrder(OrderId id) {
+        return orderRepository.findById(id)
+            .map(OrderDto::from)
+            .orElseThrow();
+    }
+}
+```
+
+**Bad Example**:
+```java
+@Service
+public class OrderService {
+    @Transactional // ❌ 여러 트랜잭션 메서드 = 여러 책임
+    public void createOrder() { }
+
+    @Transactional // ❌
+    public void updateOrder() { }
+
+    @Transactional // ❌
+    public void cancelOrder() { }
+
+    // 3개의 트랜잭션 메서드 → CreateOrderUseCase, UpdateOrderUseCase, CancelOrderUseCase로 분리 필요
+}
+```
+
+**권장 사항**:
+- Command UseCase: 1개의 @Transactional 메서드
+- Query UseCase: 1개의 @Transactional(readOnly = true) 메서드
+- 여러 트랜잭션 필요 시 → 별도 UseCase로 분리
+
+**위반 시**:
+- ArchUnit: `SingleResponsibilityTest.java` - `haveAtMostTransactionalMethods(1)` 조건 실패
+
+---
+
 ## Adapter Layer Rules
 
 ### AI-001: Request/Response DTOs MUST be records
@@ -2161,6 +2439,78 @@ Public API에 Javadoc/OpenAPI 문서화.
 public ResponseEntity<OrderResponse> create(@RequestBody CreateOrderRequest request) {
 }
 ```
+
+---
+
+### AI-017: Controllers MUST have ≤ 10 endpoints (SRP)
+
+**레벨**: 🔴 CRITICAL
+**검증**: ArchUnit
+
+**규칙**:
+Controller는 최대 10개의 엔드포인트(public 메서드)만 가져야 합니다. 하나의 Controller는 하나의 REST 리소스를 담당해야 합니다.
+
+**Good Example**:
+```java
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+    // 엔드포인트: 5개 (SRP 준수 - 단일 Order 리소스)
+    @PostMapping
+    public ResponseEntity<OrderResponse> create(@RequestBody CreateOrderRequest request) { }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> getById(@PathVariable Long id) { }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderResponse> update(@PathVariable Long id, @RequestBody UpdateOrderRequest request) { }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) { }
+
+    @GetMapping
+    public ResponseEntity<List<OrderResponse>> list(@RequestParam(required = false) String status) { }
+}
+```
+
+**Bad Example**:
+```java
+@RestController
+@RequestMapping("/api")
+public class ApiController {
+    // 엔드포인트: 12개 (SRP 위반 - 여러 리소스)
+    @PostMapping("/orders")
+    public ResponseEntity<?> createOrder(...) { }
+
+    @GetMapping("/orders/{id}")
+    public ResponseEntity<?> getOrder(...) { }
+
+    @PostMapping("/products")
+    public ResponseEntity<?> createProduct(...) { }
+
+    @GetMapping("/products/{id}")
+    public ResponseEntity<?> getProduct(...) { }
+
+    @PostMapping("/customers")
+    public ResponseEntity<?> createCustomer(...) { }
+
+    @GetMapping("/customers/{id}")
+    public ResponseEntity<?> getCustomer(...) { }
+
+    // ... 6개 더
+    // → OrderController, ProductController, CustomerController로 분리 필요
+}
+```
+
+**리소스별 분리 원칙**:
+- 1 Controller = 1 REST Resource
+- `/orders` → OrderController
+- `/products` → ProductController
+- `/customers` → CustomerController
+
+**위반 시**:
+- ArchUnit: `SingleResponsibilityTest.java` 실패
+- 리소스별로 Controller 분리 필요
 
 ---
 
@@ -2831,12 +3181,173 @@ public OrderEntity findWithCustomer(Long orderId) {
 
 ---
 
+### AO-033: Repositories MUST focus on single Entity (SRP)
+
+**レベル**: 🔴 CRITICAL
+**検証**: ArchUnit
+
+**規칙**:
+Repository는 하나의 Entity만 다뤄야 합니다. 여러 Entity에 의존하는 것은 여러 책임을 의미합니다.
+
+**Good Example**:
+```java
+@Repository
+class OrderJpaAdapter implements OrderRepository {
+    private final OrderJpaRepository orderJpaRepository; // ✅ 단일 Entity Repository
+    private final OrderMapper orderMapper;
+
+    public Optional<Order> findById(OrderId id) {
+        return orderJpaRepository.findById(id.value())
+            .map(orderMapper::toDomain);
+    }
+
+    public void save(Order order) {
+        OrderEntity entity = orderMapper.toEntity(order);
+        orderJpaRepository.save(entity);
+    }
+}
+```
+
+**Bad Example**:
+```java
+@Repository
+class OrderRepositoryImpl {
+    // ❌ 여러 Entity 의존 = 여러 책임
+    private final OrderJpaRepository orderRepository;
+    private final CustomerJpaRepository customerRepository;
+    private final ProductJpaRepository productRepository;
+
+    public OrderWithDetails findOrderWithDetails(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId).orElseThrow();
+        CustomerEntity customer = customerRepository.findById(order.getCustomerId()).orElseThrow();
+        // ❌ Repository가 여러 Entity를 직접 조합 → Application Layer에서 해야 함
+        return new OrderWithDetails(order, customer);
+    }
+}
+```
+
+**올바른 패턴**:
+```java
+// ✅ Application Layer에서 명시적 조합
+@Service
+public class GetOrderWithDetailsUseCase {
+    private final LoadOrderPort loadOrderPort;
+    private final LoadCustomerPort loadCustomerPort;
+
+    public OrderWithDetailsDto execute(OrderId orderId) {
+        Order order = loadOrderPort.loadById(orderId).orElseThrow();
+        Customer customer = loadCustomerPort.loadById(order.getCustomerId()).orElseThrow();
+        return OrderWithDetailsDto.of(order, customer);
+    }
+}
+```
+
+**위반 시**:
+- ArchUnit: `SingleResponsibilityTest.java` - `haveSingleEntityDependency()` 조건 실패
+- Application Layer로 로직 이동 필요
+
+---
+
+### AO-034: Entities MUST use Long FK, NO JPA relationships (Law of Demeter)
+
+**レベル**: 🔴 CRITICAL
+**検証**: ArchUnit + Checkstyle + persistence-validator.sh
+
+**規칙**:
+Entity는 Long FK 필드만 사용해야 합니다. JPA 관계 어노테이션(@OneToMany, @ManyToOne 등)은 Law of Demeter 위반을 유발하므로 절대 금지입니다.
+
+**Good Example**:
+```java
+@Entity
+@Table(name = "orders")
+public class OrderEntity {
+    @Id
+    @Column(name = "id")
+    private Long id;
+
+    // ✅ Long FK 전략
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
+
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
+    // ✅ Application Layer에서 명시적으로 로드
+    // OrderService: loadOrder() + loadCustomer() + loadProduct()
+}
+```
+
+**Bad Example**:
+```java
+@Entity
+@Table(name = "orders")
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    // ❌ JPA 관계 = Law of Demeter 위반
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private CustomerEntity customer;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderLineEntity> orderLines;
+}
+
+// 호출부에서 Law of Demeter 위반 발생
+order.getCustomer().getName(); // ❌ Train Wreck
+order.getCustomer().getAddress().getCity(); // ❌ 3단계 체이닝
+```
+
+**JPA 관계의 문제점**:
+1. **Law of Demeter 위반**: Getter 체이닝 유발
+2. **N+1 쿼리 문제**: 암묵적 추가 쿼리 발생
+3. **양방향 관계 복잡도**: 순환 참조, JSON 직렬화 문제
+4. **LazyInitializationException**: 트랜잭션 밖에서 접근 시 예외
+5. **테스트 어려움**: Entity 관계 설정 복잡
+
+**Long FK 전략의 장점**:
+1. **Law of Demeter 준수**: Getter 체이닝 불가능
+2. **명시적 데이터 로딩**: Application Layer에서 제어
+3. **성능 예측 가능**: 필요한 데이터만 로드
+4. **테스트 단순화**: Entity 독립적 테스트 가능
+5. **레이어 분리 명확**: Persistence 관심사 격리
+
+**Application Layer 패턴**:
+```java
+@Service
+public class GetOrderWithCustomerUseCase {
+    private final LoadOrderPort loadOrderPort;
+    private final LoadCustomerPort loadCustomerPort;
+
+    @Transactional(readOnly = true)
+    public OrderWithCustomerDto execute(OrderId orderId) {
+        // ✅ 명시적 로드 (Long FK 활용)
+        Order order = loadOrderPort.loadById(orderId).orElseThrow();
+        Customer customer = loadCustomerPort.loadById(order.getCustomerId()).orElseThrow();
+        return OrderWithCustomerDto.of(order, customer);
+    }
+}
+```
+
+**위반 시**:
+- ArchUnit: `LawOfDemeterTest.java` 실패
+- Checkstyle: RegexpSingleline JPA 관계 어노테이션 검출
+- persistence-validator.sh 차단
+- 빌드 중단
+
+---
+
 ## 요약
 
-총 **87개 규칙**:
-- **Domain Layer**: 30개 규칙 (D-001 ~ D-030)
-- **Application Layer**: 25개 규칙 (A-001 ~ A-025)
-- **Adapter Layer**: 32개 규칙 (AI-001 ~ AI-016 [Controller 16개] + AO-001 ~ AO-016 [Persistence 16개])
+총 **96개 규칙**:
+- **Domain Layer**: 34개 규칙 (D-001 ~ D-034)
+  - 기존 30개 + SRP 2개 (D-031, D-032) + Law of Demeter 2개 (D-033, D-034)
+- **Application Layer**: 27개 규칙 (A-001 ~ A-027)
+  - 기존 25개 + SRP 2개 (A-026, A-027)
+- **Adapter Layer**: 35개 규칙
+  - **Controller (AI)**: 17개 (AI-001 ~ AI-017) - 기존 16개 + SRP 1개 (AI-017)
+  - **Persistence (AO)**: 18개 (AO-001 ~ AO-034) - 기존 16개 + SRP 1개 (AO-033) + Law of Demeter 1개 (AO-034)
 
 모든 규칙은 다음 도구로 자동 검증:
 - ArchUnit (아키텍처 경계)
