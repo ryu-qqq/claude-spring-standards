@@ -100,19 +100,8 @@ class SingleResponsibilityTest {
             rule.check(domainClasses);
         }
 
-        @Test
-        @DisplayName("Domain classes MUST be cohesive (methods use shared fields)")
-        void domainClassesShouldBeCohesive() {
-            ArchRule rule = classes()
-                .that().resideInPackage("..domain..")
-                .and().areNotInterfaces()
-                .and().haveSimpleNameNotEndingWith("Exception")
-                .and().haveSimpleNameNotEndingWith("Id")
-                .should(haveLowLackOfCohesion())
-                .because("Low cohesion indicates multiple unrelated responsibilities");
-
-            rule.check(domainClasses);
-        }
+        // Note: Cohesion (LCOM) is better measured by PMD's GodClass rule
+        // See config/pmd/pmd-ruleset.xml for accurate LCOM measurement
     }
 
     // ========================================
@@ -241,46 +230,8 @@ class SingleResponsibilityTest {
         };
     }
 
-    /**
-     * 응집도 검사 (간단한 휴리스틱)
-     *
-     * 실제 LCOM 계산은 복잡하므로, 간단한 휴리스틱 사용:
-     * - 메서드들이 공통 필드를 사용하는가?
-     * - 모든 메서드가 전혀 다른 필드만 사용하면 응집도 낮음
-     */
-    private static ArchCondition<JavaClass> haveLowLackOfCohesion() {
-        return new ArchCondition<JavaClass>("have low lack of cohesion") {
-            @Override
-            public void check(JavaClass javaClass, ConditionEvents events) {
-                long methodCount = javaClass.getMethods().stream()
-                    .filter(m -> !m.getName().equals("equals"))
-                    .filter(m -> !m.getName().equals("hashCode"))
-                    .filter(m -> !m.getName().equals("toString"))
-                    .filter(m -> !m.getModifiers().contains(com.tngtech.archunit.core.domain.JavaModifier.STATIC))
-                    .count();
-
-                long fieldCount = javaClass.getFields().stream()
-                    .filter(f -> !f.getModifiers().contains(com.tngtech.archunit.core.domain.JavaModifier.STATIC))
-                    .count();
-
-                // 메서드나 필드가 너무 적으면 검사 스킵
-                if (methodCount < 3 || fieldCount < 2) {
-                    return;
-                }
-
-                // 경고만 (실제 LCOM 계산은 PMD가 더 정확)
-                if (methodCount > 7 && fieldCount > 5) {
-                    String message = String.format(
-                        "Class <%s> has %d methods and %d fields - consider checking cohesion (LCOM)",
-                        javaClass.getName(),
-                        methodCount,
-                        fieldCount
-                    );
-                    events.add(SimpleConditionEvent.violated(javaClass, message));
-                }
-            }
-        };
-    }
+    // Note: LCOM (Lack of Cohesion in Methods) is accurately measured by PMD's GodClass rule
+    // See config/pmd/pmd-ruleset.xml - GodClass rule with LCOM threshold
 
     /**
      * 최대 @Transactional 메서드 개수

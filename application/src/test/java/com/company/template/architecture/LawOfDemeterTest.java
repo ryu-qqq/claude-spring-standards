@@ -79,16 +79,8 @@ class LawOfDemeterTest {
     @DisplayName("🏛️ Domain Layer - Strict Demeter Enforcement")
     class DomainLayerDemeterTests {
 
-        @Test
-        @DisplayName("Domain MUST NOT chain getter calls")
-        void domainShouldNotChainGetters() {
-            ArchRule rule = classes()
-                .that().resideInPackage("..domain..")
-                .should(notChainGetterCalls())
-                .because("Domain objects must follow Law of Demeter - no getter chaining");
-
-            rule.check(domainClasses);
-        }
+        // Note: Getter chaining is more accurately detected by PMD's DomainLayerDemeterStrict rule
+        // See config/pmd/pmd-ruleset.xml for XPath-based AST analysis
 
         @Test
         @DisplayName("Domain MUST use delegation instead of getters")
@@ -188,73 +180,8 @@ class LawOfDemeterTest {
     // 커스텀 ArchCondition 구현
     // ========================================
 
-    /**
-     * Getter 체이닝 감지 ArchCondition
-     *
-     * 패턴:
-     * - obj.getX().getY() → 데미터 위반
-     * - obj.builder().x().y().build() → 허용 (Fluent API)
-     * - list.stream().map().collect() → 허용 (Stream API)
-     */
-    private static ArchCondition<JavaClass> notChainGetterCalls() {
-        return new ArchCondition<JavaClass>("not chain getter calls") {
-            @Override
-            public void check(JavaClass javaClass, ConditionEvents events) {
-                for (JavaMethod method : javaClass.getMethods()) {
-                    for (JavaMethodCall call : method.getMethodCallsFromSelf()) {
-                        if (isGetterChaining(call)) {
-                            String message = String.format(
-                                "Method <%s> chains getter calls: %s → Use delegation instead",
-                                method.getFullName(),
-                                call.getDescription()
-                            );
-                            events.add(SimpleConditionEvent.violated(call, message));
-                        }
-                    }
-                }
-            }
-
-            private boolean isGetterChaining(JavaMethodCall call) {
-                String targetMethod = call.getTarget().getName();
-                String targetOwner = call.getTarget().getOwner().getName();
-
-                // Fluent API 패턴 허용
-                if (isFluentApi(targetMethod, targetOwner)) {
-                    return false;
-                }
-
-                // getter → getter 패턴 감지 (간단한 휴리스틱)
-                // 실제로는 PMD의 AST 분석이 더 정확함
-                return targetMethod.startsWith("get") &&
-                       call.getOriginOwner().getMethods().stream()
-                           .filter(m -> m.getMethodCallsFromSelf().contains(call))
-                           .anyMatch(m -> m.getMethodCallsFromSelf().size() > 3);
-            }
-
-            private boolean isFluentApi(String methodName, String ownerClass) {
-                // Builder 패턴
-                if (methodName.equals("builder") || methodName.equals("build")) {
-                    return true;
-                }
-
-                // Stream API
-                if (ownerClass.contains("Stream") ||
-                    methodName.equals("stream") ||
-                    methodName.equals("map") ||
-                    methodName.equals("filter") ||
-                    methodName.equals("collect")) {
-                    return true;
-                }
-
-                // StringBuilder
-                if (ownerClass.contains("StringBuilder") || ownerClass.contains("StringBuffer")) {
-                    return true;
-                }
-
-                return false;
-            }
-        };
-    }
+    // Note: Getter chaining detection is better handled by PMD's AST-based XPath rules
+    // See config/pmd/pmd-ruleset.xml - DomainLayerDemeterStrict rule for accurate detection
 
     /**
      * 비즈니스 메서드 제공 여부 검사
