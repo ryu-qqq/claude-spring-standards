@@ -200,7 +200,7 @@
                 <value>
 <![CDATA[
 //ClassOrInterfaceDeclaration[contains(@PackageName, '.domain.')]
-//PrimaryExpression[count(PrimarySuffix) > 2]
+//PrimaryExpression[count(PrimarySuffix) > 1]
 [not(ancestor::Annotation)]
 [not(contains(@Image, 'builder()'))]
 [not(contains(@Image, 'stream()'))]

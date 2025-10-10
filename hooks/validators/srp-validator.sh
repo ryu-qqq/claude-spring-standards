@@ -112,7 +112,7 @@ fi
 # ========================================
 
 # public으로 시작하는 메서드 (생성자, equals, hashCode, toString 제외)
-PUBLIC_METHOD_COUNT=$(grep -c "^\s*public\s\+[^c]\w\+\s\+\w\+\s*(" "$FILE" || true)
+PUBLIC_METHOD_COUNT=$(grep -Ec '^\s*public\s+[^\s(]+\s+\w+\s*\(' "$FILE" || true)
 
 # equals, hashCode, toString 제외
 PUBLIC_METHOD_COUNT=$((PUBLIC_METHOD_COUNT - $(grep -c "public.*\(equals\|hashCode\|toString\)" "$FILE" || true)))
@@ -260,7 +260,7 @@ fi
 # ========================================
 
 # private 필드 개수 (static 제외)
-FIELD_COUNT=$(grep -c "^\s*private\s\+[^s]\w\+\s\+\w\+\s*;" "$FILE" || true)
+FIELD_COUNT=$(grep -Ec '^\s*private\s+[^\s]+\s+\w+\s*;' "$FILE" || true)
 FIELD_COUNT=$((FIELD_COUNT - $(grep -c "private\s\+static" "$FILE" || true)))
 
 MAX_FIELDS=7
