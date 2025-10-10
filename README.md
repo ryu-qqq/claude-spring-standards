@@ -17,9 +17,15 @@
 ### 🔒 **Level 3 엄격 규칙**
 - ArchUnit 아키텍처 테스트
 - Checkstyle 코드 스타일 강제
-- SpotBugs 정적 분석
+- SpotBugs + PMD 정적 분석
 - **Lombok 전체 금지**
 - 데드코드 자동 감지
+
+### 📐 **Single Responsibility & Law of Demeter 강화**
+- **SRP 메트릭 자동 검증**: Domain ≤7 메서드, Application ≤5 메서드, Controller ≤10 엔드포인트
+- **Law of Demeter 엄격 적용**: Getter 체이닝 금지, Tell Don't Ask 원칙
+- **Long FK 전략**: JPA 관계 어노테이션 금지, 명시적 로딩 강제
+- **PMD 커스텀 룰**: XPath 기반 AST 분석으로 Train Wreck 패턴 방지
 
 ### 🎯 **테스트 커버리지 (JaCoCo 자동 검증)**
 - Domain: 90% 이상 (빌드 시 자동 검증)
@@ -83,6 +89,8 @@ spring-hexagonal-template/
 ├── config/                           # 품질 게이트 설정
 │   ├── checkstyle/
 │   │   └── checkstyle.xml
+│   ├── pmd/
+│   │   └── pmd-ruleset.xml           # Law of Demeter, GodClass 등
 │   └── spotbugs/
 │       └── spotbugs-exclude.xml
 │
@@ -118,8 +126,10 @@ chmod +x .git/hooks/pre-commit
 # 전체 빌드 (품질 게이트 포함)
 ./gradlew build
 
-# 아키텍처 테스트만 실행
-./gradlew :domain:test --tests "*HexagonalArchitectureTest"
+# 아키텍처 테스트 실행
+./gradlew :application:test --tests "*HexagonalArchitectureTest"
+./gradlew :application:test --tests "*SingleResponsibilityTest"
+./gradlew :application:test --tests "*LawOfDemeterTest"
 
 # 데드코드 감지
 ./gradlew detectDeadCode
@@ -129,6 +139,9 @@ chmod +x .git/hooks/pre-commit
 
 # SpotBugs 분석
 ./gradlew spotbugsMain
+
+# PMD 정적 분석 (Law of Demeter 등)
+./gradlew pmdMain
 
 # JaCoCo 커버리지 리포트 생성
 ./gradlew jacocoTestReport
@@ -334,9 +347,10 @@ git commit -m "feat: 주문 생성 기능 구현"
 
 ### 2. 품질 게이트 통과 체크리스트
 
-- [ ] ArchUnit 테스트 통과
+- [ ] ArchUnit 테스트 통과 (HexagonalArchitectureTest, SingleResponsibilityTest, LawOfDemeterTest)
 - [ ] Checkstyle 위반 없음
 - [ ] SpotBugs 버그 없음
+- [ ] PMD 정적 분석 통과 (Law of Demeter, GodClass 등)
 - [ ] 테스트 커버리지 달성
 - [ ] Javadoc 작성 (Public API)
 - [ ] @author 태그 포함
@@ -389,7 +403,7 @@ management:
 ## 📚 문서
 
 ### 핵심 문서
-- **[코딩 표준 (87개 규칙)](docs/CODING_STANDARDS.md)** - Domain, Application, Adapter 계층별 상세 규칙
+- **[코딩 표준 (96개 규칙)](docs/CODING_STANDARDS.md)** - Domain, Application, Adapter 계층별 상세 규칙 (SRP/Law of Demeter 강화)
 - **[버전 관리 가이드](docs/VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog 사용법
 - **[동적 훅 가이드](docs/DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 동적 훅 시스템
 - **[Gemini 리뷰 분석 가이드](docs/GEMINI_REVIEW_GUIDE.md)** - AI 코드 리뷰 체계적 분석 및 리팩토링 전략
@@ -402,6 +416,7 @@ management:
 
 ### 품질 도구 가이드
 - **[Checkstyle 설정 가이드](config/checkstyle/README.md)** - 코드 스타일 검증 규칙
+- **[PMD 설정 가이드](config/pmd/README.md)** - Law of Demeter, GodClass 등 정적 분석
 - **[SpotBugs 설정 가이드](config/spotbugs/README.md)** - 정적 분석 및 버그 탐지
 
 ### 설정 및 프롬프트

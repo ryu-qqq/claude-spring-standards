@@ -218,6 +218,222 @@ public class OrderNotFoundException extends DomainException {
 }
 ```
 
+### 7. Single Responsibility Principle (SRP) 메트릭
+
+Domain 클래스는 **단일 책임**을 가져야 하며, 다음 메트릭으로 검증됩니다:
+
+#### SRP 기준 (Domain Layer - 가장 엄격)
+
+| 메트릭 | 제한 | 근거 |
+|--------|------|------|
+| Public 메서드 수 | ≤ 7개 | 많은 메서드 = 여러 책임 의심 |
+| Instance 필드 수 | ≤ 5개 | 많은 필드 = 여러 관심사 의심 |
+| 클래스 라인 수 | ≤ 200 라인 | 길수록 복잡도 증가 |
+| LCOM (Lack of Cohesion) | 낮을수록 좋음 | 높을수록 응집도 낮음 |
+
+**검증 방법:**
+- ArchUnit 테스트: `SingleResponsibilityTest.java`
+- PMD 정적 분석: `GodClass` 룰 (LCOM 측정)
+
+#### ❌ Bad - SRP 위반
+```java
+// ❌ 너무 많은 책임
+public class Order {
+    // ❌ 10개 이상의 필드 (여러 관심사)
+    private OrderId id;
+    private UserId userId;
+    private OrderStatus status;
+    private Money total;
+    private ShippingAddress address;
+    private PaymentMethod payment;
+    private CouponCode coupon;
+    private DeliveryTracker tracker;
+    private InventoryChecker inventory;
+    private TaxCalculator taxCalc;
+
+    // ❌ 10개 이상의 public 메서드 (여러 책임)
+    public void validate() { }
+    public Money calculateTotal() { }
+    public Money calculateTax() { }
+    public Money calculateShipping() { }
+    public Money applyDiscount() { }
+    public void checkInventory() { }
+    public void reserveStock() { }
+    public void processPayment() { }
+    public void sendNotification() { }
+    public void trackDelivery() { }
+    public void generateInvoice() { }
+    // ... 더 많은 메서드
+}
+```
+
+#### ✅ Good - 단일 책임
+```java
+// ✅ Order는 주문 상태와 금액 계산에만 집중
+public class Order {
+    private final OrderId id;
+    private final UserId userId;
+    private final OrderStatus status;
+    private final List<OrderItem> items;
+    private final LocalDateTime createdAt;
+
+    // ✅ 7개 이하의 public 메서드
+    public OrderId getId() { return id; }
+    public OrderStatus getStatus() { return status; }
+
+    public Money calculateTotal() {
+        return items.stream()
+            .map(OrderItem::getSubtotal)
+            .reduce(Money.ZERO, Money::add);
+    }
+
+    public Order confirm() {
+        if (status != OrderStatus.PENDING) {
+            throw new InvalidOrderStateException("Only pending orders can be confirmed");
+        }
+        return new Order(id, userId, OrderStatus.CONFIRMED, items, createdAt);
+    }
+
+    public Order cancel() {
+        if (status == OrderStatus.SHIPPED) {
+            throw new InvalidOrderStateException("Shipped orders cannot be cancelled");
+        }
+        return new Order(id, userId, OrderStatus.CANCELLED, items, createdAt);
+    }
+}
+
+// ✅ 다른 책임은 별도 클래스로 분리
+public class OrderShipping {
+    private final OrderId orderId;
+    private final ShippingAddress address;
+
+    public Money calculateShippingCost() { }
+    public void trackDelivery() { }
+}
+
+public class OrderPayment {
+    private final OrderId orderId;
+    private final PaymentMethod method;
+
+    public void processPayment(Money amount) { }
+    public void refund(Money amount) { }
+}
+```
+
+**LCOM (Lack of Cohesion in Methods) 측정:**
+- PMD의 `GodClass` 룰로 자동 측정
+- LCOM > 0.8 이면 클래스 분리 검토 필요
+- 메서드들이 서로 다른 필드를 사용하면 LCOM 높아짐 → SRP 위반 신호
+
+### 8. Law of Demeter (데미터의 법칙)
+
+**핵심 원칙**: 객체는 자기 자신, 메서드 파라미터, 생성한 객체, 인스턴스 변수만 접근
+
+#### 금지 패턴: Getter 체이닝 (Train Wreck)
+
+**절대 금지:**
+```java
+// ❌ Getter 체이닝 절대 금지
+obj.getX().getY().getZ()
+```
+
+**PMD 검증:**
+- `DomainLayerDemeterStrict` 룰
+- XPath AST 분석으로 2단계 이상 체이닝 감지
+- `//PrimaryExpression[count(PrimarySuffix) > 1]`
+
+#### ❌ Bad - Law of Demeter 위반
+```java
+// ❌ Getter 체이닝
+public class OrderService {
+    public Money calculateShipping(Order order) {
+        // ❌ 3단계 체이닝
+        String city = order.getShippingAddress().getCity().getName();
+
+        // ❌ 2단계 체이닝
+        String zipCode = order.getShippingAddress().getZipCode();
+
+        // ❌ 중간 객체 조작
+        order.getCustomer().getAddress().updateZipCode("12345");
+
+        return calculateByCityAndZip(city, zipCode);
+    }
+}
+
+// ❌ Getter만 제공 (Tell, Don't Ask 위반)
+public class Order {
+    private ShippingAddress shippingAddress;
+
+    public ShippingAddress getShippingAddress() {
+        return shippingAddress;
+    }
+}
+```
+
+#### ✅ Good - Tell, Don't Ask 패턴
+
+```java
+// ✅ 위임 메서드 제공 (Delegation Methods)
+public class Order {
+    private final ShippingAddress shippingAddress;
+
+    // ✅ Getter 노출 대신 위임 메서드 제공
+    public String getShippingCity() {
+        return shippingAddress.getCityName();
+    }
+
+    public String getShippingZipCode() {
+        return shippingAddress.getZipCode();
+    }
+
+    // ✅ 비즈니스 로직 캡슐화
+    public Money calculateShippingCost() {
+        return shippingAddress.calculateShippingCost();
+    }
+}
+
+// ✅ ShippingAddress도 위임 패턴 사용
+public class ShippingAddress {
+    private final City city;
+    private final ZipCode zipCode;
+
+    public String getCityName() {
+        return city.getName();
+    }
+
+    public Money calculateShippingCost() {
+        return city.getShippingRate();
+    }
+}
+```
+
+#### 허용 패턴
+
+**✅ 허용되는 체이닝:**
+```java
+// ✅ Builder 패턴 (Fluent API)
+Order order = Order.builder()
+    .id(orderId)
+    .userId(userId)
+    .build();
+
+// ✅ Stream API
+Money total = orders.stream()
+    .map(Order::getTotal)
+    .reduce(Money.ZERO, Money::add);
+
+// ✅ StringBuilder
+String message = new StringBuilder()
+    .append("Order ")
+    .append(orderId)
+    .toString();
+```
+
+**검증 도구:**
+- ArchUnit: `LawOfDemeterTest.java`
+- PMD: `DomainLayerDemeterStrict` 룰
+- 위반 시 컴파일 단계에서 차단
+
 ---
 
 ## 🔧 Application Layer 규칙
@@ -353,7 +569,115 @@ public interface SaveUploadPolicyPort {
 
 ---
 
-### 2. Port 정의
+### 2. Single Responsibility Principle (SRP) for UseCases
+
+Application Layer의 UseCase는 **작고 집중된** 단일 비즈니스 유스케이스만 처리해야 합니다.
+
+#### SRP 기준 (Application Layer)
+
+| 메트릭 | 제한 | 근거 |
+|--------|------|------|
+| Public 메서드 수 | ≤ 5개 | UseCase는 하나의 작업만 수행 |
+| @Transactional 메서드 수 | 1개 권장 | 여러 트랜잭션 = 여러 책임 의심 |
+| 클래스 라인 수 | ≤ 150 라인 | UseCase는 작아야 함 |
+
+**검증 방법:**
+- ArchUnit 테스트: `SingleResponsibilityTest.java`
+
+#### ❌ Bad - UseCase SRP 위반
+```java
+// ❌ 여러 책임을 가진 Service
+@UseCase
+public class OrderService {
+
+    // ❌ 여러 @Transactional 메서드 (여러 책임)
+    @Transactional
+    public OrderResult createOrder(CreateOrderCommand command) {
+        // 주문 생성
+    }
+
+    @Transactional
+    public OrderResult updateOrder(UpdateOrderCommand command) {
+        // 주문 수정
+    }
+
+    @Transactional
+    public void deleteOrder(OrderId orderId) {
+        // 주문 삭제
+    }
+
+    @Transactional
+    public void cancelOrder(OrderId orderId) {
+        // 주문 취소
+    }
+
+    // ❌ 8개 이상의 public 메서드
+    public OrderResult getOrder(OrderId orderId) { }
+    public List<OrderResult> listOrders() { }
+    public void validateOrder(Order order) { }
+    public Money calculateTotal(Order order) { }
+}
+```
+
+#### ✅ Good - UseCase별 분리
+```java
+// ✅ 하나의 UseCase = 하나의 Service
+@UseCase
+@Transactional
+public class CreateOrderService implements CreateOrderUseCase {
+    private final LoadUserPort loadUserPort;
+    private final SaveOrderPort saveOrderPort;
+
+    // ✅ 단일 execute 메서드 (단일 책임)
+    @Override
+    public CreateOrderResult execute(CreateOrderCommand command) {
+        User user = loadUserPort.loadById(command.userId())
+            .orElseThrow(() -> new UserNotFoundException(command.userId()));
+
+        Order order = Order.create(user.getId(), command.items());
+        Order savedOrder = saveOrderPort.save(order);
+
+        return CreateOrderResult.from(savedOrder);
+    }
+}
+
+// ✅ 별도 UseCase로 분리
+@UseCase
+@Transactional
+public class UpdateOrderService implements UpdateOrderUseCase {
+
+    @Override
+    public OrderResult execute(UpdateOrderCommand command) {
+        // 주문 수정 로직만
+    }
+}
+
+// ✅ 조회 전용 UseCase (readOnly = true)
+@UseCase
+@Transactional(readOnly = true)
+public class GetOrderService implements GetOrderUseCase {
+
+    @Override
+    public GetOrderResult execute(GetOrderQuery query) {
+        // 조회 로직만
+    }
+}
+```
+
+**여러 @Transactional 메서드의 문제점:**
+- 각 트랜잭션은 독립적인 비즈니스 유스케이스
+- 하나의 Service에 여러 트랜잭션 = 여러 책임
+- UseCase는 단일 트랜잭션 경계를 가져야 함
+- 예외: Query 메서드들 (`findAll`, `count` 등)은 허용
+
+**권장 패턴:**
+- 1 UseCase = 1 Service Class = 1 execute 메서드
+- CQRS 패턴: Command/Query 분리
+- 복잡한 로직은 Domain Service로 위임
+
+---
+
+### 3. Port 정의
 
 #### ✅ Input Port (UseCase)
 ```java
@@ -787,6 +1111,191 @@ public class OrderEntity {
 }
 ```
 
+#### Long FK 전략 (Foreign Key Strategy)
+
+**왜 JPA 관계 어노테이션을 금지하는가?**
+
+JPA 관계 어노테이션은 여러 문제를 야기하므로 **절대 사용 금지**합니다:
+
+| 문제점 | 설명 | 영향 |
+|--------|------|------|
+| **Law of Demeter 위반** | 연관 Entity를 직접 탐색 (`order.getUser().getName()`) | Getter 체이닝 발생, 캡슐화 위반 |
+| **N+1 쿼리 문제** | 연관 Entity 로딩 시 추가 쿼리 발생 | 성능 저하, 예측 불가능한 쿼리 |
+| **양방향 참조 복잡도** | `mappedBy`, cascade, orphanRemoval 관리 | 순환 참조, 예상치 못한 삭제 |
+| **영속성 컨텍스트 의존** | JPA 세션 외부에서 LazyInitializationException | 레이어 경계 침범 |
+| **테스트 어려움** | Entity 그래프 전체를 준비해야 함 | Mock 복잡도 증가 |
+
+**Long FK 전략의 장점:**
+
+1. **Law of Demeter 준수**: Entity 간 직접 참조 없음 → Repository SRP 자연스럽게 달성
+2. **명시적 데이터 로딩**: 필요한 데이터만 Application Layer에서 명시적으로 로드
+3. **성능 예측 가능**: 쿼리가 명확하고 최적화 용이
+4. **테스트 단순화**: Entity를 독립적으로 테스트 가능
+5. **레이어 분리 강화**: Persistence가 Domain 구조를 오염시키지 않음
+
+#### Long FK 사용 패턴
+
+**패턴 1: 1:N 관계 (One-to-Many)**
+
+```java
+// ❌ JPA 관계 어노테이션 사용 (금지!)
+@Entity
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItemEntity> items;  // ❌ 절대 금지!
+}
+
+// ✅ Long FK 전략
+@Entity
+public class OrderEntity {
+    @Id
+    private Long id;
+    // OrderItem은 별도 조회 (Application Layer에서 처리)
+}
+
+@Entity
+public class OrderItemEntity {
+    @Id
+    private Long id;
+
+    // ✅ Long FK로만 관계 표현
+    @Column(nullable = false)
+    private Long orderId;  // Order와의 관계
+}
+
+// ✅ Application Layer에서 명시적 조합
+@UseCase
+@Transactional(readOnly = true)
+public class GetOrderWithItemsService {
+    private final LoadOrderPort loadOrderPort;
+    private final LoadOrderItemsPort loadOrderItemsPort;
+
+    public OrderWithItemsResult execute(OrderId orderId) {
+        // 1. Order 조회
+        Order order = loadOrderPort.loadById(orderId).orElseThrow();
+
+        // 2. OrderItem 조회
+        List<OrderItem> items = loadOrderItemsPort.loadByOrderId(orderId);
+
+        // 3. 조합
+        return OrderWithItemsResult.of(order, items);
+    }
+}
+```
+
+**패턴 2: N:1 관계 (Many-to-One)**
+
+```java
+// ❌ JPA 관계 어노테이션 사용 (금지!)
+@Entity
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private UserEntity user;  // ❌ 절대 금지!
+}
+
+// ✅ Long FK 전략
+@Entity
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    // ✅ Long FK로만 관계 표현
+    @Column(nullable = false)
+    private Long userId;
+}
+
+// ✅ Application Layer에서 명시적 로드
+@UseCase
+@Transactional(readOnly = true)
+public class GetOrderWithUserService {
+    private final LoadOrderPort loadOrderPort;
+    private final LoadUserPort loadUserPort;
+
+    public OrderWithUserResult execute(OrderId orderId) {
+        // 1. Order 조회
+        Order order = loadOrderPort.loadById(orderId).orElseThrow();
+
+        // 2. User 조회 (필요한 경우만)
+        User user = loadUserPort.loadById(order.getUserId()).orElseThrow();
+
+        // 3. 조합
+        return OrderWithUserResult.of(order, user);
+    }
+}
+```
+
+**패턴 3: N:M 관계 (Many-to-Many)**
+
+```java
+// ❌ JPA 관계 어노테이션 사용 (금지!)
+@Entity
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    @ManyToMany
+    @JoinTable(name = "order_products")
+    private List<ProductEntity> products;  // ❌ 절대 금지!
+}
+
+// ✅ Long FK 전략 + 명시적 중간 테이블
+@Entity
+@Table(name = "order_products")
+public class OrderProductEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // ✅ Long FK로만 관계 표현
+    @Column(nullable = false)
+    private Long orderId;
+
+    @Column(nullable = false)
+    private Long productId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+}
+
+// ✅ Application Layer에서 명시적 조합
+@UseCase
+@Transactional(readOnly = true)
+public class GetOrderWithProductsService {
+    private final LoadOrderPort loadOrderPort;
+    private final LoadOrderProductsPort loadOrderProductsPort;
+    private final LoadProductPort loadProductPort;
+
+    public OrderWithProductsResult execute(OrderId orderId) {
+        // 1. Order 조회
+        Order order = loadOrderPort.loadById(orderId).orElseThrow();
+
+        // 2. OrderProduct (중간 테이블) 조회
+        List<OrderProduct> orderProducts = loadOrderProductsPort.loadByOrderId(orderId);
+
+        // 3. Product 조회
+        List<ProductId> productIds = orderProducts.stream()
+            .map(OrderProduct::getProductId)
+            .toList();
+        List<Product> products = loadProductPort.loadByIds(productIds);
+
+        // 4. 조합
+        return OrderWithProductsResult.of(order, orderProducts, products);
+    }
+}
+```
+
+**핵심 원칙:**
+- JPA 연관관계 어노테이션 **절대 사용 금지**
+- Entity 간 참조는 **Long FK 필드**로만 표현
+- 데이터 조합은 **Application Layer**에서 명시적으로 처리
+- Repository는 **단일 Entity**만 담당 (SRP 준수)
+
 ### 2. Entity ↔ Domain 매핑
 
 #### ✅ Mapper 클래스 사용
@@ -915,6 +1424,167 @@ public class OrderPersistenceAdapter implements LoadOrderPort {
     }
 }
 ```
+
+### 6. Single Responsibility Principle (SRP) for Repositories
+
+Repository는 **단일 Entity**에만 집중해야 하며, 여러 Entity에 의존하는 것은 여러 책임을 가진 것으로 간주됩니다.
+
+#### SRP 원칙 (Repository Layer)
+
+| 원칙 | 설명 | 검증 방법 |
+|------|------|----------|
+| 단일 Entity 의존 | Repository는 하나의 Entity만 다뤄야 함 | ArchUnit 테스트 |
+| Entity 필드 개수 | Entity 타입 필드 ≤ 1개 | 정적 분석 |
+
+**검증 방법:**
+- ArchUnit 테스트: `SingleResponsibilityTest.java`
+- `haveSingleEntityDependency()` 조건 검사
+
+#### ❌ Bad - 여러 Entity 의존 (여러 책임)
+
+```java
+// ❌ 여러 Entity를 필드로 가진 Repository
+@Component
+public class OrderPersistenceAdapter implements SaveOrderPort, LoadOrderPort {
+
+    private final OrderJpaRepository orderRepository;
+
+    // ❌ 여러 Entity Repository 의존
+    private final UserJpaRepository userRepository;
+    private final ProductJpaRepository productRepository;
+    private final PaymentJpaRepository paymentRepository;
+
+    private final OrderEntityMapper orderMapper;
+    private final UserEntityMapper userMapper;
+    private final ProductEntityMapper productMapper;
+
+    @Override
+    public Order save(Order order) {
+        // ❌ 여러 Entity를 함께 다룸
+        UserEntity user = userRepository.findById(order.getUserId().value()).orElseThrow();
+        ProductEntity product = productRepository.findById(order.getProductId().value()).orElseThrow();
+        PaymentEntity payment = paymentRepository.findById(order.getPaymentId().value()).orElseThrow();
+
+        // Order 저장 로직
+        OrderEntity orderEntity = orderMapper.toEntity(order);
+        return orderMapper.toDomain(orderRepository.save(orderEntity));
+    }
+}
+```
+
+**문제점:**
+- 하나의 Repository가 Order, User, Product, Payment Entity를 모두 다룸
+- 여러 Entity 의존 = 여러 데이터 책임
+- SRP 위반: Repository가 단일 Entity 관리 책임을 초과
+
+#### ✅ Good - 단일 Entity만 관리
+
+```java
+// ✅ Order Entity만 담당
+@Component
+public class OrderPersistenceAdapter implements SaveOrderPort, LoadOrderPort {
+
+    private final OrderJpaRepository orderRepository;
+    private final OrderEntityMapper orderMapper;
+
+    public OrderPersistenceAdapter(
+        OrderJpaRepository orderRepository,
+        OrderEntityMapper orderMapper
+    ) {
+        this.orderRepository = orderRepository;
+        this.orderMapper = orderMapper;
+    }
+
+    @Override
+    public Order save(Order order) {
+        // ✅ Order Entity만 다룸
+        OrderEntity orderEntity = orderMapper.toEntity(order);
+        OrderEntity savedEntity = orderRepository.save(orderEntity);
+        return orderMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<Order> loadById(OrderId orderId) {
+        // ✅ Order Entity만 조회
+        return orderRepository.findById(orderId.value())
+            .map(orderMapper::toDomain);
+    }
+}
+
+// ✅ User Entity는 별도 Adapter
+@Component
+public class UserPersistenceAdapter implements LoadUserPort {
+
+    private final UserJpaRepository userRepository;
+    private final UserEntityMapper userMapper;
+
+    @Override
+    public Optional<User> loadById(UserId userId) {
+        return userRepository.findById(userId.value())
+            .map(userMapper::toDomain);
+    }
+}
+
+// ✅ Product Entity는 별도 Adapter
+@Component
+public class ProductPersistenceAdapter implements LoadProductPort {
+
+    private final ProductJpaRepository productRepository;
+    private final ProductEntityMapper productMapper;
+
+    @Override
+    public Optional<Product> loadById(ProductId productId) {
+        return productRepository.findById(productId.value())
+            .map(productMapper::toDomain);
+    }
+}
+```
+
+#### Long FK 전략과 SRP의 관계
+
+**Long FK 전략**을 사용하면 Repository SRP가 자연스럽게 지켜집니다:
+
+```java
+// ✅ Long FK 사용 → 단일 Entity만 의존
+@Entity
+@Table(name = "orders")
+public class OrderEntity {
+    @Id
+    private Long id;
+
+    // ✅ Long FK만 사용 (JPA 관계 어노테이션 없음)
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
+    private Long productId;
+
+    @Column(nullable = false)
+    private Long paymentId;
+}
+
+// ✅ Repository는 OrderEntity만 다룸
+@Component
+public class OrderPersistenceAdapter implements SaveOrderPort {
+    private final OrderJpaRepository orderRepository;
+
+    @Override
+    public Order save(Order order) {
+        // ✅ OrderEntity만 저장 (관련 Entity는 Application Layer에서 처리)
+        OrderEntity entity = OrderEntity.create(
+            order.getUserId().value(),  // Long FK
+            order.getProductId().value(),  // Long FK
+            order.getPaymentId().value()   // Long FK
+        );
+        return orderMapper.toDomain(orderRepository.save(entity));
+    }
+}
+```
+
+**분리 기준:**
+- 1 Repository = 1 Entity
+- 다른 Entity 정보가 필요하면 Application Layer에서 여러 Port 조합
+- Repository는 순수 데이터 작업만 (비즈니스 로직 없음)
 
 ---
 
@@ -1073,6 +1743,129 @@ public record ErrorResponse(
     }
 }
 ```
+
+### 4. Single Responsibility Principle (SRP) for Controllers
+
+Controller는 **단일 리소스**에 집중하며, 엔드포인트 개수를 제한해야 합니다.
+
+#### SRP 기준 (Controller Layer)
+
+| 메트릭 | 제한 | 근거 |
+|--------|------|------|
+| Public 엔드포인트 수 | ≤ 10개 | 많은 엔드포인트 = 여러 리소스 혼재 |
+| 의존 UseCase 수 | ≤ 10개 | 여러 UseCase = 여러 책임 |
+
+**검증 방법:**
+- ArchUnit 테스트: `SingleResponsibilityTest.java`
+
+#### ❌ Bad - 여러 리소스를 하나의 Controller에서 처리
+
+```java
+// ❌ 너무 많은 엔드포인트 (여러 리소스 혼재)
+@RestController
+@RequestMapping("/api/v1")
+public class ApiController {
+
+    // ❌ Order 관련
+    @PostMapping("/orders")
+    public OrderResponse createOrder(@RequestBody OrderRequest request) { }
+
+    @GetMapping("/orders/{id}")
+    public OrderResponse getOrder(@PathVariable Long id) { }
+
+    @PutMapping("/orders/{id}")
+    public OrderResponse updateOrder(@PathVariable Long id) { }
+
+    @DeleteMapping("/orders/{id}")
+    public void deleteOrder(@PathVariable Long id) { }
+
+    // ❌ User 관련
+    @PostMapping("/users")
+    public UserResponse createUser(@RequestBody UserRequest request) { }
+
+    @GetMapping("/users/{id}")
+    public UserResponse getUser(@PathVariable Long id) { }
+
+    // ❌ Product 관련
+    @PostMapping("/products")
+    public ProductResponse createProduct(@RequestBody ProductRequest request) { }
+
+    @GetMapping("/products/{id}")
+    public ProductResponse getProduct(@PathVariable Long id) { }
+
+    // ❌ Payment 관련
+    @PostMapping("/payments")
+    public PaymentResponse processPayment(@RequestBody PaymentRequest request) { }
+
+    @GetMapping("/payments/{id}")
+    public PaymentResponse getPayment(@PathVariable Long id) { }
+
+    // ❌ Shipping 관련
+    @PostMapping("/shipping")
+    public ShippingResponse createShipping(@RequestBody ShippingRequest request) { }
+
+    @GetMapping("/shipping/{id}")
+    public ShippingResponse getShipping(@PathVariable Long id) { }
+
+    // 총 12개 엔드포인트 (SRP 위반!)
+}
+```
+
+#### ✅ Good - 리소스별 Controller 분리
+
+```java
+// ✅ Order 리소스만 담당
+@RestController
+@RequestMapping("/api/v1/orders")
+public class OrderController {
+
+    private final CreateOrderUseCase createOrderUseCase;
+    private final GetOrderUseCase getOrderUseCase;
+    private final UpdateOrderUseCase updateOrderUseCase;
+    private final DeleteOrderUseCase deleteOrderUseCase;
+    private final ListOrdersUseCase listOrdersUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
+
+    // ✅ Order 관련 엔드포인트만 (6개)
+    @PostMapping
+    public OrderResponse createOrder(@RequestBody CreateOrderRequest request) { }
+
+    @GetMapping("/{id}")
+    public OrderResponse getOrder(@PathVariable Long id) { }
+
+    @GetMapping
+    public List<OrderResponse> listOrders(@RequestParam Map<String, String> params) { }
+
+    @PutMapping("/{id}")
+    public OrderResponse updateOrder(@PathVariable Long id, @RequestBody UpdateOrderRequest request) { }
+
+    @PostMapping("/{id}/cancel")
+    public void cancelOrder(@PathVariable Long id) { }
+
+    @DeleteMapping("/{id}")
+    public void deleteOrder(@PathVariable Long id) { }
+}
+
+// ✅ User 리소스는 별도 Controller
+@RestController
+@RequestMapping("/api/v1/users")
+public class UserController {
+    // User 관련 엔드포인트만
+}
+
+// ✅ Product 리소스는 별도 Controller
+@RestController
+@RequestMapping("/api/v1/products")
+public class ProductController {
+    // Product 관련 엔드포인트만
+}
+```
+
+**리소스별 분리 원칙:**
+- 1 Controller = 1 REST Resource
+- 엔드포인트 수가 10개를 초과하면 리소스를 세분화
+- 예: `OrderController` → `OrderController` + `OrderItemController`
+- CRUD + 커스텀 액션을 포함해도 10개 이하 유지
 
 ---
 
