@@ -443,6 +443,359 @@ public class GetOrderService implements GetOrderUseCase {
 }
 ```
 
+### 2-1. Transaction Boundaries with External Calls (Issue #28)
+
+**원칙: 외부 호출과 트랜잭션 분리**
+
+외부 API 호출은 `@Transactional` 메서드 밖에 배치해야 합니다:
+- S3, SQS, SNS 등 AWS 서비스
+- HTTP/REST API 호출
+- Message Queue 발행
+- 이메일/SMS 발송
+- 외부 결제 게이트웨이
+
+**문제점**: 외부 API 호출(평균 100-500ms)이 트랜잭션 내부에 있으면:
+- DB 커넥션을 장기간 점유 (외부 API 응답 대기 중)
+- 커넥션 풀 고갈 위험 (동시 요청 증가 시)
+- 트랜잭션 타임아웃 가능성
+- 외부 API 장애 시 DB 트랜잭션까지 실패
+
+#### ❌ Bad - 외부 호출이 트랜잭션 내부
+```java
+@Service
+public class UploadSessionService {
+
+    @Transactional
+    public UploadSessionWithUrlResponse createSession(Command command) {
+        // 1. 정책 검증 (메모리 작업)
+        validateUploadPolicy(command);
+
+        // 2. 도메인 객체 생성 (메모리 작업)
+        UploadSession session = UploadSession.create(...);
+
+        // ❌ 3. S3 Presigned URL 발급 (외부 API - 트랜잭션 내부!)
+        //    - 네트워크 I/O로 인한 지연 발생 (100-500ms)
+        //    - DB 커넥션을 불필요하게 점유
+        //    - S3 장애 시 DB 트랜잭션까지 실패
+        PresignedUrlInfo presignedUrlInfo = generatePresignedUrlPort.generate(command);
+
+        // 4. DB 저장 (트랜잭션 필요)
+        UploadSession savedSession = uploadSessionPort.save(session);
+
+        return new UploadSessionWithUrlResponse(savedSession, presignedUrlInfo);
+    }
+}
+```
+
+#### ✅ Good - 외부 호출과 DB 작업 분리
+```java
+@Service
+public class UploadSessionService {
+    private final UploadSessionPersistenceService persistenceService;
+
+    // ✅ @Transactional 제거 - 외부 API 호출 포함
+    public UploadSessionWithUrlResponse createSession(Command command) {
+        // 1. 정책 검증 (메모리 작업)
+        validateUploadPolicy(command);
+
+        // 2. 도메인 객체 생성 (메모리 작업)
+        UploadSession session = UploadSession.create(...);
+
+        // ✅ 3. S3 Presigned URL 발급 (외부 API - 트랜잭션 밖!)
+        //    - DB 커넥션 점유 없음
+        //    - S3 장애와 DB 작업 분리
+        PresignedUrlInfo presignedUrlInfo;
+        try {
+            presignedUrlInfo = generatePresignedUrlPort.generate(command);
+        } catch (Exception e) {
+            throw new PresignedUrlGenerationException(
+                "Failed to generate presigned URL for session: " + session.getSessionId(),
+                e
+            );
+        }
+
+        // ✅ 4. DB 저장 (별도 트랜잭션 - 빠른 커밋)
+        //    - persistenceService 내부에서 @Transactional 적용
+        //    - 외부 API 호출 없이 빠르게 커밋 (10-50ms)
+        UploadSession savedSession = persistenceService.saveSession(session);
+
+        return new UploadSessionWithUrlResponse(savedSession, presignedUrlInfo);
+    }
+}
+
+@Service
+public class UploadSessionPersistenceService {
+
+    // ✅ 외부 API 호출 없는 순수 DB 작업만 포함
+    @Transactional
+    public UploadSession saveSession(UploadSession session) {
+        if (session == null) {
+            throw new IllegalArgumentException("UploadSession must not be null");
+        }
+        return uploadSessionPort.save(session);
+    }
+}
+```
+
+**성능 개선 효과:**
+- Before: 트랜잭션 시간 ~500ms (DB 50ms + S3 400ms + 여유 50ms)
+- After: 트랜잭션 시간 ~50ms (DB 작업만)
+- **DB 커넥션 점유 시간 90% 감소**
+- 동시 100 요청 시 커넥션 풀(10개) 고갈 위험 해소
+
+#### 외부 API 호출 식별 기준
+
+다음 패턴들은 외부 API 호출로 간주하여 `@Transactional` 밖에 배치:
+
+**AWS SDK 호출**
+```java
+s3Client.putObject(...)
+s3Client.generatePresignedUrl(...)
+sqsClient.sendMessage(...)
+snsClient.publish(...)
+```
+
+**HTTP Client 호출**
+```java
+restTemplate.getForObject(...)
+restTemplate.postForEntity(...)
+webClient.get().retrieve()...
+feign Client 호출
+```
+
+**Message Queue 발행**
+```java
+rabbitTemplate.convertAndSend(...)
+kafkaTemplate.send(...)
+```
+
+#### 트랜잭션 분리 전략
+
+**전략 1: 외부 호출 → DB 작업**
+```java
+// 외부 호출이 실패하면 DB 작업 자체를 시작하지 않음
+public Result process(Command cmd) {
+    ExternalResult result = externalApi.call();  // 트랜잭션 밖
+    return persistenceService.save(result);      // 별도 트랜잭션
+}
+```
+
+**전략 2: DB 작업 → 외부 호출 (이벤트 기반)**
+```java
+@Transactional
+public Result process(Command cmd) {
+    Entity entity = repository.save(new Entity());
+    eventPublisher.publishEvent(new EntityCreated(entity.getId()));
+    return Result.success();
+}
+
+// 비동기 이벤트 핸들러 (트랜잭션 밖)
+@EventListener
+public void handleEntityCreated(EntityCreated event) {
+    externalApi.notify(event);  // 실패해도 DB 작업은 완료됨
+}
+```
+
+**전략 3: 보상 트랜잭션 (Saga 패턴)**
+```java
+public Result process(Command cmd) {
+    // 1. 외부 호출 먼저
+    ExternalResult extResult = externalApi.call();
+
+    // 2. DB 저장 (별도 트랜잭션)
+    try {
+        return persistenceService.save(extResult);
+    } catch (Exception e) {
+        // 3. 외부 작업 롤백 (보상)
+        externalApi.rollback(extResult);
+        throw e;
+    }
+}
+```
+
+#### 체크리스트
+- [ ] `@Transactional` 메서드에 S3/SQS/SNS 호출 없음
+- [ ] `@Transactional` 메서드에 HTTP/REST 호출 없음
+- [ ] `@Transactional` 메서드에 Message Queue 발행 없음
+- [ ] 외부 API 실패와 DB 트랜잭션이 독립적으로 처리됨
+- [ ] DB 작업만 포함한 메서드는 별도 Service로 분리
+- [ ] 트랜잭션 시간이 100ms 이내 (외부 호출 제외)
+
+**검증 방법:**
+- ArchUnit 테스트: `TransactionArchitectureTest.java`
+- Pre-commit Hook: `hooks/validators/transaction-boundary-validator.sh`
+- 참고: [Issue #28](https://github.com/ryu-qqq/claude-spring-standards/issues/28)
+
+### 2-2. Spring Proxy Limitations (Issue #27)
+
+**원칙: Spring AOP 프록시 한계 이해**
+
+Spring은 AOP 프록시를 통해 `@Transactional`을 구현합니다:
+- **JDK Dynamic Proxy**: 인터페이스 기반 (인터페이스 구현체)
+- **CGLIB Proxy**: 서브클래스 기반 (구체 클래스)
+
+**프록시가 작동하지 않는 경우:**
+1. Private 메서드 (서브클래스에서 접근 불가)
+2. Final 메서드 (오버라이드 불가)
+3. Final 클래스 (상속 불가)
+4. 같은 클래스 내부 메서드 호출 (`this.method()`)
+
+#### 프록시 우회 시나리오
+
+**시나리오 1: Private 메서드에 @Transactional**
+```java
+// ❌ 작동하지 않음
+@Service
+public class OrderService {
+
+    public void processOrder(OrderCommand cmd) {
+        // 이 호출은 프록시를 거치지 않음
+        this.saveOrder(cmd);  // @Transactional 무시됨!
+    }
+
+    @Transactional  // ❌ Private 메서드는 프록시 불가
+    private void saveOrder(OrderCommand cmd) {
+        // 트랜잭션이 적용되지 않음!
+        orderRepository.save(...);
+    }
+}
+```
+
+**시나리오 2: 내부 메서드 호출**
+```java
+// ❌ 작동하지 않음
+@Service
+public class OrderService {
+
+    @Transactional
+    public void processOrder(OrderCommand cmd) {
+        try {
+            orderRepository.save(...);
+        } catch (Exception e) {
+            // ❌ 내부 호출 - 프록시 우회!
+            this.handleFailure(cmd.getId(), e.getMessage());
+            throw e;
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private void handleFailure(Long orderId, String reason) {
+        // ❌ REQUIRES_NEW가 작동하지 않음
+        // 새 트랜잭션이 생성되지 않고 상위 트랜잭션 사용
+        failureLogRepository.save(...);
+    }
+}
+```
+
+#### ✅ Good - 별도 빈으로 분리
+
+```java
+// ✅ 올바른 패턴: 별도 서비스 빈
+@Service
+public class OrderService {
+    private final OrderPersistenceService persistenceService;
+    private final OrderFailureService failureService;
+
+    public OrderService(
+        OrderPersistenceService persistenceService,
+        OrderFailureService failureService
+    ) {
+        this.persistenceService = persistenceService;
+        this.failureService = failureService;
+    }
+
+    // @Transactional 없음 - 외부 API 호출 가능
+    public void processOrder(OrderCommand cmd) {
+        try {
+            // ✅ 별도 빈 호출 - 프록시 작동
+            persistenceService.saveOrder(cmd);
+        } catch (Exception e) {
+            // ✅ 별도 빈 호출 - REQUIRES_NEW 정상 작동
+            failureService.logFailure(cmd.getId(), e.getMessage());
+            throw e;
+        }
+    }
+}
+
+@Service
+public class OrderPersistenceService {
+
+    // ✅ Public 메서드 + 별도 빈 = 프록시 작동
+    @Transactional
+    public void saveOrder(OrderCommand cmd) {
+        orderRepository.save(...);
+    }
+}
+
+@Service
+public class OrderFailureService {
+
+    // ✅ REQUIRES_NEW가 정상 작동
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logFailure(Long orderId, String reason) {
+        failureLogRepository.save(...);
+    }
+}
+```
+
+#### 프록시 작동 원리
+
+```
+// 외부에서 호출 시 (프록시를 통과)
+orderService.processOrder(cmd)
+    ↓
+[Spring Proxy Intercepts]
+    ↓
+@Transactional Begin
+    ↓
+OrderService.processOrder()  // 실제 메서드 실행
+    ↓
+@Transactional Commit/Rollback
+
+// 내부에서 호출 시 (프록시 우회)
+OrderService.processOrder()
+    ↓
+this.saveOrder()  // 직접 호출 (프록시 없음)
+    ↓
+OrderService.saveOrder()  // @Transactional 무시됨!
+```
+
+#### Final 제한사항
+
+```java
+// ❌ Final 클래스 - CGLIB 프록시 불가
+@Service
+public final class OrderService {  // ❌ final 제거 필요
+
+    @Transactional
+    public void processOrder(OrderCommand cmd) {
+        // 트랜잭션이 작동하지 않음!
+    }
+}
+
+// ❌ Final 메서드 - 오버라이드 불가
+@Service
+public class OrderService {
+
+    @Transactional
+    public final void processOrder(OrderCommand cmd) {  // ❌ final 제거 필요
+        // 트랜잭션이 작동하지 않음!
+    }
+}
+```
+
+#### 체크리스트
+- [ ] `@Transactional`은 public 메서드에만 사용
+- [ ] 같은 클래스 내부에서 `@Transactional` 메서드를 호출하지 않음
+- [ ] 다른 트랜잭션 전파 속성이 필요하면 별도 빈으로 분리
+- [ ] 보상 트랜잭션은 별도 서비스 클래스로 구현
+- [ ] `@Transactional` 메서드와 클래스에 final 사용하지 않음
+
+**검증 방법:**
+- ArchUnit 테스트: `TransactionArchitectureTest.java`
+- Pre-commit Hook: `hooks/validators/transaction-proxy-validator.sh`
+- 참고: [Issue #27](https://github.com/ryu-qqq/claude-spring-standards/issues/27)
+
 ### 3. UseCase DTO
 
 #### ✅ Command/Query/Result 패턴
