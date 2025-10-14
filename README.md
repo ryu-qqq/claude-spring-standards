@@ -76,13 +76,19 @@ spring-hexagonal-template/
 │               ├── Application.java
 │               └── config/           # Spring 설정
 │
-├── .claude/                          # Claude Code 설정
+├── .claude/                          # Claude Code 설정 (최적화됨 ⚡)
 │   ├── README.md                     # Claude Code 가이드
+│   ├── CLAUDE.md                     # 중앙 설정 파일 (문서 참조)
 │   ├── commands/                     # 슬래시 커맨드
-│   │   └── gemini-review.md         # Gemini 리뷰 분석
-│   ├── hooks/                        # 동적 훅
-│   │   ├── user-prompt-submit.sh    # 코드 생성 전 규칙 주입
-│   │   └── after-tool-use.sh        # 코드 생성 후 검증
+│   │   ├── gemini-review.md         # Gemini 리뷰 분석
+│   │   └── jira-task.md             # Jira 태스크 분석
+│   ├── hooks/                        # 동적 훅 (2025.01 최적화)
+│   │   ├── README.md                # 동적 훅 상세 가이드
+│   │   └── scripts/
+│   │       ├── init-session.sh      # 세션 시작 (요약본 로딩)
+│   │       ├── preserve-rules.sh    # 컨텍스트 보존
+│   │       ├── user-prompt-submit.sh # 코드 생성 전 규칙 주입
+│   │       └── after-tool-use.sh    # 코드 생성 후 검증
 │   └── agents/                       # 전문 에이전트
 │       └── prompt-engineer.md       # 프롬프트 최적화 전문가
 │
@@ -402,26 +408,46 @@ management:
 
 ## 📚 문서
 
-### 핵심 문서
-- **[코딩 표준 (96개 규칙)](docs/CODING_STANDARDS.md)** - Domain, Application, Adapter 계층별 상세 규칙 (SRP/Law of Demeter 강화)
-- **[버전 관리 가이드](docs/VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog 사용법
-- **[동적 훅 가이드](docs/DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 동적 훅 시스템
-- **[Gemini 리뷰 분석 가이드](docs/GEMINI_REVIEW_GUIDE.md)** - AI 코드 리뷰 체계적 분석 및 리팩토링 전략
+### 핵심 문서 (요약본 우선)
 
-### Claude Code 설정
-- **[Claude Code 가이드](.claude/README.md)** - 프로젝트별 Claude Code 설정 및 사용법
-- **[슬래시 커맨드](.claude/commands/)** - Gemini 리뷰 분석 등 자동화 커맨드
-- **[동적 훅](.claude/hooks/)** - 코드 생성 시 자동 규칙 주입 및 검증
-- **[전문 에이전트](.claude/agents/)** - 프롬프트 최적화 등 특화 에이전트
+> ⚡ **2025년 1월 최적화 완료**: 요약본 문서 시스템 도입으로 빠른 참조 가능
+
+**📚 요약본 (Quick Reference - 경량)**:
+- **[코딩 표준 요약](docs/CODING_STANDARDS_SUMMARY.md)** - 134줄, 10가지 핵심 규칙
+- **[엔터프라이즈 표준 요약](docs/ENTERPRISE_SPRING_STANDARDS_SUMMARY.md)** - 186줄, 아키텍처 패턴
+
+**📖 전체 문서 (Complete Reference - 상세)**:
+- **[코딩 표준 전체](docs/CODING_STANDARDS.md)** - 2,676줄, 87개 규칙 (SRP/Law of Demeter 강화)
+- **[엔터프라이즈 표준 전체](docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md)** - 3,361줄, 96개 패턴
+
+**🎯 특화 가이드**:
+- **[DDD Aggregate 마이그레이션](docs/DDD_AGGREGATE_MIGRATION_GUIDE.md)** - DDD 패턴 적용 가이드
+- **[DTO 패턴 가이드](docs/DTO_PATTERNS_GUIDE.md)** - Request/Response 변환 패턴
+- **[예외 처리 가이드](docs/EXCEPTION_HANDLING_GUIDE.md)** - Domain Exception 전략
+- **[Java Record 가이드](docs/JAVA_RECORD_GUIDE.md)** - Record 활용법
+- **[Gemini 리뷰 분석 가이드](docs/GEMINI_REVIEW_GUIDE.md)** - AI 코드 리뷰 체계적 분석
+- **[버전 관리 가이드](docs/VERSION_MANAGEMENT_GUIDE.md)** - Gradle Version Catalog
+- **[동적 훅 가이드](docs/DYNAMIC_HOOKS_GUIDE.md)** - Claude Code 훅 시스템
+- **[설정 요약](docs/SETUP_SUMMARY.md)** - 프로젝트 설정 가이드
+
+### Claude Code 설정 (최적화됨 ⚡)
+
+> 🚀 **성능 개선**: Hook 인라인 텍스트 94% 감소, 토큰 사용량 30-50% 절감
+
+- **[Claude Code 가이드](.claude/README.md)** - 프로젝트별 설정 및 최적화 시스템
+- **[중앙 설정 파일](.claude/CLAUDE.md)** - 문서 참조 통합
+- **[슬래시 커맨드](.claude/commands/)** - Gemini 리뷰, Jira 태스크 분석
+- **[동적 훅](.claude/hooks/README.md)** - 코드 생성 시 자동 규칙 주입 (최적화)
+  - `init-session.sh`: 요약본 로딩 (세션 시작)
+  - `preserve-rules.sh`: 핵심 규칙 보존 (컨텍스트 압박 시)
+  - `user-prompt-submit.sh`: 모듈별 가이드라인 주입 (15줄로 경량화)
+  - `after-tool-use.sh`: 실시간 검증
+- **[전문 에이전트](.claude/agents/)** - 프롬프트 최적화 전문가
 
 ### 품질 도구 가이드
 - **[Checkstyle 설정 가이드](config/checkstyle/README.md)** - 코드 스타일 검증 규칙
 - **[PMD 설정 가이드](config/pmd/README.md)** - Law of Demeter, GodClass 등 정적 분석
 - **[SpotBugs 설정 가이드](config/spotbugs/README.md)** - 정적 분석 및 버그 탐지
-
-### 설정 및 프롬프트
-- **[Spring 표준 프롬프트](docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md)** - AI 코드 생성 표준
-- **[설정 요약](docs/SETUP_SUMMARY.md)** - 프로젝트 설정 가이드
 
 ### 예외 관리 시스템
 
