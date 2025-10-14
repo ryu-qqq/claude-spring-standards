@@ -365,6 +365,15 @@ git commit -m "feat: 주문 생성 기능 구현"
 
 ---
 
+### 3. 🔗 Jira 통합
+
+GitHub 이슈를 자동으로 Jira Task로 동기화할 수 있습니다:
+- **설정 가이드**: [docs/JIRA_INTEGRATION.md](./docs/JIRA_INTEGRATION.md)
+- **기능**: 이슈 생성/수정/닫기 자동 동기화
+- **설정 시간**: 약 5분
+
+---
+
 ## ⚙️ 설정 파일
 
 ### application.yml (bootstrap-web-api)
