@@ -6,22 +6,24 @@
 
 ## 📚 필수 표준 문서 (코드 작성 전 반드시 참조)
 
-### 🎯 핵심 표준 (요약본 - 경량화)
+### 🎯 핵심 표준 (요약본 - 자동 로드)
 
 **시작 시 먼저 읽을 문서:**
 @../docs/CODING_STANDARDS_SUMMARY.md
 @../docs/ENTERPRISE_SPRING_STANDARDS_SUMMARY.md
 
+### 📖 상세 가이드 (필요 시 참조 - 링크만)
+
 **아키텍처 및 설계 패턴:**
-@../docs/DDD_AGGREGATE_MIGRATION_GUIDE.md
-@../docs/DTO_PATTERNS_GUIDE.md
+- [DDD Aggregate Migration Guide](../docs/DDD_AGGREGATE_MIGRATION_GUIDE.md)
+- [DTO Patterns Guide](../docs/DTO_PATTERNS_GUIDE.md)
 
 **구현 가이드:**
-@../docs/EXCEPTION_HANDLING_GUIDE.md
-@../docs/JAVA_RECORD_GUIDE.md
+- [Exception Handling Guide](../docs/EXCEPTION_HANDLING_GUIDE.md)
+- [Java Record Guide](../docs/JAVA_RECORD_GUIDE.md)
 
 **코드 리뷰:**
-@../docs/GEMINI_REVIEW_GUIDE.md
+- [Gemini Review Guide](../docs/GEMINI_REVIEW_GUIDE.md)
 
 ---
 
@@ -89,17 +91,17 @@
 
 ---
 
-## 📖 상세 문서 (필요 시 참조)
+## 📖 전체 문서 (상세 규칙 - 링크만)
 
 ### 전체 버전 코딩 표준 (상세 규칙)
-- @../docs/CODING_STANDARDS.md (2676줄 - 87개 규칙)
-- @../docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md (3361줄 - 엔터프라이즈 패턴)
+- [CODING_STANDARDS.md](../docs/CODING_STANDARDS.md) - 2,676줄, 87개 규칙
+- [ENTERPRISE_SPRING_STANDARDS_PROMPT.md](../docs/ENTERPRISE_SPRING_STANDARDS_PROMPT.md) - 3,361줄, 엔터프라이즈 패턴
 
 ### 프로젝트 설정 및 관리
-- @../docs/CUSTOMIZATION_GUIDE.md (프로젝트 커스터마이징)
-- @../docs/SETUP_SUMMARY.md (초기 설정 가이드)
-- @../docs/VERSION_MANAGEMENT_GUIDE.md (버전 관리 전략)
-- @../docs/DYNAMIC_HOOKS_GUIDE.md (Claude Code 훅 시스템)
+- [CUSTOMIZATION_GUIDE.md](../docs/CUSTOMIZATION_GUIDE.md) - 프로젝트 커스터마이징
+- [SETUP_SUMMARY.md](../docs/SETUP_SUMMARY.md) - 초기 설정 가이드
+- [VERSION_MANAGEMENT_GUIDE.md](../docs/VERSION_MANAGEMENT_GUIDE.md) - 버전 관리 전략
+- [DYNAMIC_HOOKS_GUIDE.md](../docs/DYNAMIC_HOOKS_GUIDE.md) - Claude Code 훅 시스템
 
 ---
 
