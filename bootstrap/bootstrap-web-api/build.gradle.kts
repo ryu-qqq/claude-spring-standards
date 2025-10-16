@@ -26,12 +26,12 @@ dependencies {
     // Adapters
     // ========================================
     // Inbound
-    implementation(project(":adapter:adapter-in-admin-web"))
+    implementation(project(":adapter:in:rest-in-admin-servlet"))
 
     // Outbound
-    implementation(project(":adapter:adapter-out-persistence-jpa"))
-    implementation(project(":adapter:adapter-out-aws-s3"))
-    implementation(project(":adapter:adapter-out-aws-sqs"))
+    implementation(project(":adapter:out:persistence-jpa"))
+    implementation(project(":adapter:out:client-aws-s3"))
+    implementation(project(":adapter:out:client-aws-sqs"))
 
     // ========================================
     // Spring Boot Starters

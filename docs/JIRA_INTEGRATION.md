@@ -4,20 +4,6 @@
 
 GitHub에서 이슈가 생성되면 자동으로 Jira에 Task가 생성되는 워크플로우입니다.
 
-## 두 가지 구현 방식
-
-### 1. Atlassian Actions 사용 (권장)
-- **파일**: `.github/workflows/sync-issue-to-jira.yml`
-- **장점**: 검증된 공식 Actions 사용, 안정적
-- **단점**: 외부 Actions에 의존
-
-### 2. REST API 직접 사용 (Simple)
-- **파일**: `.github/workflows/sync-issue-to-jira-simple.yml`
-- **장점**: 외부 의존성 없음, 커스터마이징 용이
-- **단점**: 에러 핸들링 직접 구현 필요
-
-> 💡 **처음 사용하시는 경우 Atlassian Actions 버전을 권장합니다.**
-
 ## 동작 방식
 
 - **GitHub 이슈 생성** → Jira Task 자동 생성
@@ -60,19 +46,7 @@ GitHub 저장소 설정에서 다음 Secrets를 추가해야 합니다:
 
 ## 빠른 시작 (5분 설정)
 
-### 1단계: 워크플로우 선택
-
-사용하지 않을 워크플로우 파일을 삭제하세요:
-
-```bash
-# Atlassian Actions 버전 사용 시 (권장)
-rm .github/workflows/sync-issue-to-jira-simple.yml
-
-# 또는 Simple 버전 사용 시
-rm .github/workflows/sync-issue-to-jira.yml
-```
-
-### 2단계: GitHub Secrets 설정
+### 1단계: GitHub Secrets 설정
 
 GitHub CLI 사용:
 ```bash
@@ -86,36 +60,12 @@ gh secret set JIRA_PROJECT_KEY -b "FFL"
 1. 저장소 → `Settings` → `Secrets and variables` → `Actions`
 2. `New repository secret` 클릭하여 4개 Secret 추가
 
-### 3단계: 테스트
+### 2단계: 테스트
 
 1. GitHub에서 테스트 이슈 생성
 2. `Actions` 탭에서 워크플로우 실행 확인
 3. Jira에서 Task가 생성되었는지 확인
 4. 이슈에 Jira 링크 코멘트가 자동으로 추가되었는지 확인
-
-## 설정 방법 (상세)
-
-### 1. GitHub에서 Secrets 추가
-
-```bash
-# GitHub CLI를 사용하는 경우
-gh secret set JIRA_BASE_URL -b "https://your-domain.atlassian.net"
-gh secret set JIRA_USER_EMAIL -b "your-email@company.com"
-gh secret set JIRA_API_TOKEN -b "YOUR_API_TOKEN"
-gh secret set JIRA_PROJECT_KEY -b "FFL"
-```
-
-또는 웹 UI에서:
-1. GitHub 저장소 → `Settings`
-2. `Secrets and variables` → `Actions`
-3. `New repository secret` 클릭
-4. 위 표의 각 Secret을 추가
-
-### 2. 워크플로우 동작 확인
-
-1. GitHub에서 테스트 이슈 생성
-2. `Actions` 탭에서 워크플로우 실행 확인
-3. Jira에서 Task가 생성되었는지 확인
 
 ## 워크플로우 커스터마이징
 

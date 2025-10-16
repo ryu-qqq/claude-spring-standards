@@ -1,8 +1,9 @@
 // ========================================
-// Adapter-In: Admin Web (REST API)
+// Adapter-Out: Client AWS SQS
 // ========================================
-// Inbound adapter for admin REST API
-// Handles HTTP requests and responses
+// Outbound adapter for AWS SQS messaging client
+// Implements messaging ports from domain layer
+// Technology: AWS SDK v2 for SQS
 // NO Lombok allowed
 // ========================================
 
@@ -14,30 +15,26 @@ dependencies {
     // ========================================
     // Core Dependencies
     // ========================================
-    // Application layer (use cases)
     api(project(":application"))
     api(project(":domain"))
 
-    // Spring Web
-    implementation(libs.spring.boot.starter.web)
-    implementation(libs.spring.boot.starter.validation)
+    // AWS SDK v2
+    implementation(platform(libs.aws.bom))
+    implementation(libs.aws.sqs)
 
-    // Spring Security (Optional)
-    implementation(libs.spring.boot.starter.security)
+    // Spring Context & Messaging
+    implementation(libs.spring.context)
+    implementation(libs.spring.messaging)
 
     // JSON Processing
     implementation(libs.jackson.databind)
-    implementation(libs.jackson.datatype.jsr310)
-
-    // API Documentation (Optional)
-    implementation(libs.springdoc.openapi)
 
     // ========================================
     // Test Dependencies
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.spring.security.test)
-    testImplementation(libs.rest.assured)
+    testImplementation(libs.testcontainers.localstack)
+    testImplementation(libs.testcontainers.junit)
 }
 
 // ========================================

@@ -1,8 +1,9 @@
 // ========================================
-// Adapter-Out: Persistence (JPA + QueryDSL)
+// Adapter-Out: Persistence JPA
 // ========================================
-// Outbound adapter for database operations
-// Implements repository ports from application layer
+// Outbound adapter for database operations (JPA + QueryDSL)
+// Implements repository ports from domain layer
+// Technology: Spring Data JPA + QueryDSL + PostgreSQL
 // NO Lombok allowed
 // ========================================
 

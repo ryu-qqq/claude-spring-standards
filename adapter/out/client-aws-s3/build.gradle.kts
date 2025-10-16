@@ -1,8 +1,9 @@
 // ========================================
-// Adapter-Out: AWS S3
+// Adapter-Out: Client AWS S3
 // ========================================
-// Outbound adapter for AWS S3 file storage
-// Implements file storage ports from application layer
+// Outbound adapter for AWS S3 file storage client
+// Implements file storage ports from domain layer
+// Technology: AWS SDK v2 for S3
 // NO Lombok allowed
 // ========================================
 

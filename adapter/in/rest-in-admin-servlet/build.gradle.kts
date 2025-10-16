@@ -1,8 +1,9 @@
 // ========================================
-// Adapter-Out: AWS SQS
+// Adapter-In: REST Admin Servlet
 // ========================================
-// Outbound adapter for AWS SQS messaging
-// Implements messaging ports from application layer
+// Inbound adapter for admin REST API (Servlet-based)
+// Handles HTTP requests and responses for admin operations
+// Middleware: Spring MVC (Servlet)
 // NO Lombok allowed
 // ========================================
 
@@ -14,26 +15,30 @@ dependencies {
     // ========================================
     // Core Dependencies
     // ========================================
+    // Application layer (use cases)
     api(project(":application"))
     api(project(":domain"))
 
-    // AWS SDK v2
-    implementation(platform(libs.aws.bom))
-    implementation(libs.aws.sqs)
+    // Spring Web
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.validation)
 
-    // Spring Context & Messaging
-    implementation(libs.spring.context)
-    implementation(libs.spring.messaging)
+    // Spring Security (Optional)
+    implementation(libs.spring.boot.starter.security)
 
     // JSON Processing
     implementation(libs.jackson.databind)
+    implementation(libs.jackson.datatype.jsr310)
+
+    // API Documentation (Optional)
+    implementation(libs.springdoc.openapi)
 
     // ========================================
     // Test Dependencies
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.testcontainers.localstack)
-    testImplementation(libs.testcontainers.junit)
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.rest.assured)
 }
 
 // ========================================
