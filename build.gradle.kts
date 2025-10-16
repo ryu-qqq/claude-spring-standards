@@ -7,6 +7,7 @@ plugins {
     id("checkstyle")
     alias(libs.plugins.spotbugs) apply false
     id("pmd")
+    alias(libs.plugins.spotless) apply false
 }
 
 // ========================================
@@ -29,6 +30,7 @@ subprojects {
     apply(plugin = "checkstyle")
     apply(plugin = "com.github.spotbugs")
     apply(plugin = "pmd")
+    apply(plugin = "com.diffplug.spotless")
 
     java {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -113,6 +115,27 @@ subprojects {
     }
 
     // ========================================
+    // Spotless Configuration
+    // ========================================
+    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        java {
+            // Google Java Format (AOSP style - 4 spaces)
+            // Note: googleJavaFormat handles import order and unused imports internally
+            googleJavaFormat("1.22.0").aosp().reflowLongStrings()
+
+            // Target files
+            target("src/*/java/**/*.java")
+            targetExclude("**/generated/**", "**/Q*.java")
+        }
+
+        format("misc") {
+            target("*.md", ".gitignore", ".gitattributes", "*.yaml", "*.yml")
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+
+    // ========================================
     // JaCoCo Coverage Configuration
     // ========================================
     apply(plugin = "jacoco")
@@ -170,6 +193,7 @@ subprojects {
     }
 
     tasks.named("build") {
+        dependsOn(tasks.named("spotlessCheck"))
         dependsOn(tasks.named("jacocoTestCoverageVerification"))
     }
 

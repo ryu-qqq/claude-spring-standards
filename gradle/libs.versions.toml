@@ -46,6 +46,7 @@ spotbugsPlugin = "6.0.9"
 jacoco = "0.8.11"
 pmd = "7.0.0"
 pmdPlugin = "6.55.0"
+spotless = "7.0.0.BETA4"
 
 # ========================================
 # API Documentation
@@ -203,4 +204,5 @@ observability = [
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugsPlugin" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 # Note: PMD is a core Gradle plugin, applied via `id("pmd")` in build.gradle.kts
