@@ -28,20 +28,23 @@ application/[context]/
 
 ## 네이밍 규약
 - UseCase: `CreateXxxUseCase`, `GetXxxUseCase` 등
-- Service: `XxxCommandService`, `XxxQueryService`
-- Port: `XxxCommandPort`, `XxxQueryPort`, `ExternalApiPort`
-- Assembler: `CreateXxxAssembler`, `XxxDtoAssembler`
+- Service: `XxxCommandService`, `XxxQueryService` 등
+- Port: `XxxCommandPort`, `XxxQueryPort`, `ExternalApiPort` 등
+- Assembler: `CreateXxxAssembler`, `XxxDtoAssembler` 등
 
 ## Do / Don't
 **Do**
 - 트랜잭션 경계 설정 (`@Transactional`)
 - 외부 I/O는 트랜잭션 **밖**에서 실행
 - 조회 필요 시 다른 서비스 직접 호출 대신 **QueryPort** 사용
+- 스프링 프록시 한계에 대해 생각할것 
 
 **Don't**
 - 다른 Application 서비스 직접 호출(순환 의존 위험)
 - REST/JPA 어노테이션 사용 (어댑터 레이어로 이동)
 - 도메인 규칙을 여기서 구현(도메인으로 이동)
+- 셀프 인보케이션
+- 트랜잭션 어노테이션이 붙은 메서드에 내부 호출 및 프라이빗 메서드 호출
 
 ## ArchUnit 룰 스니펫
 ```java
