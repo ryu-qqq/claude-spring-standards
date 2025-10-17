@@ -1,78 +1,61 @@
 #!/bin/bash
 
 # =====================================================
-# Claude Code Hook: user-prompt-submit
+# Claude Code Hook: user-prompt-submit (JSON Logging)
 # Trigger: 사용자가 프롬프트를 제출할 때
 # Strategy: Keyword → Layer → inject-rules.py (Cache-based)
 # =====================================================
 
-# 로그 디렉토리 생성
-LOG_DIR=".claude/hooks/logs"
-mkdir -p "$LOG_DIR"
+# 로그 헬퍼 경로
+LOG_HELPER=".claude/hooks/scripts/log-helper.py"
 
-# 로그 파일
-LOG_FILE="$LOG_DIR/hook-execution.log"
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+# 세션 ID
+SESSION_ID="$(date +%s)-$$"
+PROJECT_NAME=$(basename "$(pwd)")
 
-# 입력 읽기 (Claude Code가 전달하는 사용자 입력)
+# 입력 읽기
 USER_INPUT=$(cat)
 
-# 로그 기록
-echo "[$TIMESTAMP] user-prompt-submit triggered" >> "$LOG_FILE"
-echo "User Input: $USER_INPUT" >> "$LOG_FILE"
+# JSON 로그 함수
+log_event() {
+    echo "$2" | python3 "$LOG_HELPER" "$1" 2>/dev/null
+}
 
-# =====================================================
-# Phase 1: Context 분석 및 레이어 감지
-# =====================================================
+# 세션 시작
+log_event "session_start" "{\"session_id\":\"$SESSION_ID\",\"project\":\"$PROJECT_NAME\",\"hook\":\"user-prompt-submit\",\"user_command\":\"$USER_INPUT\"}"
+
+# ==================== Context 분석 ====================
 
 CONTEXT_SCORE=0
 DETECTED_LAYERS=()
+DETECTED_KEYWORDS=()
 PRIORITY_FILTER=""
 
 # Keyword → Layer 매핑
 declare -A LAYER_KEYWORDS=(
-    # Domain Layer (30점)
     ["aggregate"]="domain"
     ["애그리게이트"]="domain"
     ["entity"]="domain"
     ["value.object"]="domain"
     ["domain.event"]="domain"
-
-    # Application Layer (30점)
     ["usecase"]="application"
     ["service"]="application"
     ["command"]="application"
     ["query"]="application"
     ["transaction"]="application"
-
-    # Adapter-REST Layer (30점)
     ["controller"]="adapter-rest"
     ["컨트롤러"]="adapter-rest"
     ["rest.api"]="adapter-rest"
     ["endpoint"]="adapter-rest"
-
-    # Adapter-Persistence Layer (30점)
     ["repository"]="adapter-persistence"
     ["jpa"]="adapter-persistence"
     ["entity.mapping"]="adapter-persistence"
-
-    # Testing Layer (25점)
     ["test"]="testing"
     ["테스트"]="testing"
-    ["unit.test"]="testing"
-    ["integration"]="testing"
-
-    # Java21 Patterns (20점)
     ["record"]="java21"
     ["sealed"]="java21"
-    ["pattern.matching"]="java21"
-
-    # Enterprise Patterns (20점)
     ["dto"]="enterprise"
     ["mapper"]="enterprise"
-    ["assembler"]="enterprise"
-
-    # Error Handling (25점)
     ["exception"]="error-handling"
     ["error"]="error-handling"
 )
@@ -80,69 +63,64 @@ declare -A LAYER_KEYWORDS=(
 # Secondary Keywords (15점)
 if echo "$USER_INPUT" | grep -qiE "(domain|도메인)"; then
     CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
-    echo "  → Detected: domain context (+15 score)" >> "$LOG_FILE"
+    DETECTED_KEYWORDS+=("domain_context")
 fi
 
 if echo "$USER_INPUT" | grep -qiE "(api|rest)"; then
     CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
-    echo "  → Detected: api context (+15 score)" >> "$LOG_FILE"
+    DETECTED_KEYWORDS+=("api_context")
 fi
 
-# Primary Keyword 검사 및 레이어 수집
+# Primary Keywords (30점)
 for keyword in "${!LAYER_KEYWORDS[@]}"; do
-    # 공백을 .으로 변환하여 정규식으로 검색
     regex_keyword=$(echo "$keyword" | sed 's/\./ /g')
 
     if echo "$USER_INPUT" | grep -qiE "$regex_keyword"; then
         layer="${LAYER_KEYWORDS[$keyword]}"
         CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
 
-        # 중복 제거하며 레이어 추가
         if [[ ! " ${DETECTED_LAYERS[@]} " =~ " ${layer} " ]]; then
             DETECTED_LAYERS+=("$layer")
         fi
 
-        echo "  → Detected: $keyword → $layer (+30 score)" >> "$LOG_FILE"
+        DETECTED_KEYWORDS+=("$keyword")
     fi
 done
 
-# Zero-Tolerance 키워드 검사 (Priority Filter)
+# Zero-Tolerance Keywords (20점)
 if echo "$USER_INPUT" | grep -qiE "(lombok|getter.chaining|@transactional|zero.tolerance)"; then
     PRIORITY_FILTER="critical"
     CONTEXT_SCORE=$((CONTEXT_SCORE + 20))
-    echo "  → Detected: Zero-Tolerance keyword → critical priority (+20 score)" >> "$LOG_FILE"
+    DETECTED_KEYWORDS+=("zero_tolerance")
 fi
 
-echo "  → Context Score: $CONTEXT_SCORE" >> "$LOG_FILE"
-echo "  → Detected Layers: ${DETECTED_LAYERS[*]}" >> "$LOG_FILE"
-echo "  → Priority Filter: $PRIORITY_FILTER" >> "$LOG_FILE"
+# 키워드 분석 결과 로그
+LAYERS_JSON=$(printf '%s\n' "${DETECTED_LAYERS[@]}" | jq -R . | jq -s .)
+KEYWORDS_JSON=$(printf '%s\n' "${DETECTED_KEYWORDS[@]}" | jq -R . | jq -s .)
 
-# =====================================================
-# Phase 2: 규칙 주입 (inject-rules.py 호출)
-# =====================================================
+log_event "keyword_analysis" "{\"session_id\":\"$SESSION_ID\",\"context_score\":$CONTEXT_SCORE,\"threshold\":25,\"detected_layers\":$LAYERS_JSON,\"detected_keywords\":$KEYWORDS_JSON,\"priority_filter\":\"$PRIORITY_FILTER\"}"
 
-# 임계값: 25점 (키워드 1개 이상 매칭)
+# ==================== 규칙 주입 ====================
+
 if [[ $CONTEXT_SCORE -ge 25 ]]; then
-    echo "  → Strategy: CACHE_BASED (inject-rules.py)" >> "$LOG_FILE"
+    log_event "decision" "{\"session_id\":\"$SESSION_ID\",\"action\":\"cache_injection\",\"reason\":\"score_above_threshold\"}"
 
-    # Python 스크립트 경로
     INJECT_SCRIPT=".claude/commands/lib/inject-rules.py"
 
     if [[ -f "$INJECT_SCRIPT" ]]; then
-        # 레이어별 규칙 주입
         for layer in "${DETECTED_LAYERS[@]}"; do
-            echo "  → Injecting rules for layer: $layer" >> "$LOG_FILE"
-
+            # inject-rules.py 호출 (별도로 자체 JSON 로그 작성)
             if [[ -n "$PRIORITY_FILTER" ]]; then
-                python3 "$INJECT_SCRIPT" "$layer" "$PRIORITY_FILTER" 2>> "$LOG_FILE"
+                python3 "$INJECT_SCRIPT" "$layer" "$PRIORITY_FILTER"
             else
-                python3 "$INJECT_SCRIPT" "$layer" 2>> "$LOG_FILE"
+                python3 "$INJECT_SCRIPT" "$layer"
             fi
         done
 
-        # 레이어가 감지되지 않았지만 점수가 높으면 일반 규칙 주입
+        log_event "cache_injection_complete" "{\"session_id\":\"$SESSION_ID\",\"layers_count\":${#DETECTED_LAYERS[@]}}"
+
+        # 레이어가 없으면 일반 규칙
         if [[ ${#DETECTED_LAYERS[@]} -eq 0 ]]; then
-            echo "  → No specific layer detected, injecting general rules" >> "$LOG_FILE"
             cat << 'EOF'
 
 ---
@@ -158,39 +136,16 @@ if [[ $CONTEXT_SCORE -ge 25 ]]; then
 - **Pure Java**: Domain 레이어는 순수 Java만 사용
 - **Law of Demeter**: Getter 체이닝 금지
 
-### 📋 상세 문서
-Cache 시스템이 컨텍스트에 따라 자동으로 관련 규칙을 주입합니다.
-
 ---
 
 EOF
         fi
     else
-        echo "  → ERROR: inject-rules.py not found" >> "$LOG_FILE"
-
-        # Fallback: 기본 규칙
-        cat << 'EOF'
-
----
-
-## 🎯 기본 프로젝트 규칙
-
-### ❌ Zero-Tolerance 규칙
-- **Lombok 절대 금지**
-- **Javadoc 필수**: @author, @since 포함
-
----
-
-EOF
+        log_event "error" "{\"session_id\":\"$SESSION_ID\",\"message\":\"inject-rules.py not found\"}"
     fi
 else
-    echo "  → Strategy: SKIP (Low Context Score < 25)" >> "$LOG_FILE"
-    # Context Score가 낮으면 규칙 주입하지 않음
+    log_event "decision" "{\"session_id\":\"$SESSION_ID\",\"action\":\"skip_injection\",\"reason\":\"score_below_threshold\"}"
 fi
 
-# =====================================================
-# Phase 3: 원본 입력 반환
-# =====================================================
-
-# 원본 입력 그대로 반환 (중요!)
+# 원본 입력 반환
 echo "$USER_INPUT"

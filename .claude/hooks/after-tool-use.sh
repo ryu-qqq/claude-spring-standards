@@ -12,6 +12,9 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/hook-execution.log"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
+# 프로젝트명 가져오기
+PROJECT_NAME=$(basename "$(pwd)")
+
 # 입력 읽기 (Claude Code가 전달하는 JSON)
 TOOL_DATA=$(cat)
 
@@ -24,14 +27,26 @@ if [[ -z "$FILE_PATH" ]]; then
 fi
 
 # 로그 기록
-echo "[$TIMESTAMP] after-tool-use triggered" >> "$LOG_FILE"
-echo "File: $FILE_PATH" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >> "$LOG_FILE"
+echo "[$TIMESTAMP] 🔍 CODE GENERATION DETECTED" >> "$LOG_FILE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
+echo "→ PROJECT: $PROJECT_NAME" >> "$LOG_FILE"
+echo "→ HOOK: after-tool-use triggered" >> "$LOG_FILE"
+echo "→ GENERATED FILE: $FILE_PATH" >> "$LOG_FILE"
 
 # 파일이 실제로 존재하는지 확인
 if [[ ! -f "$FILE_PATH" ]]; then
-    echo "  → File not found, skipping validation" >> "$LOG_FILE"
+    echo "  → ⚠️ File not found, skipping validation" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
     exit 0
 fi
+
+# 파일 정보 로그
+FILE_LINES=$(wc -l < "$FILE_PATH" | tr -d ' ')
+echo "  → File size: $FILE_LINES lines" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
 
 # =====================================================
 # Phase 1: Layer 감지 (파일 경로 기반)
@@ -39,29 +54,36 @@ fi
 
 LAYER="unknown"
 
+echo "→ LAYER DETECTION:" >> "$LOG_FILE"
+
 # case 문으로 가독성 및 유지보수성 개선
 case "$FILE_PATH" in
     *domain/*model*)
         LAYER="domain"
-        echo "  → Detected Layer: DOMAIN" >> "$LOG_FILE"
+        echo "  → Layer: DOMAIN (from path pattern)" >> "$LOG_FILE"
         ;;
     *adapter/in/web*)
         LAYER="adapter-rest"
-        echo "  → Detected Layer: ADAPTER-REST" >> "$LOG_FILE"
+        echo "  → Layer: ADAPTER-REST (from path pattern)" >> "$LOG_FILE"
         ;;
     *adapter/out/persistence*)
         LAYER="adapter-persistence"
-        echo "  → Detected Layer: ADAPTER-PERSISTENCE" >> "$LOG_FILE"
+        echo "  → Layer: ADAPTER-PERSISTENCE (from path pattern)" >> "$LOG_FILE"
         ;;
     *application/*)
         LAYER="application"
-        echo "  → Detected Layer: APPLICATION" >> "$LOG_FILE"
+        echo "  → Layer: APPLICATION (from path pattern)" >> "$LOG_FILE"
         ;;
     *test/*)
         LAYER="testing"
-        echo "  → Detected Layer: TESTING" >> "$LOG_FILE"
+        echo "  → Layer: TESTING (from path pattern)" >> "$LOG_FILE"
+        ;;
+    *)
+        echo "  → Layer: UNKNOWN (no pattern match)" >> "$LOG_FILE"
         ;;
 esac
+
+echo "" >> "$LOG_FILE"
 
 # =====================================================
 # Phase 2: Cache-based Validation (validation-helper.py)
@@ -70,14 +92,14 @@ esac
 VALIDATOR_SCRIPT=".claude/hooks/scripts/validation-helper.py"
 
 if [[ -f "$VALIDATOR_SCRIPT" && "$LAYER" != "unknown" ]]; then
-    echo "  → Running cache-based validation for layer: $LAYER" >> "$LOG_FILE"
-
     # Python 검증기 실행
     python3 "$VALIDATOR_SCRIPT" "$FILE_PATH" "$LAYER" 2>> "$LOG_FILE"
 
     # 검증 성공 여부는 Python 스크립트 출력으로 판단
 else
-    echo "  → Fallback to basic validation (validator not found or unknown layer)" >> "$LOG_FILE"
+    echo "→ FALLBACK VALIDATION:" >> "$LOG_FILE"
+    echo "  → Using basic validators (cache not available)" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
 
     # ===== Fallback: Basic Critical Validators =====
 
@@ -193,3 +215,10 @@ EOF
 EOF
     fi
 fi
+
+# 세션 종료 로그
+echo "" >> "$LOG_FILE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >> "$LOG_FILE"
+echo "✅ SESSION COMPLETE" >> "$LOG_FILE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"

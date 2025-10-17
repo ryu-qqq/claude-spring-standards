@@ -12,18 +12,38 @@ Output: Markdown-formatted rules for Claude
 import json
 import sys
 from pathlib import Path
+from datetime import datetime
 
 # 경로 설정
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent  # 3단계 위로
 CACHE_DIR = PROJECT_ROOT / ".claude" / "cache" / "rules"
 INDEX_FILE = CACHE_DIR / "index.json"
+LOG_FILE = PROJECT_ROOT / ".claude" / "hooks" / "logs" / "hook-execution.jsonl"
+
+
+def log_event(event_type: str, data: dict):
+    """JSON 로그 기록"""
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "event": event_type,
+        **data
+    }
+
+    # JSONL 형식으로 append
+    with open(LOG_FILE, 'a', encoding='utf-8') as f:
+        f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
 
 
 def load_index():
     """Index 파일 로드"""
     with open(INDEX_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        index = json.load(f)
+        log_event("cache_index_loaded", {
+            "index_file": str(INDEX_FILE),
+            "total_rules": len(index.get('rules', []))
+        })
+        return index
 
 
 def load_rule(rule_id):
@@ -51,11 +71,16 @@ def inject_layer_rules(layer: str, priority_filter: str = None):
     rule_ids = index.get("layerIndex", {}).get(layer, [])
 
     if not rule_ids:
+        log_event("cache_injection_error", {
+            "layer": layer,
+            "error": "no_rules_found"
+        })
         print(f"⚠️  No rules found for layer: {layer}")
         return
 
     # 규칙 로드
     rules = []
+    loaded_files = []
     for rule_id in rule_ids:
         rule = load_rule(rule_id)
         if rule:
@@ -65,11 +90,30 @@ def inject_layer_rules(layer: str, priority_filter: str = None):
                     continue
 
             rules.append(rule)
+            loaded_files.append(f"{rule_id}.json")
 
     # 규칙이 없으면 종료
     if not rules:
+        log_event("cache_injection_error", {
+            "layer": layer,
+            "priority_filter": priority_filter,
+            "error": "no_matching_rules"
+        })
         print(f"⚠️  No rules match priority filter: {priority_filter}")
         return
+
+    # 토큰 예상량 계산
+    estimated_tokens = sum(len(json.dumps(r)) for r in rules) // 4
+
+    # 캐시 주입 로그
+    log_event("cache_injection", {
+        "layer": layer,
+        "priority_filter": priority_filter or "all",
+        "total_rules_available": len(rule_ids),
+        "rules_loaded": len(rules),
+        "cache_files": loaded_files,
+        "estimated_tokens": estimated_tokens
+    })
 
     # Markdown 출력
     print("---")

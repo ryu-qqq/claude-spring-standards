@@ -67,7 +67,7 @@ chmod +x .claude/hooks/*.sh
 
 ### Domain Aggregate 생성
 
-Claude Code 또는 수동으로 Domain Aggregate를 생성합니다.
+실제 PRD를 기반으로 Domain Aggregate를 생성합니다.
 
 #### 방법 1: Claude Code 사용 (권장)
 
@@ -75,9 +75,11 @@ Claude Code 또는 수동으로 Domain Aggregate를 생성합니다.
 # Claude Code 실행
 claude code
 
-# Order Aggregate 생성 요청
-> "Create an Order aggregate in the domain layer"
+# PRD 기반 Order Aggregate 생성 요청
+> "/code-gen-domain Order prd/order-management.md"
 ```
+
+> **참고**: `prd/order-management.md`는 실제 프로젝트에 포함된 주문 관리 PRD입니다.
 
 #### 방법 2: 수동 생성
 
@@ -305,15 +307,29 @@ cat .claude/cache/rules/domain-layer-law-of-demeter-01_getter-chaining-prohibiti
 
 ## 🎓 다음 단계
 
-### 추가 튜토리얼
+### 📊 벤치마크 실험
 
-- [02-slash-commands.md](./02-slash-commands.md) - Slash Commands 상세 가이드
-- [03-custom-rules.md](./03-custom-rules.md) - 커스텀 규칙 추가 방법
+시스템의 일관성과 토큰 효율성을 직접 검증해보세요:
+
+```bash
+# benchmarks 디렉토리로 이동
+cd benchmarks
+
+# 자동화된 3회 실험 실행
+./scripts/run-experiments.sh
+```
+
+**이 실험에서 확인할 수 있는 것**:
+- 동일한 PRD로 3회 생성 시 일관성 (90% 이상)
+- Cache 시스템의 토큰 절감 효과 (85% 이상)
+
+자세한 내용은 [Benchmarks README](../../benchmarks/README.md)를 참조하세요.
 
 ### 상세 문서
 
 - [DYNAMIC_HOOKS_GUIDE.md](../DYNAMIC_HOOKS_GUIDE.md) - 전체 시스템 가이드
-- [Cache README](./.claude/cache/rules/README.md) - Cache 시스템 상세
+- [Cache README](../../.claude/cache/rules/README.md) - Cache 시스템 상세
+- [Benchmarks](../../benchmarks/README.md) - 검증 시스템 가이드
 
 ---
 

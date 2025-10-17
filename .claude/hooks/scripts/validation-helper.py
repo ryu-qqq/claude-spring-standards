@@ -14,12 +14,15 @@ import sys
 import re
 from pathlib import Path
 from typing import Dict, List, Any, Optional
+from datetime import datetime
+import time
 
 # 경로 설정
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent  # 3단계 위로 (scripts → hooks → .claude → project root)
 CACHE_DIR = PROJECT_ROOT / ".claude" / "cache" / "rules"
 INDEX_FILE = CACHE_DIR / "index.json"
+LOG_FILE = PROJECT_ROOT / ".claude" / "hooks" / "logs" / "hook-execution.jsonl"
 
 
 class ValidationResult:
@@ -31,12 +34,26 @@ class ValidationResult:
         self.message = message
 
 
+def log_event(event_type: str, data: dict):
+    """JSON 로그 기록"""
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "event": event_type,
+        **data
+    }
+
+    with open(LOG_FILE, 'a', encoding='utf-8') as f:
+        f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
+
+
 class Validator:
     """캐시 기반 코드 검증기"""
 
     def __init__(self):
         self.index = self.load_index()
         self.results: List[ValidationResult] = []
+        self.validation_start_time = None
+        self.checked_rules = []
 
     def load_index(self) -> Dict[str, Any]:
         """Index 파일 로드"""
@@ -81,8 +98,14 @@ class Validator:
 
     def validate_file(self, file_path: str, layer: str) -> List[ValidationResult]:
         """파일 검증 실행"""
+        self.validation_start_time = time.time()
 
         if not Path(file_path).exists():
+            log_event("validation_error", {
+                "file": file_path,
+                "layer": layer,
+                "error": "file_not_found"
+            })
             return [ValidationResult(
                 "file-existence",
                 False,
@@ -93,17 +116,36 @@ class Validator:
         with open(file_path, 'r', encoding='utf-8') as f:
             raw_content = f.read()
 
+        file_lines = len(raw_content.splitlines())
+
+        log_event("validation_start", {
+            "file": file_path,
+            "layer": layer,
+            "file_lines": file_lines
+        })
+
         # 주석과 문자열 제거 (false positive 방지)
         content = self.remove_comments_and_strings(raw_content, file_path)
 
         # 레이어별 규칙 가져오기
         rule_ids = self.index.get("layerIndex", {}).get(layer, [])
 
+        if not rule_ids:
+            log_event("validation_warning", {
+                "file": file_path,
+                "layer": layer,
+                "warning": "no_rules_found"
+            })
+            return self.results
+
         # Critical 규칙만 검증 (성능 최적화)
+        critical_count = 0
         for rule_id in rule_ids:
             rule = self.load_rule(rule_id)
 
             if rule and rule["metadata"]["priority"] == "critical":
+                critical_count += 1
+                self.checked_rules.append(rule_id)
                 self.validate_rule(content, file_path, rule)
 
         return self.results
@@ -176,7 +218,22 @@ class Validator:
     def print_results(self, file_path: str):
         """검증 결과 출력"""
 
+        # 검증 시간 계산
+        validation_time = int((time.time() - self.validation_start_time) * 1000) if self.validation_start_time else 0
+
         failed_results = [r for r in self.results if not r.passed]
+        passed_results = [r for r in self.results if r.passed]
+
+        # JSON 로그: 검증 완료
+        log_event("validation_complete", {
+            "file": file_path,
+            "total_rules": len(self.results),
+            "passed": len(passed_results),
+            "failed": len(failed_results),
+            "validation_time_ms": validation_time,
+            "status": "failed" if failed_results else "passed",
+            "failed_rules": [{"rule_id": r.rule_id, "message": r.message} for r in failed_results]
+        })
 
         if failed_results:
             print("\n---\n")

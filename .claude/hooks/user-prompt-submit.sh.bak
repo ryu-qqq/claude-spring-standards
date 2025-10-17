@@ -1,0 +1,223 @@
+#!/bin/bash
+
+# =====================================================
+# Claude Code Hook: user-prompt-submit
+# Trigger: 사용자가 프롬프트를 제출할 때
+# Strategy: Keyword → Layer → inject-rules.py (Cache-based)
+# =====================================================
+
+# 로그 디렉토리 생성
+LOG_DIR=".claude/hooks/logs"
+mkdir -p "$LOG_DIR"
+
+# 로그 헬퍼 경로
+LOG_HELPER=".claude/hooks/scripts/log-helper.py"
+
+# 세션 ID (프로세스 ID 기반)
+SESSION_ID="$(date +%s)-$$"
+
+# 프로젝트명 가져오기 (디렉토리명 사용)
+PROJECT_NAME=$(basename "$(pwd)")
+
+# 입력 읽기 (Claude Code가 전달하는 사용자 입력)
+USER_INPUT=$(cat)
+
+# JSON 로그 헬퍼 함수
+log_event() {
+    local event=$1
+    local json_data=$2
+
+    echo "$json_data" | python3 "$LOG_HELPER" "$event"
+}
+
+# 세션 시작 로그
+log_event "session_start" "{\"session_id\":\"$SESSION_ID\",\"project\":\"$PROJECT_NAME\",\"hook\":\"user-prompt-submit\",\"user_command\":\"$USER_INPUT\"}"
+
+# =====================================================
+# Phase 1: Context 분석 및 레이어 감지
+# =====================================================
+
+CONTEXT_SCORE=0
+DETECTED_LAYERS=()
+PRIORITY_FILTER=""
+
+# Keyword → Layer 매핑
+declare -A LAYER_KEYWORDS=(
+    # Domain Layer (30점)
+    ["aggregate"]="domain"
+    ["애그리게이트"]="domain"
+    ["entity"]="domain"
+    ["value.object"]="domain"
+    ["domain.event"]="domain"
+
+    # Application Layer (30점)
+    ["usecase"]="application"
+    ["service"]="application"
+    ["command"]="application"
+    ["query"]="application"
+    ["transaction"]="application"
+
+    # Adapter-REST Layer (30점)
+    ["controller"]="adapter-rest"
+    ["컨트롤러"]="adapter-rest"
+    ["rest.api"]="adapter-rest"
+    ["endpoint"]="adapter-rest"
+
+    # Adapter-Persistence Layer (30점)
+    ["repository"]="adapter-persistence"
+    ["jpa"]="adapter-persistence"
+    ["entity.mapping"]="adapter-persistence"
+
+    # Testing Layer (25점)
+    ["test"]="testing"
+    ["테스트"]="testing"
+    ["unit.test"]="testing"
+    ["integration"]="testing"
+
+    # Java21 Patterns (20점)
+    ["record"]="java21"
+    ["sealed"]="java21"
+    ["pattern.matching"]="java21"
+
+    # Enterprise Patterns (20점)
+    ["dto"]="enterprise"
+    ["mapper"]="enterprise"
+    ["assembler"]="enterprise"
+
+    # Error Handling (25점)
+    ["exception"]="error-handling"
+    ["error"]="error-handling"
+)
+
+# Secondary Keywords (15점)
+if echo "$USER_INPUT" | grep -qiE "(domain|도메인)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    echo "  → Detected: domain context (+15 score)" >> "$LOG_FILE"
+fi
+
+if echo "$USER_INPUT" | grep -qiE "(api|rest)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    echo "  → Detected: api context (+15 score)" >> "$LOG_FILE"
+fi
+
+# Primary Keyword 검사 및 레이어 수집
+for keyword in "${!LAYER_KEYWORDS[@]}"; do
+    # 공백을 .으로 변환하여 정규식으로 검색
+    regex_keyword=$(echo "$keyword" | sed 's/\./ /g')
+
+    if echo "$USER_INPUT" | grep -qiE "$regex_keyword"; then
+        layer="${LAYER_KEYWORDS[$keyword]}"
+        CONTEXT_SCORE=$((CONTEXT_SCORE + 30))
+
+        # 중복 제거하며 레이어 추가
+        if [[ ! " ${DETECTED_LAYERS[@]} " =~ " ${layer} " ]]; then
+            DETECTED_LAYERS+=("$layer")
+        fi
+
+        echo "  → Detected: $keyword → $layer (+30 score)" >> "$LOG_FILE"
+    fi
+done
+
+# Zero-Tolerance 키워드 검사 (Priority Filter)
+if echo "$USER_INPUT" | grep -qiE "(lombok|getter.chaining|@transactional|zero.tolerance)"; then
+    PRIORITY_FILTER="critical"
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 20))
+    echo "  → Detected: Zero-Tolerance keyword → critical priority (+20 score)" >> "$LOG_FILE"
+fi
+
+echo "" >> "$LOG_FILE"
+echo "→ KEYWORD ANALYSIS COMPLETE:" >> "$LOG_FILE"
+echo "  → Context Score: $CONTEXT_SCORE (threshold: 25)" >> "$LOG_FILE"
+echo "  → Detected Layers: ${DETECTED_LAYERS[*]}" >> "$LOG_FILE"
+if [[ -n "$PRIORITY_FILTER" ]]; then
+    echo "  → Priority Filter: $PRIORITY_FILTER" >> "$LOG_FILE"
+fi
+echo "" >> "$LOG_FILE"
+
+# =====================================================
+# Phase 2: 규칙 주입 (inject-rules.py 호출)
+# =====================================================
+
+# 임계값: 25점 (키워드 1개 이상 매칭)
+if [[ $CONTEXT_SCORE -ge 25 ]]; then
+    echo "→ DECISION: Cache-based rule injection (Score >= 25) ✅" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
+
+    # Python 스크립트 경로
+    INJECT_SCRIPT=".claude/commands/lib/inject-rules.py"
+
+    if [[ -f "$INJECT_SCRIPT" ]]; then
+        # 레이어별 규칙 주입
+        for layer in "${DETECTED_LAYERS[@]}"; do
+            if [[ -n "$PRIORITY_FILTER" ]]; then
+                python3 "$INJECT_SCRIPT" "$layer" "$PRIORITY_FILTER" 2>> "$LOG_FILE"
+            else
+                python3 "$INJECT_SCRIPT" "$layer" 2>> "$LOG_FILE"
+            fi
+        done
+
+        echo "" >> "$LOG_FILE"
+        echo "→ CACHE INJECTION COMPLETE" >> "$LOG_FILE"
+        echo "" >> "$LOG_FILE"
+
+        # 레이어가 감지되지 않았지만 점수가 높으면 일반 규칙 주입
+        if [[ ${#DETECTED_LAYERS[@]} -eq 0 ]]; then
+            echo "  → No specific layer detected, injecting general rules" >> "$LOG_FILE"
+            cat << 'EOF'
+
+---
+
+## 🎯 기본 프로젝트 규칙 (자동 주입됨)
+
+### ❌ Zero-Tolerance 규칙
+- **Lombok 절대 금지**: @Data, @Builder, @Getter, @Setter 등 모든 Lombok 어노테이션
+- **Javadoc 필수**: 모든 public 클래스/메서드에 @author, @since 포함
+- **트랜잭션 경계**: @Transactional 내 외부 API 호출 절대 금지
+
+### ✅ 필수 규칙
+- **Pure Java**: Domain 레이어는 순수 Java만 사용
+- **Law of Demeter**: Getter 체이닝 금지
+
+### 📋 상세 문서
+Cache 시스템이 컨텍스트에 따라 자동으로 관련 규칙을 주입합니다.
+
+---
+
+EOF
+        fi
+    else
+        echo "  → ERROR: inject-rules.py not found" >> "$LOG_FILE"
+
+        # Fallback: 기본 규칙
+        cat << 'EOF'
+
+---
+
+## 🎯 기본 프로젝트 규칙
+
+### ❌ Zero-Tolerance 규칙
+- **Lombok 절대 금지**
+- **Javadoc 필수**: @author, @since 포함
+
+---
+
+EOF
+    fi
+else
+    echo "→ DECISION: Skip cache injection (Score < 25) ⏭️" >> "$LOG_FILE"
+    echo "  → No keywords detected, using default rules only" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
+fi
+
+# 시스템 상태 로그
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >> "$LOG_FILE"
+echo "💡 Awaiting Claude Code response..." >> "$LOG_FILE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
+
+# =====================================================
+# Phase 3: 원본 입력 반환
+# =====================================================
+
+# 원본 입력 그대로 반환 (중요!)
+echo "$USER_INPUT"
