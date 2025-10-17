@@ -53,6 +53,32 @@ class Validator:
         with open(rule_file, 'r', encoding='utf-8') as f:
             return json.load(f)
 
+    def remove_comments_and_strings(self, content: str, file_path: str) -> str:
+        """주석과 문자열 리터럴 제거 (false positive 방지)"""
+
+        # Java/Kotlin 파일
+        if file_path.endswith(('.java', '.kt')):
+            # 1. 블록 주석 제거 (/* ... */)
+            content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+            # 2. 라인 주석 제거 (// ...)
+            content = re.sub(r'//.*?$', '', content, flags=re.MULTILINE)
+            # 3. 문자열 리터럴 제거 ("...", '...')
+            content = re.sub(r'"(?:\\.|[^"\\])*"', '', content)
+            content = re.sub(r"'(?:\\.|[^'\\])*'", '', content)
+
+        # Python 파일
+        elif file_path.endswith('.py'):
+            # 1. 블록 주석 제거 ("""...""", '''...''')
+            content = re.sub(r'""".*?"""', '', content, flags=re.DOTALL)
+            content = re.sub(r"'''.*?'''", '', content, flags=re.DOTALL)
+            # 2. 라인 주석 제거 (# ...)
+            content = re.sub(r'#.*?$', '', content, flags=re.MULTILINE)
+            # 3. 문자열 리터럴 제거
+            content = re.sub(r'"(?:\\.|[^"\\])*"', '', content)
+            content = re.sub(r"'(?:\\.|[^'\\])*'", '', content)
+
+        return content
+
     def validate_file(self, file_path: str, layer: str) -> List[ValidationResult]:
         """파일 검증 실행"""
 
@@ -65,7 +91,10 @@ class Validator:
 
         # 파일 내용 읽기
         with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
+            raw_content = f.read()
+
+        # 주석과 문자열 제거 (false positive 방지)
+        content = self.remove_comments_and_strings(raw_content, file_path)
 
         # 레이어별 규칙 가져오기
         rule_ids = self.index.get("layerIndex", {}).get(layer, [])

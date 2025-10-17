@@ -1026,7 +1026,7 @@ GitHub Issues에 다음 내용을 포함하여 제보:
 | 카테고리 | 기술 |
 |----------|-----------|
 | **언어** | Java 21 |
-| **프레임워크** | Spring Boot 3.3.x |
+| **프레임워크** | Spring Boot 3.5.x |
 | **빌드 도구** | Gradle 8.5+ (Kotlin DSL) |
 | **아키텍처** | Hexagonal (Ports & Adapters) |
 | **설계 패턴** | DDD, CQRS |

@@ -15,8 +15,8 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 # 입력 읽기 (Claude Code가 전달하는 JSON)
 TOOL_DATA=$(cat)
 
-# 파일 경로 추출 (공백 허용)
-FILE_PATH=$(echo "$TOOL_DATA" | grep -oE '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"/\1/')
+# 파일 경로 추출 (jq 사용으로 안전한 JSON 파싱)
+FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.file_path // empty')
 
 if [[ -z "$FILE_PATH" ]]; then
     # 파일 경로가 없으면 스킵
@@ -39,22 +39,29 @@ fi
 
 LAYER="unknown"
 
-if echo "$FILE_PATH" | grep -q "domain/.*model"; then
-    LAYER="domain"
-    echo "  → Detected Layer: DOMAIN" >> "$LOG_FILE"
-elif echo "$FILE_PATH" | grep -q "adapter/in/web"; then
-    LAYER="adapter-rest"
-    echo "  → Detected Layer: ADAPTER-REST" >> "$LOG_FILE"
-elif echo "$FILE_PATH" | grep -q "adapter/out/persistence"; then
-    LAYER="adapter-persistence"
-    echo "  → Detected Layer: ADAPTER-PERSISTENCE" >> "$LOG_FILE"
-elif echo "$FILE_PATH" | grep -q "application/"; then
-    LAYER="application"
-    echo "  → Detected Layer: APPLICATION" >> "$LOG_FILE"
-elif echo "$FILE_PATH" | grep -q "test/"; then
-    LAYER="testing"
-    echo "  → Detected Layer: TESTING" >> "$LOG_FILE"
-fi
+# case 문으로 가독성 및 유지보수성 개선
+case "$FILE_PATH" in
+    *domain/*model*)
+        LAYER="domain"
+        echo "  → Detected Layer: DOMAIN" >> "$LOG_FILE"
+        ;;
+    *adapter/in/web*)
+        LAYER="adapter-rest"
+        echo "  → Detected Layer: ADAPTER-REST" >> "$LOG_FILE"
+        ;;
+    *adapter/out/persistence*)
+        LAYER="adapter-persistence"
+        echo "  → Detected Layer: ADAPTER-PERSISTENCE" >> "$LOG_FILE"
+        ;;
+    *application/*)
+        LAYER="application"
+        echo "  → Detected Layer: APPLICATION" >> "$LOG_FILE"
+        ;;
+    *test/*)
+        LAYER="testing"
+        echo "  → Detected Layer: TESTING" >> "$LOG_FILE"
+        ;;
+esac
 
 # =====================================================
 # Phase 2: Cache-based Validation (validation-helper.py)

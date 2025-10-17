@@ -87,7 +87,7 @@ def extract_keywords_from_title(filepath: Path) -> list[str]:
 
 
 def extract_prohibited_patterns(filepath: Path) -> list[str]:
-    """금지 패턴 추출 (❌, 금지 등)"""
+    """금지 패턴 추출 (❌, 금지 등) - 모든 패턴 추출"""
     patterns = []
 
     try:
@@ -98,9 +98,6 @@ def extract_prohibited_patterns(filepath: Path) -> list[str]:
                     pattern = re.sub(r'^\s*-\s*', '', line).strip()
                     patterns.append(pattern)
 
-                    if len(patterns) >= 5:  # 최대 5개
-                        break
-
     except Exception as e:
         print(f"  {YELLOW}⚠  Warning:{NC} Failed to extract prohibited patterns: {e}")
 
@@ -108,7 +105,7 @@ def extract_prohibited_patterns(filepath: Path) -> list[str]:
 
 
 def extract_allowed_patterns(filepath: Path) -> list[str]:
-    """허용 패턴 추출 (✅)"""
+    """허용 패턴 추출 (✅) - 모든 패턴 추출"""
     patterns = []
 
     try:
@@ -118,9 +115,6 @@ def extract_allowed_patterns(filepath: Path) -> list[str]:
                 if re.match(r'^\s*-\s*✅', line):
                     pattern = re.sub(r'^\s*-\s*', '', line).strip()
                     patterns.append(pattern)
-
-                    if len(patterns) >= 5:  # 최대 5개
-                        break
 
     except Exception as e:
         print(f"  {YELLOW}⚠  Warning:{NC} Failed to extract allowed patterns: {e}")

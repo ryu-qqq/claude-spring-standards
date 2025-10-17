@@ -87,8 +87,12 @@ docs/coding_convention/
 │   ├── event-driven/
 │   └── resilience/
 │
-└── 08-error-handling/  (4개 규칙)
-    └── Error handling 전략
+└── 08-error-handling/  (5개 규칙)
+    ├── error-handling-strategy/
+    ├── domain-exception-design/
+    ├── global-exception-handler/
+    ├── error-response-format/
+    └── errorcode-management/
 ```
 
 **총 90개 규칙 → JSON Cache로 변환 → O(1) 검색 및 주입**
