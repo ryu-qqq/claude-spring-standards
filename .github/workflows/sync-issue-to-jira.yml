@@ -190,9 +190,9 @@ jobs:
           script: |
             const jiraKey = '${{ steps.create.outputs.issue }}';
             const jiraUrl = '${{ secrets.JIRA_BASE_URL }}';
-            
+
             console.log(`Created Jira issue: ${jiraKey}`);
-            
+
             // Add comment with Jira link
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -200,7 +200,7 @@ jobs:
               issue_number: context.issue.number,
               body: `✅ Jira 이슈가 생성되었습니다: [${jiraKey}](${jiraUrl}/browse/${jiraKey})`
             });
-            
+
             // Add label to track sync
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
@@ -225,7 +225,7 @@ jobs:
                     `- Jira 프로젝트 권한\n` +
                     `- Issue Type이 프로젝트에서 사용 가능한지 확인`
             });
-            
+
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -241,22 +241,22 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             console.log(`Searching for Jira issue key in issue #${context.issue.number}`);
-            
+
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number
             });
-            
+
             console.log(`Found ${comments.data.length} comments`);
-            
+
             // Find Jira issue key from comments (matches both [KEY-123] and [KEY-123](url))
             const jiraKeyRegex = /\[([A-Z]+-\d+)\](?:\([^\)]+\))?/;
             const simpleKeyRegex = /([A-Z]+-\d+)/;
-            
+
             for (const comment of comments.data) {
               console.log(`Checking comment by ${comment.user.login}: ${comment.body.substring(0, 100)}`);
-              
+
               // First try to find in markdown link format
               let match = comment.body.match(jiraKeyRegex);
               if (match) {
@@ -264,7 +264,7 @@ jobs:
                 console.log(`✅ Found Jira issue in markdown link: ${match[1]}`);
                 return;
               }
-              
+
               // If bot comment, try simple format
               if (comment.user.type === 'Bot' || comment.user.login.includes('[bot]')) {
                 match = comment.body.match(simpleKeyRegex);
@@ -275,7 +275,7 @@ jobs:
                 }
               }
             }
-            
+
             // Also check issue title for [KEY-123] format
             console.log(`Checking issue title: ${context.payload.issue.title}`);
             const titleMatch = context.payload.issue.title.match(simpleKeyRegex);
@@ -308,7 +308,7 @@ jobs:
           issue: ${{ steps.find.outputs.issue }}
           comment: |
             GitHub Comment by ${{ github.event.comment.user.login }}:
-            
+
             ${{ github.event.comment.body }}
-            
+
             [View on GitHub](${{ github.event.comment.html_url }})
