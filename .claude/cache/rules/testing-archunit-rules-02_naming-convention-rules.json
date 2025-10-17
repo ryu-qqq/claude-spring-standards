@@ -1,0 +1,40 @@
+{
+  "id": "testing-archunit-rules-02_naming-convention-rules",
+  "sourceFile": "/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/05-testing/archunit-rules/02_naming-convention-rules.md",
+  "metadata": {
+    "keywords": {
+      "primary": [
+        "naming",
+        "convention",
+        "rules"
+      ],
+      "secondary": [
+        "naming",
+        "convention",
+        "rules",
+        "archunit으로",
+        "네이밍",
+        "규칙",
+        "검증"
+      ],
+      "anti": []
+    },
+    "layer": "testing",
+    "priority": "critical",
+    "tokenEstimate": 2221
+  },
+  "rules": {
+    "prohibited": [],
+    "allowed": [
+      "✅ `*UseCase` 접미사 필수",
+      "✅ Public Interface 여야 함",
+      "✅ `domain.port.in` 패키지에 위치",
+      "✅ `*Port` 접미사 필수",
+      "✅ `Load/Save/Send/Publish` 등 동사로 시작"
+    ]
+  },
+  "documentation": {
+    "path": "docs/coding_convention/05-testing/archunit-rules/02_naming-convention-rules.md",
+    "summary": "Auto-generated from 02_naming-convention-rules.md"
+  }
+}
