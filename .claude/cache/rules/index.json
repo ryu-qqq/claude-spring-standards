@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "buildDate": "2025-10-17T03:52:03.347304Z",
-  "totalRules": 90,
+  "buildDate": "2025-10-17T06:57:55.828179Z",
+  "totalRules": 96,
   "keywordIndex": {
     "restful": [
       "adapter-rest-api-layer-controller-design-01_restful-api-design"
@@ -109,12 +109,16 @@
     "test": [
       "adapter-rest-api-layer-testing-01_controller-unit-test",
       "adapter-rest-api-layer-testing-02_integration-test",
-      "persistence-layer-testing-03_test-tags-strategy"
+      "persistence-layer-testing-03_test-tags-strategy",
+      "testing-integration-testing-04_test-data-management",
+      "testing-multi-module-testing-02_shared-test-fixtures",
+      "testing-multi-module-testing-04_test-tags-and-execution"
     ],
     "integration": [
       "adapter-rest-api-layer-testing-02_integration-test",
       "persistence-layer-testing-02_testcontainers-integration",
       "testing-integration-testing-02_api-integration-tests",
+      "testing-multi-module-testing-03_cross-module-integration",
       "java21-patterns-virtual-threads-04_spring-integration"
     ],
     "rest": [
@@ -275,6 +279,7 @@
     "strategy": [
       "persistence-layer-jpa-entity-design-01_long-fk-strategy",
       "persistence-layer-testing-03_test-tags-strategy",
+      "testing-multi-module-testing-01_module-isolation-strategy",
       "error-handling-01_error-handling-strategy"
     ],
     "entity": [
@@ -325,7 +330,8 @@
       "testing-integration-testing-01_testcontainers-setup"
     ],
     "tags": [
-      "persistence-layer-testing-03_test-tags-strategy"
+      "persistence-layer-testing-03_test-tags-strategy",
+      "testing-multi-module-testing-04_test-tags-and-execution"
     ],
     "layer": [
       "testing-archunit-rules-01_layer-dependency-rules"
@@ -356,6 +362,45 @@
     ],
     "persistence": [
       "testing-integration-testing-03_persistence-tests"
+    ],
+    "data": [
+      "testing-integration-testing-04_test-data-management"
+    ],
+    "management": [
+      "testing-integration-testing-04_test-data-management",
+      "error-handling-05_errorcode-management"
+    ],
+    "performance": [
+      "testing-integration-testing-05_performance-and-benchmark",
+      "java21-patterns-virtual-threads-03_performance-tuning"
+    ],
+    "and": [
+      "testing-integration-testing-05_performance-and-benchmark",
+      "testing-multi-module-testing-04_test-tags-and-execution",
+      "enterprise-patterns-resilience-02_retry-and-timeout"
+    ],
+    "benchmark": [
+      "testing-integration-testing-05_performance-and-benchmark"
+    ],
+    "module": [
+      "testing-multi-module-testing-01_module-isolation-strategy",
+      "testing-multi-module-testing-03_cross-module-integration",
+      "enterprise-patterns-event-driven-04_multi-module-event-design"
+    ],
+    "isolation": [
+      "testing-multi-module-testing-01_module-isolation-strategy"
+    ],
+    "shared": [
+      "testing-multi-module-testing-02_shared-test-fixtures"
+    ],
+    "fixtures": [
+      "testing-multi-module-testing-02_shared-test-fixtures"
+    ],
+    "cross": [
+      "testing-multi-module-testing-03_cross-module-integration"
+    ],
+    "execution": [
+      "testing-multi-module-testing-04_test-tags-and-execution"
     ],
     "with": [
       "java21-patterns-record-patterns-01_dto-with-records",
@@ -407,9 +452,6 @@
       "java21-patterns-virtual-threads-02_async-processing",
       "java21-patterns-virtual-threads-05_outbound-port-async"
     ],
-    "performance": [
-      "java21-patterns-virtual-threads-03_performance-tuning"
-    ],
     "tuning": [
       "java21-patterns-virtual-threads-03_performance-tuning"
     ],
@@ -442,9 +484,6 @@
     "multi": [
       "enterprise-patterns-event-driven-04_multi-module-event-design"
     ],
-    "module": [
-      "enterprise-patterns-event-driven-04_multi-module-event-design"
-    ],
     "circuit": [
       "enterprise-patterns-resilience-01_circuit-breaker"
     ],
@@ -452,9 +491,6 @@
       "enterprise-patterns-resilience-01_circuit-breaker"
     ],
     "retry": [
-      "enterprise-patterns-resilience-02_retry-and-timeout"
-    ],
-    "and": [
       "enterprise-patterns-resilience-02_retry-and-timeout"
     ],
     "timeout": [
@@ -467,9 +503,6 @@
       "error-handling-04_error-response-format"
     ],
     "errorcode": [
-      "error-handling-05_errorcode-management"
-    ],
-    "management": [
       "error-handling-05_errorcode-management"
     ]
   },
@@ -542,7 +575,13 @@
       "testing-archunit-rules-03_annotation-rules",
       "testing-integration-testing-01_testcontainers-setup",
       "testing-integration-testing-02_api-integration-tests",
-      "testing-integration-testing-03_persistence-tests"
+      "testing-integration-testing-03_persistence-tests",
+      "testing-integration-testing-04_test-data-management",
+      "testing-integration-testing-05_performance-and-benchmark",
+      "testing-multi-module-testing-01_module-isolation-strategy",
+      "testing-multi-module-testing-02_shared-test-fixtures",
+      "testing-multi-module-testing-03_cross-module-integration",
+      "testing-multi-module-testing-04_test-tags-and-execution"
     ],
     "java21": [
       "java21-patterns-record-patterns-01_dto-with-records",
