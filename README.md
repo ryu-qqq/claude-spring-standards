@@ -9,7 +9,7 @@
 
 ---
 
-## 🎯 핵심 차별점
+## 🎯 CLAUDE 세션 구현 
 
 **Dynamic Hooks + Cache System**: 키워드 기반 Layer 감지 → JSON Cache 조회 → 규칙 자동 주입 → 실시간 검증
 
@@ -17,7 +17,6 @@
 |------|----------|------------|
 | 코딩 표준 | 수동 리뷰 | 자동 주입 + 검증 |
 | 규칙 로딩 | 전체 문서 | JSON Cache |
-| 검증 속도 | 561ms | 148ms |
 
 ---
 
@@ -33,6 +32,42 @@
 ---
 
 ## 🚀 빠른 시작
+
+### Option 1: Claude 설정만 복사 (다른 프로젝트에 적용)
+
+**해당 템플릿 없이 Claude Hooks + Cache 시스템만 사용하고 싶다면:**
+
+```bash
+# 1. 이 프로젝트를 임시로 클론
+git clone https://github.com/your-org/claude-spring-standards.git /tmp/claude-spring-standards
+
+# 2. 본인 프로젝트로 이동
+cd your-project
+
+# 3. 설치 스크립트 실행 (대화형)
+bash /tmp/claude-spring-standards/scripts/install-claude-hooks.sh
+
+# 4. 완료 후 임시 디렉토리 삭제
+rm -rf /tmp/claude-spring-standards
+```
+
+**설치 스크립트가 수행하는 작업**:
+- ✅ `.claude/hooks/` 복사 (user-prompt-submit.sh, after-tool-use.sh)
+- ✅ `.claude/hooks/scripts/` 복사 (로그, 검증, Cache 빌드 스크립트)
+- ✅ `.claude/commands/lib/` 복사 (규칙 주입 스크립트)
+- ✅ 실행 권한 자동 설정
+- ✅ Python 의존성 확인 (tiktoken, jq)
+- ✅ 코딩 규칙 문서 복사 여부 선택
+- ✅ Cache 빌드 여부 선택
+
+**설치 후**:
+1. `.claude/CLAUDE.md` 프로젝트에 맞게 수정
+2. `docs/coding_convention/` 규칙 추가/수정
+3. `python3 .claude/hooks/scripts/build-rule-cache.py` 실행
+
+---
+
+### Option 2: 전체 템플릿 사용 (헥사고날 아키텍처 포함)
 
 ### 사전 요구사항
 
@@ -187,13 +222,9 @@ public Order create() {
 // ✅ Transaction 외부에서 호출
 public Order create() {
     ExternalData data = apiClient.fetch(); // ✅
-    return saveInTransaction(data);
+    return anyClass.doSomething(data);
 }
 
-@Transactional
-protected Order saveInTransaction(ExternalData data) {
-    return save(data);
-}
 ```
 
 #### 4. Javadoc 필수
