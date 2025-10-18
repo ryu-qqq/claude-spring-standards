@@ -14,6 +14,29 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# y/N 입력 검증 함수
+ask_yes_no() {
+    local prompt="$1"
+    local reply
+
+    while true; do
+        read -p "$prompt (y/N): " -n 1 -r reply
+        echo ""
+
+        case "$reply" in
+            [Yy])
+                return 0  # Yes
+                ;;
+            [Nn]|"")
+                return 1  # No (기본값)
+                ;;
+            *)
+                echo -e "${RED}❌ 잘못된 입력입니다. y 또는 N을 입력하세요.${NC}"
+                ;;
+        esac
+    done
+}
+
 # 현재 스크립트 위치
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_PROJECT="$(dirname "$SCRIPT_DIR")"
@@ -32,19 +55,17 @@ echo ""
 if [[ -d "$TARGET_PROJECT/.claude/hooks" ]]; then
     echo -e "${YELLOW}⚠️  이미 Claude Hooks가 설치되어 있습니다.${NC}"
     echo ""
-    read -p "덮어쓰시겠습니까? (y/N): " -n 1 -r
-    echo ""
 
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if ask_yes_no "덮어쓰시겠습니까?"; then
+        echo -e "${YELLOW}기존 설정을 백업합니다...${NC}"
+        BACKUP_DIR="$TARGET_PROJECT/.claude/hooks.backup.$(date +%Y%m%d_%H%M%S)"
+        mv "$TARGET_PROJECT/.claude/hooks" "$BACKUP_DIR"
+        echo -e "${GREEN}✅ 백업 완료: $BACKUP_DIR${NC}"
+        echo ""
+    else
         echo -e "${RED}❌ 설치를 취소합니다.${NC}"
         exit 1
     fi
-
-    echo -e "${YELLOW}기존 설정을 백업합니다...${NC}"
-    BACKUP_DIR="$TARGET_PROJECT/.claude/hooks.backup.$(date +%Y%m%d_%H%M%S)"
-    mv "$TARGET_PROJECT/.claude/hooks" "$BACKUP_DIR"
-    echo -e "${GREEN}✅ 백업 완료: $BACKUP_DIR${NC}"
-    echo ""
 fi
 
 # 필수 디렉토리 생성
@@ -86,10 +107,8 @@ echo ""
 # CLAUDE.md 복사 여부 확인
 if [[ ! -f "$TARGET_PROJECT/.claude/CLAUDE.md" ]]; then
     echo -e "${YELLOW}💡 CLAUDE.md 파일이 없습니다.${NC}"
-    read -p "템플릿 CLAUDE.md를 복사하시겠습니까? (y/N): " -n 1 -r
-    echo ""
 
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if ask_yes_no "템플릿 CLAUDE.md를 복사하시겠습니까?"; then
         cp "$SOURCE_PROJECT/.claude/CLAUDE.md" "$TARGET_PROJECT/.claude/"
         echo -e "${GREEN}✅ CLAUDE.md 복사 완료${NC}"
         echo -e "${YELLOW}⚠️  프로젝트에 맞게 CLAUDE.md를 수정하세요!${NC}"
@@ -101,10 +120,8 @@ fi
 echo -e "${YELLOW}📚 코딩 규칙 문서 (docs/coding_convention/)${NC}"
 echo "이 디렉토리는 프로젝트별로 다를 수 있습니다."
 echo ""
-read -p "코딩 규칙 문서도 복사하시겠습니까? (y/N): " -n 1 -r
-echo ""
 
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+if ask_yes_no "코딩 규칙 문서도 복사하시겠습니까?"; then
     if [[ -d "$TARGET_PROJECT/docs/coding_convention" ]]; then
         echo -e "${YELLOW}⚠️  기존 coding_convention 디렉토리를 백업합니다.${NC}"
         BACKUP_CONV="$TARGET_PROJECT/docs/coding_convention.backup.$(date +%Y%m%d_%H%M%S)"
@@ -133,10 +150,8 @@ fi
 # tiktoken 설치 확인
 if ! python3 -c "import tiktoken" 2>/dev/null; then
     echo -e "${YELLOW}⚠️  tiktoken이 설치되지 않았습니다.${NC}"
-    read -p "tiktoken을 설치하시겠습니까? (y/N): " -n 1 -r
-    echo ""
 
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if ask_yes_no "tiktoken을 설치하시겠습니까?"; then
         pip3 install tiktoken
         echo -e "${GREEN}✅ tiktoken 설치 완료${NC}"
     else
@@ -162,10 +177,8 @@ echo ""
 # Cache 빌드 여부 확인
 if [[ -d "$TARGET_PROJECT/docs/coding_convention" ]]; then
     echo -e "${BLUE}💾 Cache 빌드${NC}"
-    read -p "지금 Cache를 빌드하시겠습니까? (y/N): " -n 1 -r
-    echo ""
 
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if ask_yes_no "지금 Cache를 빌드하시겠습니까?"; then
         cd "$TARGET_PROJECT"
         python3 .claude/hooks/scripts/build-rule-cache.py
         echo -e "${GREEN}✅ Cache 빌드 완료${NC}"
