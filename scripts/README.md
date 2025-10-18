@@ -41,6 +41,8 @@ rm -rf /tmp/claude-spring-standards
 #### 선택 항목 (대화형 선택)
 - `.claude/CLAUDE.md` - Claude Code 프로젝트 설정
 - `docs/coding_convention/` - 코딩 규칙 문서 (90개 규칙)
+- `hooks/pre-commit` - Git pre-commit hooks (커밋 시점 검증)
+- `hooks/validators/` - Git hook 검증 스크립트
 
 ### 설치 후 작업
 
@@ -64,6 +66,32 @@ vim docs/coding_convention/02-domain-layer/...
 # 규칙 문서를 JSON Cache로 변환
 python3 .claude/hooks/scripts/build-rule-cache.py
 ```
+
+#### 4. Git Pre-commit Hooks 설정 (선택사항)
+
+Git pre-commit hooks를 설치한 경우, 프로젝트에 맞게 검증 규칙을 수정하세요.
+
+```bash
+# 검증 스크립트 수정
+vim hooks/validators/validate-transaction-boundaries.sh
+vim hooks/validators/validate-proxy-constraints.sh
+vim hooks/validators/validate-lombok-usage.sh
+vim hooks/validators/validate-law-of-demeter.sh
+
+# 테스트
+git add <file>
+git commit -m "test"  # 검증 자동 실행
+```
+
+**검증 항목:**
+- ✅ Transaction 경계 검증 (`@Transactional` 내 외부 API 호출)
+- ✅ Spring 프록시 제약사항 (Private/Final 메서드 `@Transactional`)
+- ✅ Lombok 사용 금지
+- ✅ Law of Demeter (Getter 체이닝 금지)
+
+**심볼릭 링크:**
+- `.git/hooks/pre-commit` → `../../hooks/pre-commit`
+- Git 저장소가 아니면 설치 불가
 
 ### 의존성
 
@@ -125,6 +153,24 @@ tiktoken을 설치하시겠습니까? (y/N): y
 지금 Cache를 빌드하시겠습니까? (y/N): y
 ✅ Cache 빌드 완료
 
+🔗 Git Pre-commit Hooks (선택사항)
+Git pre-commit hooks는 커밋 시점에 코드를 검증합니다.
+※ 주의: Spring 프로젝트 전용 검증 로직이 포함되어 있습니다.
+
+검증 항목:
+  - Transaction 경계 검증 (@Transactional 내 외부 API 호출)
+  - Spring 프록시 제약사항 (Private/Final 메서드)
+  - Lombok 사용 금지
+  - Law of Demeter (Getter 체이닝)
+
+Git pre-commit hooks를 설치하시겠습니까? (y/N): y
+📋 Git hooks 파일 복사 중...
+✅ Git pre-commit hooks 설치 완료
+   위치: hooks/pre-commit
+   심볼릭 링크: .git/hooks/pre-commit → ../../hooks/pre-commit
+
+💡 프로젝트에 맞게 hooks/validators/ 스크립트를 수정하세요!
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ 설치 완료!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -134,6 +180,7 @@ tiktoken을 설치하시겠습니까? (y/N): y
 1. 프로젝트별 설정 수정:
    - .claude/CLAUDE.md 편집 (프로젝트 정보 업데이트)
    - docs/coding_convention/ 규칙 추가/수정
+   - hooks/validators/ 스크립트 수정 (프로젝트 검증 규칙)
 
 2. Cache 빌드 (규칙 변경 시마다):
    python3 .claude/hooks/scripts/build-rule-cache.py
@@ -142,6 +189,10 @@ tiktoken을 설치하시겠습니까? (y/N): y
    ./.claude/hooks/scripts/view-logs.sh
    ./.claude/hooks/scripts/view-logs.sh -f  # 실시간
    ./.claude/hooks/scripts/view-logs.sh -s  # 통계
+
+4. Git pre-commit hooks 테스트:
+   git add <file>
+   git commit -m "test" # 검증 자동 실행
 
 💡 Claude Code에서 다음과 같이 사용하세요:
    - domain, usecase, controller 등 키워드 입력
@@ -183,4 +234,66 @@ rm -rf .claude/commands/lib/inject-rules.py
 
 # 코딩 규칙 문서도 제거 (선택)
 rm -rf docs/coding_convention
+
+# Git pre-commit hooks 제거 (선택)
+rm -rf hooks
+rm .git/hooks/pre-commit
+```
+
+### Git Pre-commit Hooks 상세
+
+#### 검증 스크립트 구조
+
+```
+hooks/
+├── pre-commit                          # Master hook (심볼릭 링크 대상)
+└── validators/
+    ├── validate-transaction-boundaries.sh  # Transaction 경계 검증
+    ├── validate-proxy-constraints.sh       # Spring 프록시 제약사항
+    ├── validate-lombok-usage.sh            # Lombok 사용 금지
+    └── validate-law-of-demeter.sh          # Law of Demeter
+```
+
+#### 검증 규칙 커스터마이징
+
+각 검증 스크립트는 독립적으로 활성화/비활성화 가능합니다.
+
+```bash
+# validators/validate-transaction-boundaries.sh 예시
+# 외부 API 호출 패턴을 프로젝트에 맞게 수정
+EXTERNAL_API_PATTERNS=(
+    "RestTemplate"
+    "WebClient"
+    "FeignClient"
+    # 프로젝트 특정 패턴 추가
+)
+```
+
+#### 검증 비활성화
+
+특정 검증을 비활성화하려면 `hooks/pre-commit`에서 해당 라인 주석 처리:
+
+```bash
+# vim hooks/pre-commit
+# bash "$VALIDATORS_DIR/validate-lombok-usage.sh" "$STAGED_FILES"  # 비활성화
+```
+
+#### 수동 설치 (스크립트 사용하지 않는 경우)
+
+```bash
+# 1. hooks 디렉토리 생성
+mkdir -p hooks/validators
+
+# 2. 검증 스크립트 복사
+cp /path/to/template/hooks/* hooks/
+
+# 3. 실행 권한 부여
+chmod +x hooks/pre-commit hooks/validators/*.sh
+
+# 4. Git hooks 심볼릭 링크 생성
+ln -sf ../../hooks/pre-commit .git/hooks/pre-commit
+
+# 5. 테스트
+git add <file>
+git commit -m "test"
 ```

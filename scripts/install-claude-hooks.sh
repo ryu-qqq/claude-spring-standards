@@ -203,6 +203,65 @@ else
     echo ""
 fi
 
+# Git Pre-commit Hooks 설치 여부 확인
+echo -e "${BLUE}🔗 Git Pre-commit Hooks (선택사항)${NC}"
+echo "Git pre-commit hooks는 커밋 시점에 코드를 검증합니다."
+echo "※ 주의: Spring 프로젝트 전용 검증 로직이 포함되어 있습니다."
+echo ""
+echo "검증 항목:"
+echo "  - Transaction 경계 검증 (@Transactional 내 외부 API 호출)"
+echo "  - Spring 프록시 제약사항 (Private/Final 메서드)"
+echo "  - Lombok 사용 금지"
+echo "  - Law of Demeter (Getter 체이닝)"
+echo ""
+
+if ask_yes_no "Git pre-commit hooks를 설치하시겠습니까?"; then
+    # .git 디렉토리 존재 확인
+    if [[ ! -d "$TARGET_PROJECT/.git" ]]; then
+        echo -e "${RED}❌ Git 저장소가 아닙니다 (.git 디렉토리 없음).${NC}"
+        echo -e "${YELLOW}   git init 실행 후 다시 시도하세요.${NC}"
+        echo ""
+    else
+        # hooks 디렉토리 확인
+        if [[ ! -d "$SOURCE_PROJECT/hooks" ]]; then
+            echo -e "${RED}❌ 소스 프로젝트에 hooks/ 디렉토리가 없습니다.${NC}"
+            echo ""
+        else
+            # 기존 pre-commit hook 백업
+            if [[ -f "$TARGET_PROJECT/.git/hooks/pre-commit" ]] || [[ -L "$TARGET_PROJECT/.git/hooks/pre-commit" ]]; then
+                echo -e "${YELLOW}⚠️  기존 pre-commit hook을 백업합니다.${NC}"
+                BACKUP_HOOK="$TARGET_PROJECT/.git/hooks/pre-commit.backup.$(date +%Y%m%d_%H%M%S)"
+                mv "$TARGET_PROJECT/.git/hooks/pre-commit" "$BACKUP_HOOK"
+                echo -e "${GREEN}✅ 백업 완료: $BACKUP_HOOK${NC}"
+            fi
+
+            # 프로젝트 루트에 hooks 디렉토리 복사
+            echo -e "${BLUE}📋 Git hooks 파일 복사 중...${NC}"
+            mkdir -p "$TARGET_PROJECT/hooks/validators"
+            cp "$SOURCE_PROJECT/hooks/pre-commit" "$TARGET_PROJECT/hooks/"
+            cp -r "$SOURCE_PROJECT/hooks/validators/"* "$TARGET_PROJECT/hooks/validators/"
+
+            # 실행 권한 부여
+            chmod +x "$TARGET_PROJECT/hooks/pre-commit"
+            chmod +x "$TARGET_PROJECT/hooks/validators/"*.sh
+
+            # .git/hooks에 심볼릭 링크 생성
+            ln -sf "../../hooks/pre-commit" "$TARGET_PROJECT/.git/hooks/pre-commit"
+
+            echo -e "${GREEN}✅ Git pre-commit hooks 설치 완료${NC}"
+            echo -e "${BLUE}   위치: hooks/pre-commit${NC}"
+            echo -e "${BLUE}   심볼릭 링크: .git/hooks/pre-commit → ../../hooks/pre-commit${NC}"
+            echo ""
+            echo -e "${YELLOW}💡 프로젝트에 맞게 hooks/validators/ 스크립트를 수정하세요!${NC}"
+            echo ""
+        fi
+    fi
+else
+    echo -e "${YELLOW}⚠️  Git pre-commit hooks를 설치하지 않았습니다.${NC}"
+    echo -e "${YELLOW}   나중에 설치하려면: ln -sf ../../hooks/pre-commit .git/hooks/pre-commit${NC}"
+    echo ""
+fi
+
 # 완료 메시지
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}✅ 설치 완료!${NC}"
@@ -213,6 +272,9 @@ echo ""
 echo "1. 프로젝트별 설정 수정:"
 echo "   - .claude/CLAUDE.md 편집 (프로젝트 정보 업데이트)"
 echo "   - docs/coding_convention/ 규칙 추가/수정"
+if [[ -d "$TARGET_PROJECT/hooks" ]]; then
+    echo "   - hooks/validators/ 스크립트 수정 (프로젝트 검증 규칙)"
+fi
 echo ""
 echo "2. Cache 빌드 (규칙 변경 시마다):"
 echo "   python3 .claude/hooks/scripts/build-rule-cache.py"
@@ -222,6 +284,12 @@ echo "   ./.claude/hooks/scripts/view-logs.sh"
 echo "   ./.claude/hooks/scripts/view-logs.sh -f  # 실시간"
 echo "   ./.claude/hooks/scripts/view-logs.sh -s  # 통계"
 echo ""
+if [[ -L "$TARGET_PROJECT/.git/hooks/pre-commit" ]]; then
+    echo "4. Git pre-commit hooks 테스트:"
+    echo "   git add <file>"
+    echo "   git commit -m \"test\" # 검증 자동 실행"
+    echo ""
+fi
 echo -e "${YELLOW}💡 Claude Code에서 다음과 같이 사용하세요:${NC}"
 echo "   - domain, usecase, controller 등 키워드 입력"
 echo "   - 자동으로 Layer별 규칙이 주입되고 검증됩니다"
