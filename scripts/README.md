@@ -30,6 +30,12 @@ rm -rf /tmp/claude-spring-standards
 - `.claude/hooks/scripts/validation-helper.py` - 검증 헬퍼
 - `.claude/hooks/scripts/build-rule-cache.py` - Cache 빌드 스크립트
 - `.claude/commands/lib/inject-rules.py` - 규칙 주입 스크립트
+- `.claude/commands/code-gen-domain.md` - Domain 코드 생성 명령
+- `.claude/commands/code-gen-usecase.md` - UseCase 코드 생성 명령
+- `.claude/commands/code-gen-controller.md` - Controller 코드 생성 명령
+- `.claude/commands/validate-domain.md` - Domain 검증 명령
+- `.claude/commands/validate-architecture.md` - 아키텍처 검증 명령
+- `.claude/commands/README.md` - Commands 설명
 - `.claude/hooks/logs/README.md` - 로그 시스템 설명
 
 #### 선택 항목 (대화형 선택)

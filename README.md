@@ -54,6 +54,7 @@ rm -rf /tmp/claude-spring-standards
 **설치 스크립트가 수행하는 작업**:
 - ✅ `.claude/hooks/` 복사 (user-prompt-submit.sh, after-tool-use.sh)
 - ✅ `.claude/hooks/scripts/` 복사 (로그, 검증, Cache 빌드 스크립트)
+- ✅ `.claude/commands/` 복사 (코드 생성, 검증 명령어)
 - ✅ `.claude/commands/lib/` 복사 (규칙 주입 스크립트)
 - ✅ 실행 권한 자동 설정
 - ✅ Python 의존성 확인 (tiktoken, jq)

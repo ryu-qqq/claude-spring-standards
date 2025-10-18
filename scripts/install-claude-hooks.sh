@@ -91,6 +91,14 @@ cp "$SOURCE_PROJECT/.claude/hooks/scripts/build-rule-cache.py" "$TARGET_PROJECT/
 # Commands 복사
 cp "$SOURCE_PROJECT/.claude/commands/lib/inject-rules.py" "$TARGET_PROJECT/.claude/commands/lib/"
 
+# Slash Commands 복사
+cp "$SOURCE_PROJECT/.claude/commands/README.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/code-gen-controller.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/code-gen-domain.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/code-gen-usecase.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/validate-architecture.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/validate-domain.md" "$TARGET_PROJECT/.claude/commands/"
+
 # README 복사
 cp "$SOURCE_PROJECT/.claude/hooks/logs/README.md" "$TARGET_PROJECT/.claude/hooks/logs/"
 
