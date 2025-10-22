@@ -38,31 +38,31 @@ get_layer_from_keyword() {
 
     case "$keyword" in
         # Domain layer
-        aggregate|entity|value*object|domain*event)
+        aggregate|entity|value*object|domain*event|getter|factory|policy)
             echo "domain"
             ;;
         # Application layer
-        usecase|service|command|query|transaction)
+        usecase|service|command|query|transaction|assembler|spring|proxy|orchestration)
             echo "application"
             ;;
         # Adapter-REST layer (adapter-in 포함)
-        controller|rest*api|endpoint|adapter*in)
+        controller|rest*api|endpoint|adapter*in|validation|request|response|handling)
             echo "adapter-rest"
             ;;
         # Adapter-Persistence layer (adapter-out, persistence-mysql 포함)
-        repository|jpa|entity*mapping|adapter*out|persistence*mysql|persistence*postgresql|persistence*mongo)
+        repository|jpa|entity*mapping|adapter*out|persistence*mysql|persistence*postgresql|persistence*mongo|querydsl|batch|specification)
             echo "adapter-persistence"
             ;;
         # Testing
-        test)
+        test|archunit|testcontainers|benchmark)
             echo "testing"
             ;;
         # Java21
-        record|sealed)
+        record|sealed|virtual|threads|async)
             echo "java21"
             ;;
         # Enterprise
-        dto|mapper)
+        dto|mapper|cache|event|circuit*breaker|resilience|saga)
             echo "enterprise"
             ;;
         # Error handling
@@ -76,7 +76,7 @@ get_layer_from_keyword() {
 }
 
 # 키워드 목록 (프로젝트별 패키지 구조 포함)
-KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent usecase service command query transaction controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo test record sealed dto mapper exception error"
+KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent getter factory policy usecase service command query transaction assembler spring proxy orchestration controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin validation request response handling repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo querydsl batch specification test archunit testcontainers benchmark record sealed virtual threads async dto mapper cache event circuit.breaker circuit_breaker circuitbreaker resilience saga exception error"
 
 # Primary Keywords 검색 (30점)
 for keyword in $KEYWORDS; do
@@ -135,8 +135,23 @@ if echo "$USER_INPUT" | grep -qiE "(api|rest)"; then
     DETECTED_KEYWORDS+=("api_context")
 fi
 
+if echo "$USER_INPUT" | grep -qiE "(persistence|영속성)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    DETECTED_KEYWORDS+=("persistence_context")
+fi
+
+if echo "$USER_INPUT" | grep -qiE "(transaction|트랜잭션)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    DETECTED_KEYWORDS+=("transaction_context")
+fi
+
+if echo "$USER_INPUT" | grep -qiE "(validation|검증)"; then
+    CONTEXT_SCORE=$((CONTEXT_SCORE + 15))
+    DETECTED_KEYWORDS+=("validation_context")
+fi
+
 # Zero-Tolerance Keywords (20점)
-if echo "$USER_INPUT" | grep -qiE "(lombok|getter.chaining|@transactional|zero.tolerance)"; then
+if echo "$USER_INPUT" | grep -qiE "(lombok|getter\.chaining|law\.of\.demeter|@transactional|zero\.tolerance)"; then
     PRIORITY_FILTER="critical"
     CONTEXT_SCORE=$((CONTEXT_SCORE + 20))
     DETECTED_KEYWORDS+=("zero_tolerance")
