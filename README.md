@@ -3,7 +3,7 @@
 > **Spring Boot 3.5.x + Java 21 헥사고날 아키텍처 템플릿**
 > Dynamic Hooks + Cache 시스템을 통한 AI 기반 코딩 표준 자동화
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blue.svg)](https://alistair.cockburn.us/hexagonal-architecture/)
 
@@ -85,7 +85,7 @@ rm -rf /tmp/claude-spring-standards
 git clone https://github.com/your-org/claude-spring-standards.git
 cd claude-spring-standards
 
-# 2. Cache 빌드 (90개 규칙 → JSON, 약 5초)
+# 2. Cache 빌드 (96개 규칙 → JSON, 약 5초)
 python3 .claude/hooks/scripts/build-rule-cache.py
 
 # 3. Git Hooks 설정
@@ -120,14 +120,14 @@ claude code
 
 **Before (기존 방식)**:
 ```
-90개 마크다운 문서 전체 로딩
+98개 마크다운 문서 전체 로딩
 → 예제, 설명 포함 전체 내용
 → 50,000+ 토큰 소비
 ```
 
 **After (JSON Cache)**:
 ```
-90개 JSON 파일 (핵심만 구조화)
+96개 JSON 파일 (핵심만 구조화)
 → 필요한 규칙만 O(1) 조회
 → 500-1,000 토큰 (선택적 로딩)
 ```
@@ -158,12 +158,37 @@ claude code
 
 ### 키워드 → Layer 매핑
 
-| 키워드 | Layer | 점수 |
-|---------|-------|-------|
-| aggregate | domain | 30 |
-| controller | adapter-rest | 30 |
-| usecase, service | application | 30 |
-| repository, jpa | adapter-persistence | 30 |
+#### Primary Keywords (30점)
+
+| 키워드 | Layer | 예시 |
+|---------|-------|------|
+| aggregate, entity, getter, factory, policy | domain | Law of Demeter, Aggregate 설계 |
+| usecase, service, command, query, transaction, assembler, spring, proxy, orchestration | application | Transaction 경계, UseCase 패턴 |
+| controller, endpoint, validation, request, response, handling | adapter-rest | REST API 설계, 검증 |
+| repository, jpa, querydsl, batch, specification | adapter-persistence | JPA 전략, QueryDSL 최적화 |
+| test, archunit, testcontainers, benchmark | testing | 아키텍처 검증, 통합 테스트 |
+| record, sealed, virtual, threads, async | java21 | Java 21 패턴, Virtual Thread |
+| dto, mapper, cache, event, circuit-breaker, resilience, saga | enterprise | 캐싱 전략, 이벤트 기반 |
+| exception, error | error-handling | 예외 처리 전략 |
+
+#### Secondary Keywords (15점)
+
+| 키워드 | 설명 |
+|---------|------|
+| domain, 도메인 | 도메인 컨텍스트 |
+| api, rest | API 컨텍스트 |
+| persistence, 영속성 | 영속성 컨텍스트 |
+| transaction, 트랜잭션 | 트랜잭션 컨텍스트 |
+| validation, 검증 | 검증 컨텍스트 |
+
+#### Zero-Tolerance Keywords (20점)
+
+| 키워드 | 규칙 |
+|---------|------|
+| lombok | Lombok 사용 금지 |
+| getter.chaining | Getter 체이닝 금지 |
+| law.of.demeter | Law of Demeter 위반 |
+| @transactional | Transaction 경계 위반 |
 
 **예시**:
 ```
@@ -172,6 +197,12 @@ claude code
 → Layer: domain
 → 로드: domain-layer-*.json (13개 규칙)
 → 주입: Critical 우선순위 규칙
+
+입력: "getter chaining 금지 규칙 적용"
+→ "getter" 감지 (+30, Primary)
+→ "getter.chaining" 감지 (+20, Zero-Tolerance)
+→ Layer: domain
+→ 로드: Law of Demeter 관련 규칙
 ```
 
 ---
@@ -541,4 +572,27 @@ python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
 
 ---
 
-*최종 업데이트: 2025-10-17*
+## 📝 최근 업데이트
+
+### 2025-10-22
+- ✅ **Hook 키워드 확장**: 33개 추가로 Cache 매핑 커버리지 46.9% → 85%+ 달성
+- ✅ **Slash Commands 추가**: 5개 레이어별 작업 모드 구현 (`/domain`, `/application`, `/rest`, `/persistence`, `/test`)
+- ✅ **Secondary Keywords 확장**: persistence, transaction, validation (15점)
+- ✅ **Zero-Tolerance 강화**: Law of Demeter 패턴 감지 추가
+- ✅ **키워드 커버리지 개선**:
+  - Domain: getter, factory, policy
+  - Application: assembler, spring, proxy, orchestration
+  - REST: validation, request, response, handling
+  - Persistence: querydsl, batch, specification
+  - Testing: archunit, testcontainers, benchmark
+  - Java21: virtual, threads, async
+  - Enterprise: cache, event, circuit-breaker, resilience, saga
+
+### 2025-10-17
+- ✅ Dynamic Hooks + Cache 시스템 초기 구현
+- ✅ 96개 규칙 JSON 캐시 구축
+- ✅ 자동 검증 시스템 구현
+
+---
+
+*최종 업데이트: 2025-10-22*
