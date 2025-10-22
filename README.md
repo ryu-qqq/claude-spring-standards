@@ -24,6 +24,7 @@
 
 - [빠른 시작](#-빠른-시작)
 - [Cache 시스템](#-cache-시스템)
+- [레이어별 작업 모드 (Slash Commands)](#-레이어별-작업-모드-slash-commands)
 - [코딩 표준](#-코딩-표준)
 - [개발 워크플로우](#-개발-워크플로우)
 - [로그 시스템](#-로그-시스템)
@@ -172,6 +173,149 @@ claude code
 → 로드: domain-layer-*.json (13개 규칙)
 → 주입: Critical 우선순위 규칙
 ```
+
+---
+
+## 🎯 레이어별 작업 모드 (Slash Commands)
+
+### 기존 문제점
+
+**키워드 기반 감지의 한계**:
+```
+사용자: "domain 클래스에 reconstitute() 추가해줘"
+→ "domain" 키워드만 감지 (15점)
+→ 임계값 25점 미달 ❌
+→ 규칙 주입 실패!
+```
+
+**문제 원인**:
+- Primary Keywords (30점): `entity`, `aggregate`, `usecase`, `controller` 등
+- Secondary Keywords (15점): `domain`, `api`, `rest`
+- 임계값: 25점
+- **사용자가 정확한 키워드를 기억하고 사용해야 함** ← 비직관적!
+
+### 해결책: 명시적 Slash Commands
+
+**5개 레이어별 Commands 추가**:
+```bash
+/domain      # Domain layer 작업
+/application # Application layer 작업
+/rest        # REST API/Controller 작업
+/persistence # Persistence/Repository 작업
+/test        # 테스트 작업
+```
+
+### 작동 메커니즘
+
+#### 1. Slash Command 파일 구조
+
+```markdown
+# .claude/commands/domain.md
+---
+description: Domain layer 작업 (Aggregate, Entity, Value Object 등)
+---
+
+domain entity {{args}}
+```
+
+#### 2. 확장 프로세스
+
+```
+사용자 입력:
+  /domain "Order에 reconstitute() 메서드 추가"
+
+       ↓ (Claude Code가 domain.md 읽음)
+
+확장된 프롬프트:
+  domain entity Order에 reconstitute() 메서드 추가
+
+       ↓ (hooks.json의 UserPromptSubmit 트리거)
+
+user-prompt-submit.sh 실행:
+  - "domain" 감지 → +15점 (Secondary)
+  - "entity" 감지 → +30점 (Primary)
+  - 합산: 45점 (임계값 25점 초과 ✅)
+
+       ↓ (inject-rules.py 호출)
+
+Domain Layer 규칙 자동 주입:
+  - 13개 JSON 규칙 파일 로드
+  - 2,120 토큰 주입
+  - Law of Demeter, Lombok 금지 등
+```
+
+#### 3. 점수 설계
+
+| Command | 확장 템플릿 | 점수 | 설명 |
+|---------|------------|------|------|
+| `/domain` | `domain entity {{args}}` | 45점 | entity(30) + domain(15) |
+| `/application` | `usecase service {{args}}` | 60점 | usecase(30) + service(30) |
+| `/rest` | `controller rest api {{args}}` | 60점+ | controller(30) + rest(15) + api(15) |
+| `/persistence` | `repository jpa persistence {{args}}` | 60점+ | repository(30) + jpa(30) |
+| `/test` | `test {{args}}` | 30점 | test(30) |
+
+**모든 Command가 임계값(25점)을 안정적으로 초과!**
+
+### 사용 예시
+
+#### 시나리오 1: Domain 수정
+```bash
+# Before (키워드 기억 필요)
+"Order entity에 cancel() 메서드 추가해줘"  # entity(30) → ✅
+"Order aggregate에 취소 정책 추가해줘"    # aggregate(30) → ✅
+"Order domain에 reconstitute() 추가해줘"  # domain(15) → ❌ 실패!
+
+# After (명시적 Command)
+/domain "Order에 cancel() 메서드 추가해줘"        # ✅ 항상 45점
+/domain "Order에 취소 정책 추가해줘"              # ✅ 항상 45점
+/domain "Order에 reconstitute() 추가해줘"        # ✅ 항상 45점
+```
+
+#### 시나리오 2: 전체 워크플로우
+```bash
+# 1. Domain 작업
+/domain "Payment Aggregate에 환불 로직 추가"
+
+# 2. Application 작업
+/application "RefundUseCase에 정산 로직 추가"
+
+# 3. REST API 작업
+/rest "PaymentController에 환불 엔드포인트 추가"
+
+# 4. Persistence 작업
+/persistence "PaymentRepository에 환불 이력 조회 추가"
+
+# 5. 테스트 작업
+/test "환불 기능 통합 테스트 작성"
+```
+
+### 코드 생성 Commands와의 차이
+
+| 구분 | 레이어별 작업 모드 | 코드 생성 Commands |
+|------|------------------|------------------|
+| **Command** | `/domain`, `/application` 등 | `/code-gen-domain`, `/code-gen-usecase` |
+| **목적** | 기존 코드 수정/추가 | 전체 구조 새로 생성 |
+| **범위** | 자유로운 부분 수정 | 파일 + 테스트 + 구조 |
+| **출력** | 요청한 내용만 | 완전한 파일 세트 |
+| **사용 시점** | 세부 구현/수정 | 초기 구조 생성 |
+
+**권장 워크플로우**:
+```bash
+# 1. 초기 구조 생성
+/code-gen-domain Order
+/code-gen-usecase PlaceOrder
+
+# 2. 세부 구현 및 수정
+/domain "Order에 추가 비즈니스 로직"
+/application "PlaceOrderUseCase에 검증 로직 추가"
+```
+
+### 핵심 이점
+
+✅ **직관적**: `/domain` 타이핑만으로 Domain 작업 모드 진입
+✅ **안정적**: 항상 임계값 초과 보장 (키워드 망각 문제 해결)
+✅ **명시적**: 어떤 Layer 작업인지 명확히 선언
+✅ **일관적**: 모든 팀원이 동일한 방식으로 사용
 
 ---
 
@@ -393,7 +537,7 @@ python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
 
 ## 📄 라이선스
 
-© 2024 Ryu-qqq. All Rights Reserved.
+© 2025 Ryu-qqq. All Rights Reserved.
 
 ---
 
