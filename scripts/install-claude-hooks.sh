@@ -78,6 +78,9 @@ mkdir -p "$TARGET_PROJECT/.claude/commands/lib"
 # Claude 설정 파일 복사
 echo -e "${BLUE}📋 설정 파일 복사 중...${NC}"
 
+# hooks.json 복사
+cp "$SOURCE_PROJECT/.claude/hooks.json" "$TARGET_PROJECT/.claude/"
+
 # Hooks 복사
 cp "$SOURCE_PROJECT/.claude/hooks/user-prompt-submit.sh" "$TARGET_PROJECT/.claude/hooks/"
 cp "$SOURCE_PROJECT/.claude/hooks/after-tool-use.sh" "$TARGET_PROJECT/.claude/hooks/"
@@ -87,6 +90,8 @@ cp "$SOURCE_PROJECT/.claude/hooks/scripts/log-helper.py" "$TARGET_PROJECT/.claud
 cp "$SOURCE_PROJECT/.claude/hooks/scripts/view-logs.sh" "$TARGET_PROJECT/.claude/hooks/scripts/"
 cp "$SOURCE_PROJECT/.claude/hooks/scripts/validation-helper.py" "$TARGET_PROJECT/.claude/hooks/scripts/"
 cp "$SOURCE_PROJECT/.claude/hooks/scripts/build-rule-cache.py" "$TARGET_PROJECT/.claude/hooks/scripts/"
+cp "$SOURCE_PROJECT/.claude/hooks/scripts/init-session.sh" "$TARGET_PROJECT/.claude/hooks/scripts/"
+cp "$SOURCE_PROJECT/.claude/hooks/scripts/preserve-rules.sh" "$TARGET_PROJECT/.claude/hooks/scripts/"
 
 # Commands 복사
 cp "$SOURCE_PROJECT/.claude/commands/lib/inject-rules.py" "$TARGET_PROJECT/.claude/commands/lib/"

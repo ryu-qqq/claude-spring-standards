@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/scripts/after-tool-use.sh {{toolName}} {{filePath}}"
+            "command": "bash .claude/hooks/after-tool-use.sh {{toolName}} {{filePath}}"
           }
         ]
       }
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/scripts/user-prompt-submit.sh '{{prompt}}'"
+            "command": "bash .claude/hooks/user-prompt-submit.sh"
           }
         ]
       }
