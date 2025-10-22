@@ -98,9 +98,20 @@ cp "$SOURCE_PROJECT/.claude/commands/lib/inject-rules.py" "$TARGET_PROJECT/.clau
 
 # Slash Commands 복사
 cp "$SOURCE_PROJECT/.claude/commands/README.md" "$TARGET_PROJECT/.claude/commands/"
+
+# 레이어별 작업 모드 Commands
+cp "$SOURCE_PROJECT/.claude/commands/domain.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/application.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/rest.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/persistence.md" "$TARGET_PROJECT/.claude/commands/"
+cp "$SOURCE_PROJECT/.claude/commands/test.md" "$TARGET_PROJECT/.claude/commands/"
+
+# 코드 생성 Commands
 cp "$SOURCE_PROJECT/.claude/commands/code-gen-controller.md" "$TARGET_PROJECT/.claude/commands/"
 cp "$SOURCE_PROJECT/.claude/commands/code-gen-domain.md" "$TARGET_PROJECT/.claude/commands/"
 cp "$SOURCE_PROJECT/.claude/commands/code-gen-usecase.md" "$TARGET_PROJECT/.claude/commands/"
+
+# 검증 Commands
 cp "$SOURCE_PROJECT/.claude/commands/validate-architecture.md" "$TARGET_PROJECT/.claude/commands/"
 cp "$SOURCE_PROJECT/.claude/commands/validate-domain.md" "$TARGET_PROJECT/.claude/commands/"
 
