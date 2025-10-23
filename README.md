@@ -96,6 +96,52 @@ chmod +x .git/hooks/pre-commit
 ./gradlew build
 ```
 
+### Claude Code Hooks 설정 (필수)
+
+**중요**: Claude Code Hooks는 `/hooks` 명령어를 통해 **수동으로 등록**해야 합니다.
+보안상의 이유로 `settings.json` 파일을 Git에 커밋해도 자동으로 활성화되지 않습니다.
+
+#### 설정 방법
+
+1. **Claude Code에서 프로젝트 열기**
+   ```bash
+   claude code
+   ```
+
+2. **`/hooks` 명령어 실행**
+   - 터미널에서 `/hooks` 입력
+
+3. **UserPromptSubmit Hook 등록**
+   - Event: `UserPromptSubmit`
+   - Command: `.claude/hooks/user-prompt-submit.sh`
+   - 저장: Project settings 선택
+
+4. **PreToolUse Hook 등록**
+   - Event: `PreToolUse`
+   - Command: `.claude/hooks/user-prompt-submit.sh`
+   - 저장: Project settings 선택
+
+5. **PostToolUse Hook 등록 (선택사항, 코드 검증용)**
+   - Event: `PostToolUse`
+   - Matcher: `Write|Edit|MultiEdit`
+   - Command: `.claude/hooks/after-tool-use.sh {{toolName}} {{filePath}}`
+   - 저장: Project settings 선택
+
+#### 설정 확인
+
+```bash
+# Hook이 정상 작동하는지 테스트
+domain aggregate 테스트
+
+# 로그 확인
+cat .claude/hooks/logs/hook-execution.jsonl
+```
+
+**Hook이 정상 작동하면**:
+- ✅ `.claude/hooks/logs/hook-execution.jsonl` 파일 생성됨
+- ✅ 프롬프트에 Layer별 규칙이 자동 주입됨
+- ✅ 코드 생성 후 자동 검증 실행됨
+
 ### 첫 코드 생성
 
 ```bash
