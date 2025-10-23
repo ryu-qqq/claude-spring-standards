@@ -191,9 +191,60 @@ python3 .claude/hooks/scripts/build-rule-cache.py
 
 ## Dynamic Hooks
 
+### Hook 실행 흐름
+
+**2가지 트리거**:
+
+1. **UserPromptSubmit Hook** - 사용자가 일반 프롬프트를 입력할 때
+2. **PreToolUse Hook** - Slash Command 실행 직전
+
+#### Slash Command와 Hook의 관계
+
+**문제**: Slash Command는 SlashCommand Tool을 통해 처리되므로 UserPromptSubmit Hook을 우회합니다.
+
+**해결**: PreToolUse Hook을 추가하여 SlashCommand Tool 실행 **직전**에 규칙을 주입합니다.
+
+**hooks.json 설정**:
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "SlashCommand",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/user-prompt-submit.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/user-prompt-submit.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**동작 비교**:
+
+| 입력 방식 | Hook 트리거 | 규칙 주입 |
+|----------|------------|----------|
+| 일반 프롬프트: "domain aggregate Order" | UserPromptSubmit | ✅ |
+| Slash Command: `/domain Order` | PreToolUse (SlashCommand 매처) | ✅ |
+
 ### user-prompt-submit.sh
 
-**Trigger**: 사용자가 프롬프트를 제출할 때
+**Trigger**:
+- UserPromptSubmit Hook (일반 프롬프트)
+- PreToolUse Hook (Slash Command)
 
 **동작 흐름**:
 
@@ -292,10 +343,41 @@ File Written (Order.java)
 
 **위치**: `.claude/commands/`
 
-**사용 가능한 커맨드**:
-- `/code-gen-domain [Aggregate] [PRD]`
-- `/code-gen-usecase [UseCase] [PRD]`
-- `/code-gen-controller [Resource] [PRD]`
+**커맨드 종류**:
+
+1. **코드 생성 커맨드** (전체 구조 생성):
+   - `/code-gen-domain [Aggregate] [PRD]`
+   - `/code-gen-usecase [UseCase] [PRD]`
+   - `/code-gen-controller [Resource] [PRD]`
+
+2. **레이어별 작업 모드** (기존 코드 수정):
+   - `/domain [작업 내용]`
+   - `/application [작업 내용]`
+   - `/rest [작업 내용]`
+   - `/persistence [작업 내용]`
+   - `/test [작업 내용]`
+
+### Slash Command 규칙 주입 메커니즘
+
+**커맨드 정의 방식** (간결한 키워드 기반):
+```markdown
+---
+description: Domain layer 작업 (Aggregate, Entity, Value Object, Domain Event 등)
+---
+
+domain aggregate entity {{args}}
+```
+
+**PreToolUse Hook 처리**:
+1. 사용자가 `/domain Product` 입력
+2. SlashCommand Tool이 "domain aggregate entity Product"로 확장
+3. PreToolUse Hook이 **Tool 실행 직전** 트리거
+4. user-prompt-submit.sh가 키워드 분석:
+   - "domain" (30점) + "aggregate" (30점) + "entity" (30점) = 90점
+5. Domain layer 규칙 13개 자동 주입
+6. SlashCommand Tool 실행 → Claude가 규칙 준수 코드 생성
+
+**핵심**: 커맨드는 간결하게 유지하고, Hook이 규칙 주입을 담당합니다.
 
 ### /code-gen-domain
 

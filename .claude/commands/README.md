@@ -4,66 +4,7 @@
 
 ## 📋 사용 가능한 커맨드
 
-### 🎯 레이어별 작업 모드 (NEW!)
-
-**목적**: 특정 레이어 작업 시 관련 규칙 자동 주입 (키워드 감지 불필요)
-
-#### `/domain`
-**사용 시점**: Domain layer 수정/추가 작업
-```bash
-/domain "Order에 cancel() 메서드 추가해줘"
-/domain "reconstitute() 정적 팩토리 메서드 구현해줘"
-/domain "OrderStatus를 sealed class로 변경해줘"
-```
-**주입 규칙**: Aggregate 설계, Law of Demeter, Domain 캡슐화, Pure Java
-
----
-
-#### `/application`
-**사용 시점**: Application layer (UseCase) 수정/추가 작업
-```bash
-/application "주문 생성 UseCase에 재고 확인 로직 추가해줘"
-/application "CreateOrderCommand DTO 필드 추가해줘"
-/application "트랜잭션 경계 수정해줘"
-```
-**주입 규칙**: UseCase 패턴, Transaction 관리, Command/Query 분리, Assembler 패턴
-
----
-
-#### `/rest`
-**사용 시점**: REST API Controller 수정/추가 작업
-```bash
-/rest "OrderController에 PUT /orders/{id} 엔드포인트 추가해줘"
-/rest "Request DTO 유효성 검증 강화해줘"
-/rest "ErrorResponse 형식 통일해줘"
-```
-**주입 규칙**: RESTful API 설계, Request/Response DTO (Record), Exception Handling
-
----
-
-#### `/persistence`
-**사용 시점**: Repository/JPA 수정/추가 작업
-```bash
-/persistence "OrderRepository에 findByStatusAndDate 추가해줘"
-/persistence "QueryDSL로 복잡한 검색 쿼리 최적화해줘"
-/persistence "Entity Mapper 수정해줘"
-```
-**주입 규칙**: Long FK 전략, JPA 최적화, Entity ↔ Domain 매핑, N+1 방지
-
----
-
-#### `/test`
-**사용 시점**: 테스트 코드 작성
-```bash
-/test "Order 엔티티 단위 테스트 작성해줘"
-/test "CreateOrderUseCase 통합 테스트 추가해줘"
-/test "ArchUnit 규칙 검증 강화해줘"
-```
-**주입 규칙**: Unit Test, Integration Test, ArchUnit, Testcontainers, Given-When-Then
-
----
-
-### 🔨 코드 생성 커맨드 (전체 구조 자동 생성)
+### 🔨 코드 생성 커맨드
 
 #### `/code-gen-domain`
 **목적**: DDD Aggregate 자동 생성
@@ -135,7 +76,119 @@
 
 ## 🔧 규칙 주입 시스템
 
+### PreToolUse Hook을 통한 자동 규칙 주입
+
+**핵심 메커니즘**: Slash Command 실행 직전에 PreToolUse Hook이 트리거되어 규칙을 주입합니다.
+
+**hooks.json 설정**:
+```json
+{
+  "PreToolUse": [
+    {
+      "matcher": "SlashCommand",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/hooks/user-prompt-submit.sh"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**동작 흐름**:
+```
+/domain Product 입력
+    ↓
+SlashCommand Tool 확장: "domain aggregate entity Product"
+    ↓
+PreToolUse Hook 트리거
+    ↓
+user-prompt-submit.sh 실행
+    ↓
+키워드 분석: domain(30) + aggregate(30) + entity(30) = 90점
+    ↓
+Domain layer 규칙 13개 자동 주입
+    ↓
+SlashCommand Tool 실행
+    ↓
+Claude가 규칙 준수 코드 생성
+```
+
+**커맨드 정의 방식** (간결한 키워드):
+- 각 커맨드는 핵심 키워드만 포함 (예: `domain aggregate entity {{args}}`)
+- 자세한 설명이나 규칙은 포함하지 않음
+- Hook이 자동으로 규칙을 주입하므로 커맨드는 심플하게 유지
+
 모든 커맨드는 `.claude/cache/rules/` 디렉토리의 JSON Cache를 기반으로 레이어별 규칙을 자동으로 주입합니다.
+
+---
+
+### 🎯 레이어별 작업 모드
+
+#### `/domain`
+**목적**: Domain layer 코드 수정/추가 (Aggregate, Entity, Value Object 등)
+
+**사용법**:
+```bash
+/domain "Order에 cancel() 메서드 추가해줘"
+/domain "Payment Aggregate에 환불 정책 추가해줘"
+```
+
+**자동 주입**: Domain layer 규칙 (Law of Demeter, Lombok 금지 등)
+
+---
+
+#### `/application`
+**목적**: Application layer 코드 수정/추가 (UseCase, Transaction 관리 등)
+
+**사용법**:
+```bash
+/application "PlaceOrderUseCase에 재고 확인 로직 추가해줘"
+/application "결제 실패 시 보상 트랜잭션 추가해줘"
+```
+
+**자동 주입**: Application layer 규칙 (Transaction 경계, DTO 패턴 등)
+
+---
+
+#### `/rest`
+**목적**: REST API/Controller 코드 수정/추가
+
+**사용법**:
+```bash
+/rest "OrderController에 주문 취소 엔드포인트 추가해줘"
+/rest "페이징 처리 추가해줘"
+```
+
+**자동 주입**: REST API layer 규칙 (HTTP 표준, DTO 매핑 등)
+
+---
+
+#### `/persistence`
+**목적**: Persistence/Repository 코드 수정/추가
+
+**사용법**:
+```bash
+/persistence "OrderRepository에 상태별 조회 메서드 추가해줘"
+/persistence "N+1 쿼리 최적화해줘"
+```
+
+**자동 주입**: Persistence layer 규칙 (JPA, QueryDSL 등)
+
+---
+
+#### `/test`
+**목적**: 테스트 코드 작성/수정
+
+**사용법**:
+```bash
+/test "주문 취소 기능 통합 테스트 작성해줘"
+/test "ArchUnit 규칙 추가해줘"
+```
+
+**자동 주입**: Testing 규칙 (ArchUnit, 통합 테스트 등)
 
 ---
 
