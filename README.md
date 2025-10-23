@@ -98,34 +98,31 @@ chmod +x .git/hooks/pre-commit
 
 ### Claude Code Hooks 설정 (필수)
 
-**중요**: Claude Code Hooks는 `/hooks` 명령어를 통해 **수동으로 등록**해야 합니다.
-보안상의 이유로 `settings.json` 파일을 Git에 커밋해도 자동으로 활성화되지 않습니다.
+**중요**: Claude Code Hooks는 로컬 설정 파일을 통해 활성화됩니다.
+보안상의 이유로 `settings.json` 파일을 Git에 커밋해도 자동으로 활성화되지 않으므로,
+각 개발자가 **로컬에서 `settings.local.json` 파일을 생성**해야 합니다.
 
-#### 설정 방법
+#### 방법 1: 템플릿 복사 (권장)
+
+```bash
+# 템플릿을 settings.local.json으로 복사
+cp .claude/settings.local.json.template .claude/settings.local.json
+
+# 권한 설정 확인
+chmod +x .claude/hooks/*.sh
+```
+
+#### 방법 2: /hooks 명령어 사용
 
 1. **Claude Code에서 프로젝트 열기**
    ```bash
    claude code
    ```
 
-2. **`/hooks` 명령어 실행**
-   - 터미널에서 `/hooks` 입력
-
-3. **UserPromptSubmit Hook 등록**
-   - Event: `UserPromptSubmit`
-   - Command: `.claude/hooks/user-prompt-submit.sh`
-   - 저장: Project settings 선택
-
-4. **PreToolUse Hook 등록**
-   - Event: `PreToolUse`
-   - Command: `.claude/hooks/user-prompt-submit.sh`
-   - 저장: Project settings 선택
-
-5. **PostToolUse Hook 등록 (선택사항, 코드 검증용)**
-   - Event: `PostToolUse`
-   - Matcher: `Write|Edit|MultiEdit`
-   - Command: `.claude/hooks/after-tool-use.sh {{toolName}} {{filePath}}`
-   - 저장: Project settings 선택
+2. **`/hooks` 명령어 실행하여 하나씩 등록**
+   - `UserPromptSubmit`: `.claude/hooks/user-prompt-submit.sh`
+   - `PreToolUse` (Matcher: `SlashCommand`): `.claude/hooks/user-prompt-submit.sh`
+   - `PostToolUse` (Matcher: `Write|Edit|MultiEdit`): `.claude/hooks/after-tool-use.sh {{toolName}} {{filePath}}`
 
 #### 설정 확인
 
@@ -141,6 +138,8 @@ cat .claude/hooks/logs/hook-execution.jsonl
 - ✅ `.claude/hooks/logs/hook-execution.jsonl` 파일 생성됨
 - ✅ 프롬프트에 Layer별 규칙이 자동 주입됨
 - ✅ 코드 생성 후 자동 검증 실행됨
+
+**참고**: `settings.local.json`은 `.gitignore`에 등록되어 있어 Git에 커밋되지 않습니다.
 
 ### 첫 코드 생성
 
