@@ -26,12 +26,10 @@ dependencies {
     // Adapters
     // ========================================
     // Inbound
-    implementation(project(":adapter:in:rest-in-admin-servlet"))
+    implementation(project(":adapter-in:rest-api"))
 
     // Outbound
-    implementation(project(":adapter:out:persistence-jpa"))
-    implementation(project(":adapter:out:client-aws-s3"))
-    implementation(project(":adapter:out:client-aws-sqs"))
+    implementation(project(":adapter-out:persistence-mysql"))
 
     // ========================================
     // Spring Boot Starters
@@ -72,6 +70,12 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.rest.assured)
+
+    // TestFixtures from all modules (for CommonTestingRulesTest)
+    testImplementation(testFixtures(project(":domain")))
+    testImplementation(testFixtures(project(":application")))
+    testImplementation(testFixtures(project(":adapter-in:rest-api")))
+    testImplementation(testFixtures(project(":adapter-out:persistence-mysql")))
 }
 
 // ========================================

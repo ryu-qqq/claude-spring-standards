@@ -92,6 +92,7 @@ cp "$SOURCE_PROJECT/.claude/hooks/scripts/validation-helper.py" "$TARGET_PROJECT
 cp "$SOURCE_PROJECT/.claude/hooks/scripts/build-rule-cache.py" "$TARGET_PROJECT/.claude/hooks/scripts/"
 cp "$SOURCE_PROJECT/.claude/hooks/scripts/init-session.sh" "$TARGET_PROJECT/.claude/hooks/scripts/"
 cp "$SOURCE_PROJECT/.claude/hooks/scripts/preserve-rules.sh" "$TARGET_PROJECT/.claude/hooks/scripts/"
+cp "$SOURCE_PROJECT/.claude/hooks/scripts/setup-serena-conventions.sh" "$TARGET_PROJECT/.claude/hooks/scripts/"
 
 # Commands 복사
 cp "$SOURCE_PROJECT/.claude/commands/lib/inject-rules.py" "$TARGET_PROJECT/.claude/commands/lib/"
@@ -114,6 +115,10 @@ cp "$SOURCE_PROJECT/.claude/commands/code-gen-usecase.md" "$TARGET_PROJECT/.clau
 # 검증 Commands
 cp "$SOURCE_PROJECT/.claude/commands/validate-architecture.md" "$TARGET_PROJECT/.claude/commands/"
 cp "$SOURCE_PROJECT/.claude/commands/validate-domain.md" "$TARGET_PROJECT/.claude/commands/"
+
+# Coding Convention Commands (cc 네임스페이스)
+mkdir -p "$TARGET_PROJECT/.claude/commands/cc"
+cp "$SOURCE_PROJECT/.claude/commands/cc/load.md" "$TARGET_PROJECT/.claude/commands/cc/"
 
 # README 복사
 cp "$SOURCE_PROJECT/.claude/hooks/logs/README.md" "$TARGET_PROJECT/.claude/hooks/logs/"
@@ -219,6 +224,92 @@ else
     echo ""
 fi
 
+# 텔레메트리 설정
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}📊 텔레메트리 (익명 사용 통계)${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo "Spring Standards 템플릿 개선을 위해 익명화된 사용 통계를"
+echo "수집하도록 허용하시겠습니까?"
+echo ""
+echo "수집 데이터:"
+echo "  ✅ 토큰 사용량 (익명)"
+echo "  ✅ 검증 시간 (익명)"
+echo "  ✅ 컨벤션 위반 통계 (익명)"
+echo "  ❌ 사용자 이름 (수집 안 됨)"
+echo "  ❌ 파일 이름 (수집 안 됨)"
+echo "  ❌ 코드 내용 (수집 안 됨)"
+echo ""
+echo "자세한 내용: docs/LANGFUSE_TELEMETRY_GUIDE.md"
+echo ""
+
+if ask_yes_no "텔레메트리를 활성화하시겠습니까?"; then
+    echo -e "${BLUE}📋 텔레메트리 설정 중...${NC}"
+
+    # .langfuse.telemetry 파일 생성
+    cat > "$TARGET_PROJECT/.langfuse.telemetry" <<'EOF'
+enabled=true
+public_key=pk-lf-d028249b-630d-4100-8edb-0a4a89d25b0a
+secret_key=sk-lf-43cd007f-183b-4fbb-a114-8289da1f327f
+host=https://us.cloud.langfuse.com
+anonymize=true
+EOF
+
+    echo -e "${GREEN}✅ 텔레메트리 활성화 완료${NC}"
+    echo -e "${YELLOW}💡 텔레메트리는 언제든지 비활성화할 수 있습니다:${NC}"
+    echo "   rm -f .langfuse.telemetry"
+    echo ""
+else
+    echo -e "${YELLOW}⚠️  텔레메트리를 비활성화했습니다.${NC}"
+    echo "   템플릿의 모든 기능은 정상 작동합니다."
+    echo ""
+fi
+
+# Windsurf/Cascade 설정 복사 여부 확인
+echo -e "${BLUE}🚀 Windsurf/Cascade 설정 (IntelliJ 통합)${NC}"
+echo "Windsurf 설정은 IntelliJ Cascade와 통합하여 Boilerplate를 빠르게 생성합니다."
+echo ""
+echo "포함 내용:"
+echo "  - .windsurf/rules/rules.md (Cascade 자동 로드 규칙)"
+echo "  - .windsurf/workflows/*.md (체계적인 코드 생성 가이드)"
+echo "  - .windsurf/README.md (Windsurf 사용 가이드)"
+echo ""
+
+if ask_yes_no "Windsurf/Cascade 설정을 복사하시겠습니까?"; then
+    if [[ ! -d "$SOURCE_PROJECT/.windsurf" ]]; then
+        echo -e "${RED}❌ 소스 프로젝트에 .windsurf/ 디렉토리가 없습니다.${NC}"
+        echo ""
+    else
+        echo -e "${BLUE}📋 Windsurf 설정 복사 중...${NC}"
+
+        # 기존 .windsurf 디렉토리 백업
+        if [[ -d "$TARGET_PROJECT/.windsurf" ]]; then
+            echo -e "${YELLOW}⚠️  기존 .windsurf 디렉토리를 백업합니다.${NC}"
+            BACKUP_WINDSURF="$TARGET_PROJECT/.windsurf.backup.$(date +%Y%m%d_%H%M%S)"
+            mv "$TARGET_PROJECT/.windsurf" "$BACKUP_WINDSURF"
+            echo -e "${GREEN}✅ 백업 완료: $BACKUP_WINDSURF${NC}"
+        fi
+
+        # .windsurf 디렉토리 생성
+        mkdir -p "$TARGET_PROJECT/.windsurf/rules"
+        mkdir -p "$TARGET_PROJECT/.windsurf/workflows"
+
+        # 파일 복사
+        cp "$SOURCE_PROJECT/.windsurf/README.md" "$TARGET_PROJECT/.windsurf/"
+        cp "$SOURCE_PROJECT/.windsurf/rules/rules.md" "$TARGET_PROJECT/.windsurf/rules/"
+        cp "$SOURCE_PROJECT/.windsurf/workflows/"*.md "$TARGET_PROJECT/.windsurf/workflows/"
+
+        echo -e "${GREEN}✅ Windsurf 설정 복사 완료${NC}"
+        echo -e "${BLUE}   위치: .windsurf/rules/rules.md${NC}"
+        echo -e "${YELLOW}💡 IntelliJ Cascade에서 .windsurf/rules/*.md를 자동으로 읽습니다${NC}"
+        echo ""
+    fi
+else
+    echo -e "${YELLOW}⚠️  Windsurf 설정을 복사하지 않았습니다.${NC}"
+    echo -e "${YELLOW}   나중에 복사하려면: cp -r <source>/.windsurf .${NC}"
+    echo ""
+fi
+
 # Git Pre-commit Hooks 설치 여부 확인
 echo -e "${BLUE}🔗 Git Pre-commit Hooks (선택사항)${NC}"
 echo "Git pre-commit hooks는 커밋 시점에 코드를 검증합니다."
@@ -291,22 +382,37 @@ echo "   - docs/coding_convention/ 규칙 추가/수정"
 if [[ -d "$TARGET_PROJECT/hooks" ]]; then
     echo "   - hooks/validators/ 스크립트 수정 (프로젝트 검증 규칙)"
 fi
+if [[ -d "$TARGET_PROJECT/.windsurf" ]]; then
+    echo "   - .windsurf/rules/rules.md 수정 (Cascade 규칙)"
+fi
 echo ""
 echo "2. Cache 빌드 (규칙 변경 시마다):"
 echo "   python3 .claude/hooks/scripts/build-rule-cache.py"
 echo ""
-echo "3. 로그 확인:"
+echo "3. Serena 메모리 초기화 (1회만):"
+echo "   bash .claude/hooks/scripts/setup-serena-conventions.sh"
+echo "   # 이후 Claude Code에서 /cc:load 실행"
+echo ""
+echo "4. 로그 확인:"
 echo "   ./.claude/hooks/scripts/view-logs.sh"
 echo "   ./.claude/hooks/scripts/view-logs.sh -f  # 실시간"
 echo "   ./.claude/hooks/scripts/view-logs.sh -s  # 통계"
 echo ""
 if [[ -L "$TARGET_PROJECT/.git/hooks/pre-commit" ]]; then
-    echo "4. Git pre-commit hooks 테스트:"
+    echo "5. Git pre-commit hooks 테스트:"
     echo "   git add <file>"
     echo "   git commit -m \"test\" # 검증 자동 실행"
     echo ""
 fi
-echo -e "${YELLOW}💡 Claude Code에서 다음과 같이 사용하세요:${NC}"
-echo "   - domain, usecase, controller 등 키워드 입력"
-echo "   - 자동으로 Layer별 규칙이 주입되고 검증됩니다"
+echo -e "${YELLOW}💡 Claude Code 사용법:${NC}"
+echo "   1. 세션 시작: /cc:load (코딩 컨벤션 로드)"
+echo "   2. 작업: domain, usecase, controller 등 키워드 입력"
+echo "   3. 자동: Layer별 규칙 주입 및 검증"
 echo ""
+if [[ -d "$TARGET_PROJECT/.windsurf" ]]; then
+    echo -e "${YELLOW}💡 IntelliJ Cascade 사용법:${NC}"
+    echo "   1. IntelliJ에서 Cascade 활성화"
+    echo "   2. .windsurf/rules/*.md 자동 로드됨"
+    echo "   3. Boilerplate 빠른 생성"
+    echo ""
+fi

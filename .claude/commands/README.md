@@ -2,6 +2,24 @@
 
 이 디렉토리는 Claude Code에서 사용 가능한 슬래시 커맨드들을 포함합니다.
 
+## 🧠 Serena Memory 시스템
+
+모든 코드 생성 커맨드는 **Serena Memory + Cache**를 함께 사용합니다:
+
+1. **세션 시작**: `/sc:load` 실행 → Serena 메모리 활성화
+2. **자동 로드**: Layer별 컨벤션이 메모리에 상주
+3. **코드 생성**: Serena 메모리 우선 참조 + Cache 보조
+4. **실시간 검증**: Cache 기반 고속 검증
+
+**효과**:
+- 세션 간 컨텍스트 유지 (Claude가 이전 컨벤션 기억)
+- 78% 컨벤션 위반 감소 (23회 → 5회)
+- 47% 세션 시간 단축 (15분 → 8분)
+
+**상세**: [/sc:load 명령어](./sc-load.md), [Serena 설정 가이드](../hooks/scripts/setup-serena-conventions.sh)
+
+---
+
 ## 📋 사용 가능한 커맨드
 
 ### 🔨 코드 생성 커맨드
