@@ -94,16 +94,49 @@ application/src/main/java/com/ryuqq/application/{aggregateLower}/
 
 ### 3. 필수 준수 규칙
 
-#### Command UseCase 패턴 (쓰기 작업)
+#### UseCase Interface (port/in)
 
 ```java
-package com.company.template.application.usecase;
+package com.ryuqq.application.{aggregateLower}.port.in;
+
+/**
+ * {UseCaseName} UseCase Interface (Port-In)
+ *
+ * <p>{간단한 설명}</p>
+ *
+ * <p><strong>헥사고날 아키텍처:</strong></p>
+ * <ul>
+ *   <li>Port-In: 애플리케이션의 진입점 인터페이스</li>
+ *   <li>구현체: service/ 패키지에 위치</li>
+ * </ul>
+ *
+ * @author Claude
+ * @since {현재 날짜}
+ */
+public interface {UseCaseName}UseCase {
+
+    /**
+     * {UseCase 설명}
+     *
+     * @param command Input Command
+     * @return Output Result
+     * @author Claude
+     * @since {현재 날짜}
+     */
+    {UseCaseName}Result execute({UseCaseName}Command command);
+}
+```
+
+#### Service Implementation (service/)
+
+```java
+package com.ryuqq.application.{aggregateLower}.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * {UseCaseName} UseCase
+ * {UseCaseName} Service (UseCase 구현체)
  *
  * <p>{간단한 설명}</p>
  *
@@ -117,7 +150,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since {현재 날짜}
  */
 @Service
-public class {UseCaseName}UseCase {
+public class {UseCaseName}Service implements {UseCaseName}UseCase {
 
     private final {Aggregate}Repository repository;
     private final {Aggregate}Assembler assembler;
@@ -133,7 +166,7 @@ public class {UseCaseName}UseCase {
      * @author Claude
      * @since {현재 날짜}
      */
-    public {UseCaseName}UseCase(
+    public {UseCaseName}Service(
         {Aggregate}Repository repository,
         {Aggregate}Assembler assembler,
         ExternalApiPort externalApiPort
@@ -144,7 +177,7 @@ public class {UseCaseName}UseCase {
     }
 
     /**
-     * {UseCase 설명}
+     * {UseCase 실행}
      *
      * <p><strong>트랜잭션 경계:</strong></p>
      * <ol>
@@ -161,6 +194,7 @@ public class {UseCaseName}UseCase {
      * @author Claude
      * @since {현재 날짜}
      */
+    @Override
     public {UseCaseName}Result execute({UseCaseName}Command command) {
         // 1. 외부 API 호출 (트랜잭션 밖)
         ExternalData externalData = externalApiPort.fetchData(command.externalId());

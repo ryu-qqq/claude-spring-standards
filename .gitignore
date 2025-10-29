@@ -38,6 +38,7 @@ bin/
 
 # Claude Code settings (local overrides)
 .claude/settings.local.json
+.claude/hooks/logs/
 .serena/
 
 # LangFuse telemetry (contains credentials)

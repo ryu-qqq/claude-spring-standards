@@ -65,6 +65,14 @@ public record ExampleSearchApiRequest(
      * Compact Constructor - 기본값 설정 및 검증
      */
     public ExampleSearchApiRequest {
+        // 페이지네이션 타입 검증 (page와 cursor 동시 제공 불가)
+        // NOTE: 기본값 설정 전에 검증해야 원본 값 판별 가능
+        boolean hasPage = page != null;
+        boolean hasCursor = cursor != null && !cursor.isBlank();
+        if (hasPage && hasCursor) {
+            throw new IllegalArgumentException("page와 cursor는 동시에 사용할 수 없습니다. 하나만 제공해주세요.");
+        }
+
         // 기본값 설정
         page = (page == null) ? 0 : page;
         size = (size == null) ? 20 : size;
@@ -74,13 +82,6 @@ public record ExampleSearchApiRequest(
         // 날짜 범위 검증
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("시작일은 종료일보다 이전이어야 합니다");
-        }
-
-        // 페이지네이션 타입 검증 (page와 cursor 동시 제공 불가)
-        boolean hasPage = page >= 0;
-        boolean hasCursor = cursor != null && !cursor.isBlank();
-        if (hasPage && hasCursor) {
-            throw new IllegalArgumentException("page와 cursor는 동시에 사용할 수 없습니다. 하나만 제공해주세요.");
         }
     }
 }

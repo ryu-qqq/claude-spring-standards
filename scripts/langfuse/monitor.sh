@@ -2,9 +2,9 @@
 # LangFuse 실시간 모니터링 스크립트
 #
 # Usage:
-#   export LANGFUSE_PUBLIC_KEY="pk-lf-..."
-#   export LANGFUSE_SECRET_KEY="sk-lf-..."
 #   bash scripts/langfuse/monitor.sh
+#
+# Credentials are read from .langfuse.telemetry file (no env vars needed)
 
 set -e
 
@@ -55,15 +55,6 @@ log_error() {
 log_warning() {
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} ⚠️  $1"
 }
-
-# 환경 변수 확인
-if [ -z "$LANGFUSE_PUBLIC_KEY" ] || [ -z "$LANGFUSE_SECRET_KEY" ]; then
-    log_error "LangFuse credentials not found"
-    echo "   Set environment variables:"
-    echo "   export LANGFUSE_PUBLIC_KEY='pk-lf-...'"
-    echo "   export LANGFUSE_SECRET_KEY='sk-lf-...'"
-    exit 1
-fi
 
 # Python 확인
 if ! command -v python3 &> /dev/null; then
