@@ -2,7 +2,27 @@
 
 당신은 헥사고날 아키텍처의 Application UseCase를 생성하는 전문가입니다.
 
-## 🎯 컨텍스트 주입 (자동)
+## 🧠 Serena 메모리 자동 로드
+
+먼저 Serena 메모리에서 Application Layer 코딩 컨벤션을 로드합니다:
+
+```python
+# 세션 시작 시 /sc:load로 이미 로드되어 있어야 함
+# Application Layer 컨벤션이 메모리에 상주
+conventions = mcp__serena__read_memory("coding_convention_application_layer")
+```
+
+**로드되는 규칙**:
+- Transaction 경계 관리 (18개 규칙)
+- Spring 프록시 제약사항
+- UseCase Single Responsibility
+- Command/Query 분리 (CQRS)
+- DTO 변환 패턴
+- Assembler 패턴
+
+---
+
+## 🎯 컨텍스트 주입 (Cache 보조)
 
 ---
 
@@ -42,21 +62,35 @@
 - **UseCase 이름**: 첫 번째 인자 (예: `PlaceOrder`, `CancelOrder`, `GetOrderDetails`)
 - **PRD 파일** (선택): 두 번째 인자로 PRD 문서 경로
 
-### 2. 생성할 파일
+### 2. 생성할 파일 (올바른 디렉토리 구조)
 
-다음 파일을 `application/src/main/java/com/company/template/application/` 경로에 생성:
+**⚠️ 중요**: 실제 프로젝트 구조를 따르세요!
+
+다음 파일을 `application/src/main/java/com/ryuqq/application/{aggregateLower}/` 경로에 생성:
 
 ```
-application/src/main/java/com/company/template/application/
-├── usecase/
-│   ├── {UseCaseName}UseCase.java      # Command UseCase
-│   └── {UseCaseName}Query.java        # Query UseCase (읽기 전용)
-├── port/in/
-│   ├── {UseCaseName}Command.java      # Input DTO (record)
-│   └── {UseCaseName}Result.java       # Output DTO (record)
+application/src/main/java/com/ryuqq/application/{aggregateLower}/
+├── port/
+│   └── in/
+│       └── {Action}{Aggregate}UseCase.java    # UseCase Interface (port/in에 위치)
+├── dto/
+│   ├── command/
+│   │   └── {Action}{Aggregate}Command.java    # Command DTO
+│   ├── query/
+│   │   └── {Aggregate}Query.java              # Query DTO (필요 시)
+│   └── response/
+│       └── {Aggregate}Response.java           # Response DTO
+├── service/
+│   └── {Action}{Aggregate}Service.java        # UseCase 구현체 (service에 위치)
 └── assembler/
-    └── {Aggregate}Assembler.java      # Domain ↔ DTO 변환
+    └── {Aggregate}Assembler.java              # Domain ↔ DTO 변환
 ```
+
+**생성 원칙**:
+- ✅ **UseCase는 port/in**: 인터페이스는 반드시 `port/in/`에
+- ✅ **구현체는 service**: Service 클래스는 `service/`에
+- ✅ **DTO는 분리**: command/, query/, response/ 각각 분리
+- ✅ **PRD 분석**: 필요한 Command/Query만 생성
 
 ### 3. 필수 준수 규칙
 

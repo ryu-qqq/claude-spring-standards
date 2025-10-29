@@ -39,3 +39,13 @@ bin/
 # Claude Code settings (local overrides)
 .claude/settings.local.json
 .serena/
+
+# LangFuse telemetry (contains credentials)
+.langfuse.telemetry
+
+# Windsurf IDE settings (personal configuration)
+.windsurfrules
+
+# Pipeline metrics and reports (auto-generated)
+.cascade/metrics.jsonl
+.cascade/report.md

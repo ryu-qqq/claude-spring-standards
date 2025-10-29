@@ -9,6 +9,7 @@
 
 plugins {
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -30,6 +31,14 @@ dependencies {
     // ========================================
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(project(":domain"))
+
+    // ========================================
+    // Test Fixtures Dependencies
+    // ========================================
+    // Application TestFixtures는 Domain Fixtures 재사용 가능
+    testFixturesApi(project(":domain"))
+    testFixturesApi(testFixtures(project(":domain")))
+    testFixturesImplementation(libs.spring.context)
 }
 
 // ========================================

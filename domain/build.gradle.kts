@@ -7,6 +7,7 @@
 
 plugins {
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -21,6 +22,12 @@ dependencies {
 
     // Validation API (JSR-380) - Pure annotations, no implementation
     implementation(libs.jakarta.validation.api)
+
+    // ========================================
+    // Test Fixtures Dependencies
+    // ========================================
+    // Domain TestFixtures는 순수 Java만 사용 (Domain Purity 유지)
+    testFixturesImplementation(libs.commons.lang3)
 }
 
 // ========================================
