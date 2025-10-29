@@ -282,8 +282,11 @@ LangFuse (효율 측정)
 - `/validate-domain <file>` - Domain layer 파일 검증
 - `/validate-architecture [dir]` - 전체 또는 특정 모듈 아키텍처 검증
 
+**AI 리뷰**:
+- `/ai-review [pr-number]` - 통합 AI 리뷰 (Gemini + CodeRabbit + Codex, 병렬 실행)
+- `/gemini-review [pr-number]` - Gemini 전용 (Deprecated, `/ai-review --bots gemini` 사용 권장)
+
 **기타**:
-- `/gemini-review [pr-number]` - Gemini 코드 리뷰 분석
 - `/jira-task` - Jira 태스크 분석 및 브랜치 생성
 
 ### 3. Git Pre-commit Hooks (별도 시스템)
@@ -450,6 +453,7 @@ cat .claude/cache/rules/domain-layer-law-of-demeter-01_getter-chaining-prohibiti
 /code-gen-controller <name> # REST Controller 생성
 /validate-domain <file>     # Domain layer 검증
 /validate-architecture      # 전체 아키텍처 검증
+/ai-review [pr-number]      # 통합 AI 리뷰 (Gemini + CodeRabbit + Codex)
 /jira-task                  # Jira Task 분석 및 브랜치 생성
 ```
 

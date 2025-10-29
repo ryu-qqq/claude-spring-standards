@@ -7,6 +7,15 @@ model: claude-sonnet-4-5-20250929
 
 # Gemini PR Review Automation
 
+> **⚠️ DEPRECATION NOTICE**
+> This command is **deprecated** in favor of `/ai-review`, which supports multiple AI bots (Gemini + CodeRabbit + Codex) with parallel execution and intelligent deduplication.
+>
+> **Migration**:
+> - `/gemini-review 32` → `/ai-review 32 --bots gemini`
+> - `/gemini-review --preview` → `/ai-review --preview --bots gemini`
+>
+> This command still works but will be removed in a future version. Use `/ai-review` for better performance and unified bot integration.
+
 ## Why This Command Exists
 
 **The Problem**: Gemini Code Assist provides free, automated PR reviews on GitHub. But AI-generated reviews often get ignored because they lack the urgency of human feedback.
