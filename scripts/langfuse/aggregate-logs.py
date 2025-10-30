@@ -89,7 +89,9 @@ class LangFuseAggregator:
 
         elif event_type in ['keyword_analysis', 'cache_injection', 'validation_complete']:
             # Observation 생성
-            trace_id = event.get('session_id') or self._find_trace_by_time(timestamp)
+            # NOTE: session_id는 hook 내부 ID로 trace ID와 다를 수 있음
+            # timestamp로 가장 가까운 trace를 찾아 연결
+            trace_id = self._find_trace_by_time(timestamp)
             if not trace_id:
                 return
 

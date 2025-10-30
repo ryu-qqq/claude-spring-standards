@@ -88,6 +88,7 @@ class LangFuseUploader:
                 'type': 'event-create',
                 'timestamp': obs.get('startTime'),
                 'body': {
+                    'id': f"{obs.get('traceId')}-{obs.get('name')}-{obs.get('startTime')}",  # event id (required)
                     'traceId': obs.get('traceId'),
                     'name': obs.get('name'),
                     'startTime': obs.get('startTime'),
