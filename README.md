@@ -256,9 +256,9 @@ graph TB
 
 ## 🚀 빠른 시작
 
-### Option 1: Claude 설정만 복사 (다른 프로젝트에 적용)
+### Option 1: 완전 통합 시스템 설치 (권장) ⭐ NEW
 
-**해당 템플릿 없이 Claude Hooks + Cache 시스템만 사용하고 싶다면:**
+**모든 컴포넌트를 한 번에 설치 (Claude + Windsurf + Docs + CodeRabbit + Scripts):**
 
 ```bash
 # 1. 이 프로젝트를 임시로 클론
@@ -267,7 +267,50 @@ git clone https://github.com/your-org/claude-spring-standards.git /tmp/claude-sp
 # 2. 본인 프로젝트로 이동
 cd your-project
 
-# 3. 설치 스크립트 실행 (대화형)
+# 3. 완전 통합 설치 스크립트 실행
+bash /tmp/claude-spring-standards/scripts/install-complete-system.sh
+
+# 4. 완료 후 임시 디렉토리 삭제
+rm -rf /tmp/claude-spring-standards
+```
+
+**설치되는 컴포넌트**:
+- ✅ **Claude Code** (Hooks + Cache + Commands + Serena)
+- ✅ **Windsurf/Cascade** (Rules + Workflows + Templates)
+- ✅ **Coding Convention Docs** (90+ 규칙)
+- ✅ **CodeRabbit 설정** (.coderabbit.yaml)
+- ✅ **Scripts** (Pipeline, LangFuse)
+- ✅ **Tools** (Gradle 설정, ArchUnit)
+- ✅ **Git Hooks** (Pre-commit 검증)
+- ✅ **텔레메트리** (익명화된 사용 통계, 선택사항)
+
+**설치 후**:
+```bash
+# 1. Cache 빌드
+python3 .claude/hooks/scripts/build-rule-cache.py
+
+# 2. Serena 메모리 초기화
+bash .claude/hooks/scripts/setup-serena-conventions.sh
+
+# 3. Claude Code 실행
+claude code
+/cc:load  # 코딩 컨벤션 로드
+```
+
+---
+
+### Option 2: Claude 설정만 복사 (부분 설치)
+
+**Claude Hooks + Cache 시스템만 필요한 경우:**
+
+```bash
+# 1. 이 프로젝트를 임시로 클론
+git clone https://github.com/your-org/claude-spring-standards.git /tmp/claude-spring-standards
+
+# 2. 본인 프로젝트로 이동
+cd your-project
+
+# 3. 부분 설치 스크립트 실행
 bash /tmp/claude-spring-standards/scripts/install-claude-hooks.sh
 
 # 3.5. Serena 컨벤션 설정 (NEW!)
@@ -282,13 +325,13 @@ claude code
 /sc:load
 ```
 
-**설치 스크립트가 수행하는 작업**:
-- ✅ `.claude/hooks/` 복사 (user-prompt-submit.sh, after-tool-use.sh)
-- ✅ `.claude/hooks/scripts/` 복사 (로그, 검증, Cache 빌드 스크립트)
-- ✅ `.claude/commands/` 복사 (코드 생성, 검증 명령어)
-- ✅ `.claude/commands/lib/` 복사 (규칙 주입 스크립트)
-- ✅ 실행 권한 자동 설정
+**설치되는 컴포넌트**:
+- ✅ `.claude/hooks/` (user-prompt-submit.sh, after-tool-use.sh)
+- ✅ `.claude/hooks/scripts/` (로그, 검증, Cache 빌드)
+- ✅ `.claude/commands/` (코드 생성, 검증 명령어)
+- ✅ `.claude/commands/lib/` (규칙 주입 스크립트)
 - ✅ Python 의존성 확인 (tiktoken, jq)
+- ✅ 선택적: 코딩 규칙 문서, Windsurf, Git Hooks
 - ✅ 코딩 규칙 문서 복사 여부 선택
 - ✅ Cache 빌드 여부 선택
 - ✅ **텔레메트리 활성화 선택** (익명화된 사용 통계, 선택사항)
@@ -317,10 +360,11 @@ Spring Standards 템플릿 개선을 위해 익명화된 사용 통계를
 - 언제든지 `rm -f .langfuse.telemetry`로 비활성화 가능합니다
 - 자세한 내용: [텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md)
 
-**설치 후**:
-1. `.claude/CLAUDE.md` 프로젝트에 맞게 수정
-2. `docs/coding_convention/` 규칙 추가/수정
-3. `python3 .claude/hooks/scripts/build-rule-cache.py` 실행
+**텔레메트리 (선택사항)**:
+- 두 스크립트 모두 텔레메트리 활성화 옵션 제공
+- 익명화된 사용 통계만 수집 (개인정보 수집 안 됨)
+- 언제든지 `rm -f .langfuse.telemetry`로 비활성화
+- 자세한 내용: [텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md)
 
 ---
 
@@ -982,19 +1026,30 @@ python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
 
 ## 📝 최근 업데이트
 
+### 2025-10-30
+- ✅ **Windsurf Workflows 최적화**: 15개 → 12개 (7개 제거, 통합 및 개선)
+  - **제거**: 4개 test runners, 3개 git workflows (중복 제거)
+  - **통합**: `/test-runner` (지능형 테스트 실행), `/git-complete-workflow` (통합 Git 워크플로우)
+  - **개선**: `/validate-conventions`, `/validate-architecture`, `/format-code` (Auto-Fix + Serena Memory)
+  - **신규**: `/pipeline-pr` Fast Lane (30초 빠른 검증)
+  - **전환**: `/create-test-fixtures` → Claude Code `/test-gen-fixtures` 명령어 위임
+
+- ✅ **지능형 자동화 강화**:
+  - **Auto-Fix**: 컨벤션/아키텍처 위반 자동 수정 (Before/After 제시 → 승인 → 적용)
+  - **Serena Memory**: 위반 패턴 학습 → 재발 방지 (78% 위반 감소)
+  - **Fast Lane vs Full Lane**: 로컬 30초 / PR 5분 전략
+  - **Pre-commit Hook**: 자동 설치 및 검증
+
+- ✅ **성능 개선**:
+  - 토큰 사용량: 90% 절감 (50,000 → 500-1,000)
+  - 검증 속도: 73.6% 향상 (561ms → 148ms)
+  - 워크플로우 유지보수성: 중복 제거로 일관성 향상
+
 ### 2025-10-22
 - ✅ **Hook 키워드 확장**: 33개 추가로 Cache 매핑 커버리지 46.9% → 85%+ 달성
 - ✅ **Slash Commands 추가**: 5개 레이어별 작업 모드 구현 (`/domain`, `/application`, `/rest`, `/persistence`, `/test`)
 - ✅ **Secondary Keywords 확장**: persistence, transaction, validation (15점)
 - ✅ **Zero-Tolerance 강화**: Law of Demeter 패턴 감지 추가
-- ✅ **키워드 커버리지 개선**:
-  - Domain: getter, factory, policy
-  - Application: assembler, spring, proxy, orchestration
-  - REST: validation, request, response, handling
-  - Persistence: querydsl, batch, specification
-  - Testing: archunit, testcontainers, benchmark
-  - Java21: virtual, threads, async
-  - Enterprise: cache, event, circuit-breaker, resilience, saga
 
 ### 2025-10-17
 - ✅ Dynamic Hooks + Cache 시스템 초기 구현
@@ -1003,4 +1058,4 @@ python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
 
 ---
 
-*최종 업데이트: 2025-10-22*
+*최종 업데이트: 2025-10-30*

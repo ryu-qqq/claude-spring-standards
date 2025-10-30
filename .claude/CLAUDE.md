@@ -55,6 +55,35 @@ LangFuse (효율 측정: 토큰, 위반 건수 등) ← NEW
 | 컨벤션 위반 | 23회 | - | 5회 | **78% 감소** |
 | 세션 시간 | 15분 | - | 8분 | **47% 단축** |
 
+### LangFuse 통합 (메트릭 추적)
+
+**목적**: Claude Code 및 Cascade 로그를 LangFuse로 전송하여 개발 효율 측정
+
+**파이프라인**:
+1. `scripts/langfuse/aggregate-logs.py` - 로그 집계 및 변환
+2. `scripts/langfuse/upload-to-langfuse.py` - LangFuse Ingestion API 업로드
+
+**추적 메트릭**:
+- Traces: Claude Code 세션별 추적
+- Observations: Hook 실행, Cascade 작업
+- 토큰 사용량, 실행 시간, 위반 건수
+
+**사용법**:
+```bash
+# 환경 변수 설정
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_HOST="https://us.cloud.langfuse.com"
+
+# Windsurf Cascade 워크플로우 사용
+/upload-langfuse
+
+# 또는 직접 실행
+bash tools/pipeline/upload_langfuse.sh
+```
+
+**참고**: LangFuse Python SDK는 필요 없음. `requests` 라이브러리만 사용.
+
 ---
 
 ## 📚 코딩 규칙 (docs/coding_convention/)

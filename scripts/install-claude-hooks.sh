@@ -78,8 +78,11 @@ mkdir -p "$TARGET_PROJECT/.claude/commands/lib"
 # Claude 설정 파일 복사
 echo -e "${BLUE}📋 설정 파일 복사 중...${NC}"
 
-# settings.json 복사
-cp "$SOURCE_PROJECT/.claude/settings.json" "$TARGET_PROJECT/.claude/settings.json"
+# settings.local.json 복사 (있으면)
+if [[ -f "$SOURCE_PROJECT/.claude/settings.local.json" ]]; then
+    cp "$SOURCE_PROJECT/.claude/settings.local.json" "$TARGET_PROJECT/.claude/settings.local.json"
+    echo -e "${GREEN}✅ LangFuse settings 복사 완료${NC}"
+fi
 
 # Hooks 복사
 cp "$SOURCE_PROJECT/.claude/hooks/user-prompt-submit.sh" "$TARGET_PROJECT/.claude/hooks/"

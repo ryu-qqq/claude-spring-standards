@@ -30,7 +30,12 @@
       "✅ Domain → Spring 의존성 금지",
       "✅ Domain → Jakarta EE 의존성 금지",
       "✅ Controller → Repository 직접 호출 금지",
-      "✅ Adapter는 Port 구현 필수"
+      "✅ Adapter는 Port 구현 필수",
+      "✅ Application은 Domain에만 의존",
+      "✅ Port는 Domain Layer (`domain.port`)",
+      "✅ Adapter는 Application Layer (`application`)",
+      "✅ UseCase는 Inbound Port (`domain.port.in`)",
+      "✅ Repository 인터페이스는 Outbound Port (`domain.port.out`)"
     ]
   },
   "documentation": {

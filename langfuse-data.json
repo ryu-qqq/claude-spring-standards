@@ -1,0 +1,1270 @@
+{
+  "traces": [
+    {
+      "id": "session-2025-10-23T16:44:45.147318",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T16:44:45.147318",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-23T16:45:20.770296",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T16:45:20.770296",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-23T16:46:08.483036",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T16:46:08.483036",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-23T16:48:29.020887",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T16:48:29.020887",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-23T16:58:00.748108",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T16:58:00.748108",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-23T17:05:48.737484",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T17:05:48.737484",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-23T17:06:25.602734",
+      "name": "Claude Session",
+      "timestamp": "2025-10-23T17:06:25.602734",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T09:44:16.921128",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T09:44:16.921128",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:03:54.542359",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:03:54.542359",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:16:19.319307",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:16:19.319307",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:17:42.042341",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:17:42.042341",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:24:06.675218",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:24:06.675218",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:25:01.390920",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:25:01.390920",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:28:51.127605",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:28:51.127605",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:35:02.188612",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:35:02.188612",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:40:45.464509",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:40:45.464509",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:45:32.139536",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:45:32.139536",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:47:23.146076",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:47:23.146076",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:54:59.999224",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:54:59.999224",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T10:59:33.454945",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T10:59:33.454945",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T11:04:23.582663",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T11:04:23.582663",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T11:05:45.718802",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T11:05:45.718802",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    },
+    {
+      "id": "session-2025-10-30T11:10:10.670969",
+      "name": "Claude Session",
+      "timestamp": "2025-10-30T11:10:10.670969",
+      "tags": [],
+      "metadata": {
+        "project": "user-b23a6a84",
+        "user": "user-b23a6a84",
+        "tool": "claude-code"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "traceId": "1761205485-56330",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:44:45.538593",
+      "endTime": "2025-10-23T16:44:45.538593",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 105
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T16:44:45.147318",
+      "name": "Cache Injection: domain",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:44:45.638250",
+      "endTime": "2025-10-23T16:44:45.638250",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2168
+      },
+      "tags": [
+        "domain"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T16:44:45.147318",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:44:45.690381",
+      "endTime": "2025-10-23T16:44:45.690381",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T16:44:45.147318",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:44:45.743154",
+      "endTime": "2025-10-23T16:44:45.743154",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761205520-57002",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:45:21.132528",
+      "endTime": "2025-10-23T16:45:21.132528",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T16:45:20.770296",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:45:21.232355",
+      "endTime": "2025-10-23T16:45:21.232355",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T16:45:20.770296",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:45:21.283587",
+      "endTime": "2025-10-23T16:45:21.283587",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761205568-57504",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:46:08.850642",
+      "endTime": "2025-10-23T16:46:08.850642",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T16:46:08.483036",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:46:08.948007",
+      "endTime": "2025-10-23T16:46:08.948007",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T16:46:08.483036",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:46:09.004814",
+      "endTime": "2025-10-23T16:46:09.004814",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761205708-58392",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:48:29.388648",
+      "endTime": "2025-10-23T16:48:29.388648",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T16:48:29.020887",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:48:29.485932",
+      "endTime": "2025-10-23T16:48:29.485932",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T16:48:29.020887",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:48:29.541776",
+      "endTime": "2025-10-23T16:48:29.541776",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761206280-63408",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:58:01.177824",
+      "endTime": "2025-10-23T16:58:01.177824",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T16:58:00.748108",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:58:01.291607",
+      "endTime": "2025-10-23T16:58:01.291607",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T16:58:00.748108",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T16:58:01.348814",
+      "endTime": "2025-10-23T16:58:01.348814",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761206748-64765",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T17:05:49.099980",
+      "endTime": "2025-10-23T17:05:49.099980",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T17:05:48.737484",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T17:05:49.196537",
+      "endTime": "2025-10-23T17:05:49.196537",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T17:05:48.737484",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T17:05:49.246397",
+      "endTime": "2025-10-23T17:05:49.246397",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761206785-65399",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-23T17:06:25.973340",
+      "endTime": "2025-10-23T17:06:25.973340",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-23T17:06:25.602734",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-23T17:06:26.078925",
+      "endTime": "2025-10-23T17:06:26.078925",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-23T17:06:25.602734",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-23T17:06:26.132827",
+      "endTime": "2025-10-23T17:06:26.132827",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761785056-16687",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T09:44:17.267278",
+      "endTime": "2025-10-30T09:44:17.267278",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T09:44:16.921128",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T09:44:17.420307",
+      "endTime": "2025-10-30T09:44:17.420307",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T09:44:16.921128",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T09:44:17.471569",
+      "endTime": "2025-10-30T09:44:17.471569",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761786234-19940",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:03:54.930887",
+      "endTime": "2025-10-30T10:03:54.930887",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:03:54.542359",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:03:55.090009",
+      "endTime": "2025-10-30T10:03:55.090009",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:03:54.542359",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:03:55.139862",
+      "endTime": "2025-10-30T10:03:55.139862",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761786979-21716",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:16:19.684649",
+      "endTime": "2025-10-30T10:16:19.684649",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:16:19.319307",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:16:19.837076",
+      "endTime": "2025-10-30T10:16:19.837076",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:16:19.319307",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:16:19.891618",
+      "endTime": "2025-10-30T10:16:19.891618",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761787061-22240",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:17:42.392411",
+      "endTime": "2025-10-30T10:17:42.392411",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:17:42.042341",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:17:42.540964",
+      "endTime": "2025-10-30T10:17:42.540964",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:17:42.042341",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:17:42.590630",
+      "endTime": "2025-10-30T10:17:42.590630",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761787446-25740",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:24:07.039002",
+      "endTime": "2025-10-30T10:24:07.039002",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:24:06.675218",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:24:07.195214",
+      "endTime": "2025-10-30T10:24:07.195214",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:24:06.675218",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:24:07.247587",
+      "endTime": "2025-10-30T10:24:07.247587",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761787501-26528",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:25:01.770315",
+      "endTime": "2025-10-30T10:25:01.770315",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:25:01.390920",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:25:01.962241",
+      "endTime": "2025-10-30T10:25:01.962241",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:25:01.390920",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:25:02.023226",
+      "endTime": "2025-10-30T10:25:02.023226",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761787731-27922",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:28:51.503394",
+      "endTime": "2025-10-30T10:28:51.503394",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:28:51.127605",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:28:51.678712",
+      "endTime": "2025-10-30T10:28:51.678712",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:28:51.127605",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:28:51.743756",
+      "endTime": "2025-10-30T10:28:51.743756",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761788102-29396",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:35:02.612431",
+      "endTime": "2025-10-30T10:35:02.612431",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 90
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:35:02.188612",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:35:02.780614",
+      "endTime": "2025-10-30T10:35:02.780614",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:35:02.188612",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:35:02.886813",
+      "endTime": "2025-10-30T10:35:02.886813",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:35:02.188612",
+      "name": "Cache Injection: testing",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:35:02.958758",
+      "endTime": "2025-10-30T10:35:02.958758",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 12,
+        "estimated_tokens": 2736
+      },
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "traceId": "1761788445-32069",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:40:45.816701",
+      "endTime": "2025-10-30T10:40:45.816701",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 90
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:40:45.464509",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:40:45.994522",
+      "endTime": "2025-10-30T10:40:45.994522",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:40:45.464509",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:40:46.050989",
+      "endTime": "2025-10-30T10:40:46.050989",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:40:45.464509",
+      "name": "Cache Injection: testing",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:40:46.108462",
+      "endTime": "2025-10-30T10:40:46.108462",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 12,
+        "estimated_tokens": 2736
+      },
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "traceId": "1761788731-34045",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:45:32.624167",
+      "endTime": "2025-10-30T10:45:32.624167",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:45:32.139536",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:45:32.814809",
+      "endTime": "2025-10-30T10:45:32.814809",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:45:32.139536",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:45:32.871987",
+      "endTime": "2025-10-30T10:45:32.871987",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761788843-36185",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:47:23.508653",
+      "endTime": "2025-10-30T10:47:23.508653",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:47:23.146076",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:47:23.665199",
+      "endTime": "2025-10-30T10:47:23.665199",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:47:23.146076",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:47:23.723093",
+      "endTime": "2025-10-30T10:47:23.723093",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761789299-42507",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:55:00.410656",
+      "endTime": "2025-10-30T10:55:00.410656",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:54:59.999224",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:55:00.581907",
+      "endTime": "2025-10-30T10:55:00.581907",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:54:59.999224",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:55:00.638916",
+      "endTime": "2025-10-30T10:55:00.638916",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761789573-44406",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:59:33.802174",
+      "endTime": "2025-10-30T10:59:33.802174",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T10:59:33.454945",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:59:33.964863",
+      "endTime": "2025-10-30T10:59:33.964863",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T10:59:33.454945",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T10:59:34.021610",
+      "endTime": "2025-10-30T10:59:34.021610",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761789863-45547",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:04:23.991275",
+      "endTime": "2025-10-30T11:04:23.991275",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T11:04:23.582663",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:04:24.158103",
+      "endTime": "2025-10-30T11:04:24.158103",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T11:04:23.582663",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:04:24.209560",
+      "endTime": "2025-10-30T11:04:24.209560",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761789945-46795",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:05:46.089201",
+      "endTime": "2025-10-30T11:05:46.089201",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T11:05:45.718802",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:05:46.242640",
+      "endTime": "2025-10-30T11:05:46.242640",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T11:05:45.718802",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:05:46.294180",
+      "endTime": "2025-10-30T11:05:46.294180",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    },
+    {
+      "traceId": "1761790210-49427",
+      "name": "Keyword Analysis",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:10:11.046466",
+      "endTime": "2025-10-30T11:10:11.046466",
+      "level": "DEFAULT",
+      "metadata": {
+        "context_score": 60
+      },
+      "tags": []
+    },
+    {
+      "traceId": "session-2025-10-30T11:10:10.670969",
+      "name": "Cache Injection: application",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:10:11.218580",
+      "endTime": "2025-10-30T11:10:11.218580",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 13,
+        "estimated_tokens": 2166
+      },
+      "tags": [
+        "application"
+      ]
+    },
+    {
+      "traceId": "session-2025-10-30T11:10:10.670969",
+      "name": "Cache Injection: enterprise",
+      "type": "SPAN",
+      "startTime": "2025-10-30T11:10:11.289162",
+      "endTime": "2025-10-30T11:10:11.289162",
+      "level": "DEFAULT",
+      "metadata": {
+        "rules_loaded": 10,
+        "estimated_tokens": 2666
+      },
+      "tags": [
+        "enterprise"
+      ]
+    }
+  ]
+}

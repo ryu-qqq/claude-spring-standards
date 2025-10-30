@@ -32,7 +32,14 @@
       "✅ **명확한 책임**: 각 레이어의 테스트 책임이 명확히 분리됨",
       "✅ **유지보수성**: 한 모듈의 변경이 다른 모듈 테스트에 영향 최소화",
       "✅ **CI/CD 최적화**: 레이어별 선택적 테스트 실행 가능",
-      "✅ Pure Java 단위 테스트만 허용"
+      "✅ Pure Java 단위 테스트만 허용",
+      "✅ AssertJ, JUnit 5만 사용",
+      "✅ Spring Context 로딩 허용 (선택적)",
+      "✅ Outbound Port mocking (Mockito, MockK)",
+      "✅ `@MockBean`, `@SpyBean` 활용",
+      "✅ Spring Context 전체 로딩",
+      "✅ Testcontainers, 실제 DB/Redis 사용",
+      "✅ 실제 HTTP 클라이언트, 메시징 시스템 사용"
     ]
   },
   "documentation": {
