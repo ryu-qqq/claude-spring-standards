@@ -49,6 +49,7 @@ class LangFuseUploader:
         # Batch 형식으로 전송
         batch = {
             'batch': [{
+                'id': trace.get('id'),  # batch item id (required)
                 'type': 'trace-create',
                 'timestamp': trace.get('timestamp'),
                 'body': {
@@ -83,6 +84,7 @@ class LangFuseUploader:
         # Batch 형식으로 전송
         batch = {
             'batch': [{
+                'id': f"{obs.get('traceId')}-{obs.get('name')}-{obs.get('startTime')}",  # batch item id (required)
                 'type': 'event-create',
                 'timestamp': obs.get('startTime'),
                 'body': {
