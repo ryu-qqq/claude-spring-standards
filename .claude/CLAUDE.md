@@ -701,9 +701,11 @@ Cascade:
 - [Coding Convention](../docs/coding_convention/) - 98개 규칙 (Layer별, Orchestration 포함)
 
 ### Windsurf IDE
-- [Windsurf 가이드](../.windsurf/README.md) - Windsurf 사용 가이드
+- [Windsurf 가이드](../.windsurf/README.md) - Windsurf 사용 가이드 (14개 워크플로우)
 - [Windsurf Rules](../.windsurf/rules/) - Layer별 규칙 (Windsurf 자동 로드)
 - [Windsurf Workflows](../.windsurf/workflows/) - 코드 생성 워크플로우 (참고용)
+  - **cc-application.md** ⭐ NEW - Application Layer Boilerplate (10개 컴포넌트)
+  - **cc-orchestration.md** ⭐ NEW - Orchestration Pattern Boilerplate (80-85% 자동화)
 - [Windsurf Templates](../.windsurf/templates/) - Java 코드 예제 (학습용)
 
 ---

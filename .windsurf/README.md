@@ -106,7 +106,7 @@
 
 ---
 
-## 🚀 Cascade Workflows (12개) - 최적화 완료 ✨
+## 🚀 Cascade Workflows (14개) - 최적화 완료 ✨
 
 ### ⭐ 핵심 (Core) - 6개
 
@@ -143,18 +143,41 @@
    - Conventional Commits + Git Flow 통합
    - 대체: 기존 3개 git workflows
 
+### 🏗️ 코드 생성 (Code Generation) - 2개 ⭐ NEW
+
+7. **`cc-application.md`** - Application Layer Boilerplate 생성
+   - Port/In (UseCase Interface), Port/Out (OutPort Interface)
+   - Service (UseCase Implementation)
+   - DTO (Command/Query/Response - Record Pattern)
+   - Assembler (Domain-DTO Converter)
+   - Facade (Multiple UseCase Orchestration)
+   - **Zero-Tolerance**: Transaction Boundary, Long FK, Pure Java, Single Responsibility
+   - **템플릿 기반**: 10개 컴포넌트 템플릿 제공
+   - **사용 예시**: "@workflows/cc-application.md 참고해서 Order UseCase 생성"
+
+8. **`cc-orchestration.md`** - Orchestration Pattern Boilerplate 생성
+   - 3-Phase Lifecycle (Accept → Execute → Finalize)
+   - Command (Record Pattern, IdemKey)
+   - Orchestrator (@Async, BaseOrchestrator 상속)
+   - Entities (Operation, WriteAheadLog)
+   - Schedulers (Finalizer, Reaper)
+   - Controller (202 Accepted, 멱등성 보장)
+   - **Zero-Tolerance**: @Async Required, No Lombok, IdemKey Unique, Outcome Modeling
+   - **자동화율**: 80-85% (10개 파일 자동 생성)
+   - **사용 예시**: "@workflows/cc-orchestration.md 참고해서 Payment Orchestrator 생성"
+
 ### 📌 유틸리티 (Utilities) - 3개
 
-7. **`/validate-tests`** - JaCoCo 커버리지 검증
+9. **`/validate-tests`** - JaCoCo 커버리지 검증
    - 최소 80% 커버리지 요구
 
-8. **`/create-test-fixtures`** - Test Fixture 생성 안내 ⭐ UPDATED
-   - Claude Code `/test-gen-fixtures` 명령어 위임
-   - Layer별 자동 생성 (Domain, Application, REST, Persistence)
+10. **`/create-test-fixtures`** - Test Fixture 생성 안내 ⭐ UPDATED
+    - Claude Code `/test-gen-fixtures` 명령어 위임
+    - Layer별 자동 생성 (Domain, Application, REST, Persistence)
 
 ### 📊 메트릭 & 분석 - 3개
 
-9. **`/upload-langfuse`** - LangFuse 메트릭 업로드
+11. **`/upload-langfuse`** - LangFuse 메트릭 업로드
    - Claude Code 및 Cascade 로그를 LangFuse로 전송
    - 토큰 사용량, 성능, 품질 메트릭 추적
    - 실제 로직: `tools/pipeline/upload_langfuse.sh`
@@ -173,7 +196,7 @@
      - 토큰 사용량, 실행 시간, 성공/실패율
    - **대시보드**: 업로드 후 LangFuse에서 확인 가능
 
-10. **`/git-cherry-pick`** - 커밋 체리픽
+12. **`/git-cherry-pick`** - 커밋 체리픽
     - 특정 커밋을 현재 브랜치로 가져오기
 
 ### 🗑️ 제거된 Workflows (7개)
