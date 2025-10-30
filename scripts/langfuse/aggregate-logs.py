@@ -182,9 +182,34 @@ class LangFuseAggregator:
 
         # 숫자/통계 필드 (익명화 불필요)
         for key in ['context_score', 'rules_loaded', 'estimated_tokens',
-                    'validation_time_ms', 'total_rules']:
+                    'validation_time_ms', 'total_rules', 'threshold',
+                    'total_rules_available']:
             if key in event:
                 metadata[key] = event[key]
+
+        # Layer 정보 (분석에 매우 유용)
+        if 'detected_layers' in event:
+            metadata['detected_layers'] = event['detected_layers']
+            metadata['layer_count'] = len(event['detected_layers'])
+
+        if 'layer' in event:
+            metadata['layer'] = event['layer']
+
+        # 키워드 분석 정보
+        if 'detected_keywords' in event:
+            metadata['detected_keywords'] = event['detected_keywords']
+            metadata['keyword_count'] = len(event['detected_keywords'])
+
+        # Cache 파일 정보
+        if 'cache_files' in event:
+            metadata['cache_files_count'] = len(event['cache_files'])
+
+        # 효율성 메트릭 계산
+        if 'rules_loaded' in event and 'total_rules_available' in event:
+            total = event['total_rules_available']
+            loaded = event['rules_loaded']
+            if total > 0:
+                metadata['rules_efficiency'] = round((loaded / total) * 100, 2)
 
         return metadata
 
@@ -231,10 +256,72 @@ class LangFuseAggregator:
 
     def export_to_langfuse(self) -> Dict:
         """LangFuse API 형식으로 내보내기"""
+        # Trace별 통계 계산
+        self._calculate_trace_statistics()
+
         return {
             'traces': list(self.traces.values()),
             'observations': self.observations
         }
+
+    def _calculate_trace_statistics(self):
+        """각 Trace의 Observations 통계 계산"""
+        for trace_id, trace in self.traces.items():
+            # 이 trace에 속한 observations 찾기
+            trace_obs = [obs for obs in self.observations if obs['traceId'] == trace_id]
+
+            if not trace_obs:
+                continue
+
+            # 통계 계산
+            stats = {
+                'total_observations': len(trace_obs),
+                'total_tokens': 0,
+                'total_rules_loaded': 0,
+                'layers_used': set(),
+                'keywords_detected': set(),
+                'avg_context_score': 0
+            }
+
+            context_scores = []
+
+            for obs in trace_obs:
+                metadata = obs.get('metadata', {})
+
+                # 토큰 합산
+                if 'estimated_tokens' in metadata:
+                    stats['total_tokens'] += metadata['estimated_tokens']
+
+                # 규칙 합산
+                if 'rules_loaded' in metadata:
+                    stats['total_rules_loaded'] += metadata['rules_loaded']
+
+                # Layer 수집
+                if 'detected_layers' in metadata:
+                    stats['layers_used'].update(metadata['detected_layers'])
+                elif 'layer' in metadata:
+                    stats['layers_used'].add(metadata['layer'])
+
+                # 키워드 수집
+                if 'detected_keywords' in metadata:
+                    stats['keywords_detected'].update(metadata['detected_keywords'])
+
+                # Context score 수집
+                if 'context_score' in metadata:
+                    context_scores.append(metadata['context_score'])
+
+            # 평균 계산
+            if context_scores:
+                stats['avg_context_score'] = round(sum(context_scores) / len(context_scores), 2)
+
+            # Set를 list로 변환 (JSON 직렬화를 위해)
+            stats['layers_used'] = list(stats['layers_used'])
+            stats['keywords_detected'] = list(stats['keywords_detected'])
+
+            # Trace metadata에 추가
+            if 'metadata' not in trace:
+                trace['metadata'] = {}
+            trace['metadata'].update(stats)
 
 def main():
     parser = argparse.ArgumentParser(
