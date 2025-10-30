@@ -253,6 +253,20 @@ jobs:
 
 **A**: `aggregate-logs.py`가 자동으로 ISO 8601 UTC 형식 (`2025-10-30T12:00:00Z`)으로 변환합니다. 만약 오류가 발생하면 `aggregate-logs.py`를 최신 버전으로 업데이트하세요.
 
+### Q: Observations가 업로드되지 않고 0개로 표시되면?
+
+**A**: 두 가지를 확인하세요:
+1. **TraceId 매핑 문제**: `aggregate-logs.py`가 observation의 traceId를 올바른 trace ID로 매핑하는지 확인
+   - 해결: timestamp 기반으로 trace를 찾도록 수정됨 (v1.0.1+)
+2. **Event ID 누락**: LangFuse API는 event-create의 body에 `id` 필드가 필요
+   - 해결: `upload-to-langfuse.py`에 event id 자동 생성 추가됨 (v1.0.1+)
+
+최신 버전으로 업데이트 후 다시 집계 및 업로드하세요:
+```bash
+python3 scripts/langfuse/aggregate-logs.py --anonymize
+python3 scripts/langfuse/upload-to-langfuse.py
+```
+
 ## 📚 참고 문서
 
 - [LangFuse 모니터링 가이드](../../docs/LANGFUSE_MONITORING_GUIDE.md) - 전체 시스템 설명
@@ -262,4 +276,4 @@ jobs:
 ---
 
 **생성일**: 2025-10-29
-**버전**: 1.0.0
+**버전**: 1.0.1 (2025-10-30 업데이트: Observation 업로드 수정)
