@@ -1,17 +1,33 @@
 {
   "version": "1.0.0",
-  "buildDate": "2025-10-30T03:16:50.003539Z",
-  "totalRules": 104,
+  "buildDate": "2025-10-30T12:36:10.278186Z",
+  "totalRules": 113,
   "keywordIndex": {
-    "restful": [
-      "adapter-rest-api-layer-controller-design-01_restful-api-design"
+    "rest": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
+      "adapter-rest-api-layer-testing-03_rest-docs"
     ],
     "api": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
       "adapter-rest-api-layer-controller-design-01_restful-api-design",
       "adapter-rest-api-layer-dto-patterns-01_api-request-dto",
       "adapter-rest-api-layer-dto-patterns-02_api-response-dto",
       "adapter-rest-api-layer-mapper-patterns-01_api-to-usecase-mapper",
       "testing-integration-testing-02_api-integration-tests"
+    ],
+    "creation": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
+      "domain-layer-00_domain-object-creation-guide"
+    ],
+    "guide": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
+      "domain-layer-00_domain-object-creation-guide",
+      "application-layer-facade-01_facade-usage-guide",
+      "orchestration-patterns-05_quick-start-guide",
+      "orchestration-patterns-06_security-guide"
+    ],
+    "restful": [
+      "adapter-rest-api-layer-controller-design-01_restful-api-design"
     ],
     "design": [
       "adapter-rest-api-layer-controller-design-01_restful-api-design",
@@ -36,7 +52,9 @@
       "testing-02_test-fixture-pattern",
       "java21-patterns-record-patterns-03_pattern-matching",
       "enterprise-patterns-event-driven-03_saga-pattern",
-      "enterprise-patterns-resilience-03_bulkhead-pattern"
+      "enterprise-patterns-resilience-03_bulkhead-pattern",
+      "orchestration-patterns-01_command-pattern",
+      "orchestration-patterns-03_write-ahead-log-pattern"
     ],
     "request": [
       "adapter-rest-api-layer-controller-design-02_request-validation",
@@ -57,7 +75,8 @@
     ],
     "handling": [
       "adapter-rest-api-layer-controller-design-03_response-handling",
-      "error-handling-01_error-handling-strategy"
+      "error-handling-01_error-handling-strategy",
+      "orchestration-patterns-02_idempotency-handling"
     ],
     "dto": [
       "adapter-rest-api-layer-dto-patterns-01_api-request-dto",
@@ -155,9 +174,6 @@
       "testing-multi-module-testing-03_cross-module-integration",
       "java21-patterns-virtual-threads-04_spring-integration"
     ],
-    "rest": [
-      "adapter-rest-api-layer-testing-03_rest-docs"
-    ],
     "docs": [
       "adapter-rest-api-layer-testing-03_rest-docs"
     ],
@@ -173,12 +189,6 @@
       "domain-layer-00_domain-object-creation-guide",
       "domain-layer-testing-02_value-object-testing",
       "java21-patterns-record-patterns-05_entity-vs-value-object"
-    ],
-    "creation": [
-      "domain-layer-00_domain-object-creation-guide"
-    ],
-    "guide": [
-      "domain-layer-00_domain-object-creation-guide"
     ],
     "aggregate": [
       "domain-layer-aggregate-design-01_aggregate-boundaries",
@@ -267,12 +277,19 @@
     ],
     "command": [
       "application-layer-dto-patterns-02_command-query-dto",
-      "application-layer-usecase-design-01_command-usecase"
+      "application-layer-usecase-design-01_command-usecase",
+      "orchestration-patterns-01_command-pattern"
     ],
     "query": [
       "application-layer-dto-patterns-02_command-query-dto",
       "application-layer-usecase-design-02_query-usecase",
       "persistence-layer-querydsl-optimization-02_dynamic-query"
+    ],
+    "facade": [
+      "application-layer-facade-01_facade-usage-guide"
+    ],
+    "usage": [
+      "application-layer-facade-01_facade-usage-guide"
     ],
     "application_package_guide": [
       "application-layer-package-guide-01_application_package_guide"
@@ -469,7 +486,8 @@
     "modeling": [
       "java21-patterns-sealed-classes-01_domain-modeling",
       "java21-patterns-sealed-classes-02_event-modeling",
-      "java21-patterns-sealed-classes-04_aggregate-state-modeling"
+      "java21-patterns-sealed-classes-04_aggregate-state-modeling",
+      "orchestration-patterns-04_outcome-modeling"
     ],
     "result": [
       "java21-patterns-sealed-classes-03_result-types"
@@ -548,6 +566,36 @@
     ],
     "errorcode": [
       "error-handling-05_errorcode-management"
+    ],
+    "idempotency": [
+      "orchestration-patterns-02_idempotency-handling"
+    ],
+    "write": [
+      "orchestration-patterns-03_write-ahead-log-pattern"
+    ],
+    "ahead": [
+      "orchestration-patterns-03_write-ahead-log-pattern"
+    ],
+    "log": [
+      "orchestration-patterns-03_write-ahead-log-pattern"
+    ],
+    "outcome": [
+      "orchestration-patterns-04_outcome-modeling"
+    ],
+    "quick": [
+      "orchestration-patterns-05_quick-start-guide"
+    ],
+    "start": [
+      "orchestration-patterns-05_quick-start-guide"
+    ],
+    "security": [
+      "orchestration-patterns-06_security-guide"
+    ],
+    "automation": [
+      "orchestration-patterns-07_automation-analysis"
+    ],
+    "analysis": [
+      "orchestration-patterns-07_automation-analysis"
     ]
   },
   "layerIndex": {
@@ -573,6 +621,7 @@
       "application-layer-dto-patterns-01_request-response-dto",
       "application-layer-dto-patterns-02_command-query-dto",
       "application-layer-dto-patterns-03_dto-validation",
+      "application-layer-facade-01_facade-usage-guide",
       "application-layer-package-guide-01_application_package_guide",
       "application-layer-testing-01_application-service-testing",
       "application-layer-transaction-management-01_transaction-boundaries",
@@ -583,6 +632,7 @@
       "application-layer-usecase-design-03_orchestration-pattern"
     ],
     "adapter-rest": [
+      "adapter-rest-api-layer-00_rest-api-creation-guide",
       "adapter-rest-api-layer-controller-design-01_restful-api-design",
       "adapter-rest-api-layer-controller-design-02_constructor-injection-pattern",
       "adapter-rest-api-layer-controller-design-02_request-validation",

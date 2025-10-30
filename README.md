@@ -277,11 +277,11 @@ rm -rf /tmp/claude-spring-standards
 **설치되는 컴포넌트**:
 - ✅ **Claude Code** (Hooks + Cache + Commands + Serena)
 - ✅ **Windsurf/Cascade** (Rules + Workflows + Templates)
-- ✅ **Coding Convention Docs** (90+ 규칙)
+- ✅ **Coding Convention Docs** (98개 규칙, Orchestration 포함) ⭐
 - ✅ **CodeRabbit 설정** (.coderabbit.yaml)
 - ✅ **Scripts** (Pipeline, LangFuse)
 - ✅ **Tools** (Gradle 설정, ArchUnit)
-- ✅ **Git Hooks** (Pre-commit 검증)
+- ✅ **Git Hooks** (Pre-commit 검증, Orchestration 포함) ⭐
 - ✅ **텔레메트리** (익명화된 사용 통계, 선택사항)
 
 **설치 후**:
@@ -859,9 +859,44 @@ public Order create() {
 public class Order { }
 ```
 
+#### 5. Orchestration Pattern (NEW) ⭐
+
+```java
+// ❌ executeInternal()에 @Transactional 사용
+@Transactional
+@Async
+protected Outcome executeInternal(Command cmd) { }
+
+// ✅ @Async 필수, @Transactional 금지
+@Async
+protected Outcome executeInternal(Command cmd) { }
+
+// ❌ Command에 Lombok 사용
+@Data
+public class OrderCommand { }
+
+// ✅ Command는 Record 패턴
+public record OrderCommand(String idemKey, OrderId orderId) { }
+
+// ❌ boolean/void 반환 또는 Exception throw
+protected boolean executeInternal(Command cmd) throws Exception { }
+
+// ✅ Outcome 반환 (Ok/Retry/Fail)
+protected Outcome executeInternal(Command cmd) {
+    return Outcome.ok();
+}
+```
+
+**자동 검증**:
+- validation-helper.py (실시간)
+- Git pre-commit hook (커밋 시)
+- ArchUnit (빌드 시, 12개 규칙)
+
 ---
 
 ## 💻 개발 워크플로우
+
+### 기본 워크플로우
 
 ```bash
 # 1. Feature 브랜치
@@ -883,6 +918,45 @@ git checkout -b feature/order
 git add .
 git commit -m "feat: order management"
 ```
+
+### Orchestration Pattern 워크플로우 (NEW) ⭐
+
+```bash
+# 1. Orchestrator 자동 생성 (10개 파일, 80-85% 완성)
+/code-gen-orchestrator Order PlacementConfirmed
+
+# 자동 생성되는 파일:
+# - OrderPlacementConfirmedOrchestrator.java (@Async)
+# - OrderPlacementConfirmedCommand.java (Record)
+# - OrderPlacementConfirmedOperationEntity.java (@UniqueConstraint)
+# - OrderPlacementConfirmedFinalizer.java (@Scheduled)
+# - OrderPlacementConfirmedReaper.java (@Scheduled)
+# - OrderPlacementConfirmedOutcome.java (Sealed)
+# - OrderPlacementConfirmedMapper.java
+# - OrderPlacementConfirmedOperationRepository.java
+# - OrderPlacementConfirmedOperationStatus.java (Enum)
+# - OrderPlacementConfirmedWriteAheadLog.java
+
+# 2. 비즈니스 로직 구현 (15-20%)
+# - executeInternal(): 외부 API 호출 로직
+# - Mapper: Command → Domain Entity 변환
+# - Outcome: 성공/재시도/실패 조건
+
+# 3. 자동 검증 (3-Tier)
+# Tier 1: validation-helper.py (실시간)
+# Tier 2: Git pre-commit hook (커밋 시)
+# Tier 3: ArchUnit (빌드 시)
+
+# 4. 테스트 및 커밋
+./gradlew test
+git add .
+git commit -m "feat: order placement orchestration"
+```
+
+**예상 효율**:
+- 생성 시간: 8분 → 2분 (75% 단축)
+- 컨벤션 위반: 평균 12회 → 0-2회 (83-100% 감소)
+- 개발자 집중: Boilerplate → 비즈니스 로직
 
 ---
 

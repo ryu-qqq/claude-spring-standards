@@ -42,7 +42,7 @@ get_layer_from_keyword() {
             echo "domain"
             ;;
         # Application layer
-        usecase|service|command|query|transaction|assembler|spring|proxy|orchestration)
+        usecase|service|command|query|transaction|assembler|spring|proxy|orchestration|orchestrator|idempotency|idemkey|wal|write*ahead*log|outcome|finalizer|reaper)
             echo "application"
             ;;
         # Adapter-REST layer (adapter-in 포함)
@@ -76,7 +76,7 @@ get_layer_from_keyword() {
 }
 
 # 키워드 목록 (프로젝트별 패키지 구조 포함)
-KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent getter factory policy usecase service command query transaction assembler spring proxy orchestration controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin validation request response handling repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo querydsl batch specification test archunit testcontainers benchmark fixture mother builder record sealed virtual threads async dto mapper cache event circuit.breaker circuit_breaker circuitbreaker resilience saga exception error"
+KEYWORDS="aggregate entity value.object value_object valueobject domain.event domain_event domainevent getter factory policy usecase service command query transaction assembler spring proxy orchestration orchestrator idempotency idemkey wal write.ahead.log write_ahead_log writeaheadlog outcome finalizer reaper controller rest.api rest_api restapi endpoint adapter-in adapter_in adapterin validation request response handling repository jpa entity.mapping entity_mapping entitymapping adapter-out adapter_out adapterout persistence-mysql persistence_mysql persistencemysql persistence-postgresql persistence-mongo querydsl batch specification test archunit testcontainers benchmark fixture mother builder record sealed virtual threads async dto mapper cache event circuit.breaker circuit_breaker circuitbreaker resilience saga exception error"
 
 # Primary Keywords 검색 (30점)
 for keyword in $KEYWORDS; do

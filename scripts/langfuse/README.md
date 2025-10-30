@@ -267,6 +267,22 @@ python3 scripts/langfuse/aggregate-logs.py --anonymize
 python3 scripts/langfuse/upload-to-langfuse.py
 ```
 
+### Q: Windsurf Cascade 로그가 수집되지 않는데?
+
+**A**: Windsurf IDE의 Cascade는 기본적으로 로그를 생성하지 않습니다. 수동 로깅이 필요합니다:
+
+```bash
+# Cascade 작업 완료 후 수동으로 기록
+bash .windsurf/cascade-logger.sh "task_name" "status_code" "duration_seconds"
+
+# 예시
+bash .windsurf/cascade-logger.sh "create_aggregate" 0 120
+```
+
+자동화 옵션 및 상세 가이드: `.windsurf/CASCADE_LOGGING_GUIDE.md` 참고
+
+**참고**: Claude Code는 자동으로 로깅되지만, Windsurf Cascade는 별도 IDE이므로 수동 설정이 필요합니다.
+
 ## 📚 참고 문서
 
 - [LangFuse 모니터링 가이드](../../docs/LANGFUSE_MONITORING_GUIDE.md) - 전체 시스템 설명
