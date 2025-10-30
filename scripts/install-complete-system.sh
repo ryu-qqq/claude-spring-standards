@@ -295,6 +295,78 @@ if [[ -d "$SOURCE_PROJECT/tools" ]]; then
 fi
 echo ""
 
+# 5.2. ArchUnit 테스트 복사
+echo -e "${BLUE}📋 ArchUnit 테스트 복사...${NC}"
+
+# 소스 경로
+SOURCE_ARCHUNIT="$SOURCE_PROJECT/bootstrap/bootstrap-web-api/src/test/java/com/ryuqq/bootstrap/architecture"
+
+if [[ -d "$SOURCE_ARCHUNIT" ]]; then
+    # 대상 경로 확인 (프로젝트에 따라 다를 수 있음)
+    # 일반적인 경로들을 시도
+    TARGET_ARCHUNIT=""
+
+    if [[ -d "$TARGET_PROJECT/bootstrap/bootstrap-web-api/src/test/java" ]]; then
+        # claude-spring-standards 구조
+        TARGET_ARCHUNIT="$TARGET_PROJECT/bootstrap/bootstrap-web-api/src/test/java/com/ryuqq/bootstrap/architecture"
+    elif [[ -d "$TARGET_PROJECT/src/test/java" ]]; then
+        # 단일 모듈 프로젝트 구조
+        # 프로젝트의 패키지 구조 감지
+        PACKAGE_PATH=$(find "$TARGET_PROJECT/src/test/java" -type d -name "architecture" | head -1)
+        if [[ -n "$PACKAGE_PATH" ]]; then
+            TARGET_ARCHUNIT="$PACKAGE_PATH"
+        else
+            # architecture 디렉토리가 없으면 생성 (기본 패키지 가정)
+            FIRST_PACKAGE=$(find "$TARGET_PROJECT/src/test/java" -mindepth 1 -maxdepth 3 -type d | head -1)
+            if [[ -n "$FIRST_PACKAGE" ]]; then
+                TARGET_ARCHUNIT="$FIRST_PACKAGE/architecture"
+            fi
+        fi
+    fi
+
+    if [[ -n "$TARGET_ARCHUNIT" ]]; then
+        mkdir -p "$TARGET_ARCHUNIT"
+
+        # 기존 ArchUnit 테스트 백업
+        if [[ -d "$TARGET_ARCHUNIT" ]] && [[ -n "$(ls -A "$TARGET_ARCHUNIT" 2>/dev/null)" ]]; then
+            echo -e "${YELLOW}⚠️  기존 ArchUnit 테스트를 백업합니다.${NC}"
+            BACKUP_ARCHUNIT="$TARGET_ARCHUNIT.backup.$(date +%Y%m%d_%H%M%S)"
+            mkdir -p "$(dirname "$BACKUP_ARCHUNIT")"
+            cp -r "$TARGET_ARCHUNIT" "$BACKUP_ARCHUNIT"
+            echo -e "${GREEN}✅ 백업 완료: $BACKUP_ARCHUNIT${NC}"
+        fi
+
+        # ArchUnit 테스트 복사
+        cp "$SOURCE_ARCHUNIT/"*.java "$TARGET_ARCHUNIT/" 2>/dev/null || true
+
+        # 패키지 이름 자동 변경 (ryuqq → 대상 프로젝트 패키지)
+        if [[ -d "$TARGET_PROJECT/src/main/java" ]]; then
+            TARGET_PACKAGE=$(find "$TARGET_PROJECT/src/main/java" -mindepth 1 -maxdepth 3 -type d | head -1 | sed "s|$TARGET_PROJECT/src/main/java/||" | tr '/' '.')
+            if [[ -n "$TARGET_PACKAGE" ]] && [[ "$TARGET_PACKAGE" != "com.ryuqq" ]]; then
+                echo -e "${BLUE}📝 패키지 이름 변경: com.ryuqq → $TARGET_PACKAGE${NC}"
+                for java_file in "$TARGET_ARCHUNIT"/*.java; do
+                    if [[ -f "$java_file" ]]; then
+                        sed -i.bak "s/package com\.ryuqq\./package ${TARGET_PACKAGE}./g" "$java_file"
+                        sed -i.bak "s/import com\.ryuqq\./import ${TARGET_PACKAGE}./g" "$java_file"
+                        rm -f "${java_file}.bak"
+                    fi
+                done
+            fi
+        fi
+
+        echo -e "${GREEN}✅ ArchUnit 테스트 설치 완료${NC}"
+        echo -e "${YELLOW}💡 다음 테스트가 복사되었습니다:${NC}"
+        ls -1 "$TARGET_ARCHUNIT"/*.java 2>/dev/null | xargs -n1 basename | sed 's/^/   - /'
+    else
+        echo -e "${YELLOW}⚠️  대상 프로젝트의 테스트 디렉토리를 찾을 수 없습니다.${NC}"
+        echo -e "${YELLOW}   수동으로 ArchUnit 테스트를 복사하세요:${NC}"
+        echo -e "${YELLOW}   $SOURCE_ARCHUNIT${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️  소스 프로젝트에 ArchUnit 테스트가 없습니다. 건너뜁니다.${NC}"
+fi
+echo ""
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}📦 6/7 Git Hooks 설치${NC}"
