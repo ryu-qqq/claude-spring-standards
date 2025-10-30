@@ -313,8 +313,16 @@ cd your-project
 # 3. 부분 설치 스크립트 실행
 bash /tmp/claude-spring-standards/scripts/install-claude-hooks.sh
 
+# 3.5. Serena 컨벤션 설정 (NEW!)
+bash /tmp/claude-spring-standards/.claude/hooks/scripts/setup-serena-conventions.sh
+
 # 4. 완료 후 임시 디렉토리 삭제
 rm -rf /tmp/claude-spring-standards
+
+# 5. Claude Code 실행 후 Serena 메모리 로드 (NEW!)
+claude code
+# 첫 명령어 실행:
+/sc:load
 ```
 
 **설치되는 컴포넌트**:
@@ -324,6 +332,33 @@ rm -rf /tmp/claude-spring-standards
 - ✅ `.claude/commands/lib/` (규칙 주입 스크립트)
 - ✅ Python 의존성 확인 (tiktoken, jq)
 - ✅ 선택적: 코딩 규칙 문서, Windsurf, Git Hooks
+- ✅ 코딩 규칙 문서 복사 여부 선택
+- ✅ Cache 빌드 여부 선택
+- ✅ **텔레메트리 활성화 선택** (익명화된 사용 통계, 선택사항)
+
+**설치 중 텔레메트리 프롬프트**:
+```
+📊 텔레메트리 (익명 사용 통계)
+
+Spring Standards 템플릿 개선을 위해 익명화된 사용 통계를
+수집하도록 허용하시겠습니까?
+
+수집 데이터:
+  ✅ 토큰 사용량 (익명)
+  ✅ 검증 시간 (익명)
+  ✅ 컨벤션 위반 통계 (익명)
+  ❌ 사용자 이름 (수집 안 됨)
+  ❌ 파일 이름 (수집 안 됨)
+  ❌ 코드 내용 (수집 안 됨)
+
+텔레메트리를 활성화하시겠습니까? (y/N):
+```
+
+**참고**:
+- 텔레메트리는 **완전히 선택 사항**이며, 비활성화해도 모든 기능이 정상 작동합니다
+- 활성화 시 익명화된 통계만 전송되며, 개인정보는 수집되지 않습니다
+- 언제든지 `rm -f .langfuse.telemetry`로 비활성화 가능합니다
+- 자세한 내용: [텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md)
 
 **텔레메트리 (선택사항)**:
 - 두 스크립트 모두 텔레메트리 활성화 옵션 제공
