@@ -26,7 +26,11 @@
       "✅ @AutoConfigureMockMvc: MockMvc 자동 설정",
       "✅ Repository 주입: DB 상태 검증",
       "✅ @AfterEach: 테스트 격리 (DB 초기화)",
-      "✅ HTTP + DB 검증: 두 가지 모두 확인"
+      "✅ HTTP + DB 검증: 두 가지 모두 확인",
+      "✅ BDD 스타일 (Given-When-Then)",
+      "✅ 가독성 매우 높음",
+      "✅ JSON Path 검증 간편",
+      "✅ 복잡한 API 테스트에 적합"
     ]
   },
   "documentation": {

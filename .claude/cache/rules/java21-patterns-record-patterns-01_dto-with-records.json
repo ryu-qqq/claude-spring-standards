@@ -31,7 +31,8 @@
       "✅ Compact Constructor (추가 검증 또는 정규화)",
       "✅ Javadoc으로 필드 설명",
       "✅ `from()` 정적 팩토리 메서드",
-      "✅ Domain → DTO 단방향 변환"
+      "✅ Domain → DTO 단방향 변환",
+      "✅ Stream API + Record 조합"
     ]
   },
   "documentation": {

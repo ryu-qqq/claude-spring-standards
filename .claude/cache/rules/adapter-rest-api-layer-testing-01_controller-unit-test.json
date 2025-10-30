@@ -33,7 +33,11 @@
       "✅ **격리된 테스트**: Controller 로직만 검증",
       "✅ **MockMvc 자동 설정**: HTTP 요청/응답 시뮬레이션",
       "✅ HTTP 메서드 매핑 (`@GetMapping`, `@PostMapping`)",
-      "✅ 요청 검증 (`@Valid`, Bean Validation)"
+      "✅ 요청 검증 (`@Valid`, Bean Validation)",
+      "✅ 응답 상태 코드 (200, 201, 400, 404)",
+      "✅ JSON 직렬화/역직렬화",
+      "✅ Mapper 호출 (API DTO ↔ UseCase DTO)",
+      "✅ ErrorResponse 형식"
     ]
   },
   "documentation": {

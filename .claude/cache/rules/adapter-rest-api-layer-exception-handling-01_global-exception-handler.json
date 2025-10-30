@@ -29,14 +29,20 @@
       "❌ Domain 구체 타입 의존",
       "❌ 예외 생성 (Domain/Application에서 생성)",
       "❌ HTTP 응답 생성",
-      "❌ ErrorResponse DTO 생성"
+      "❌ ErrorResponse DTO 생성",
+      "❌ HTTP 예외 처리",
+      "❌ ErrorResponse 생성"
     ],
     "allowed": [
       "✅ 모든 예외를 HTTP 응답으로 변환",
       "✅ ErrorResponse DTO 생성",
       "✅ HTTP 상태 코드 설정",
       "✅ 로깅",
-      "✅ 비즈니스 예외 정의"
+      "✅ 비즈니스 예외 정의",
+      "✅ ErrorCode 인터페이스 구현",
+      "✅ HTTP 상태 코드 결정",
+      "✅ 비즈니스 예외 발생",
+      "✅ 트랜잭션 경계 관리"
     ]
   },
   "documentation": {

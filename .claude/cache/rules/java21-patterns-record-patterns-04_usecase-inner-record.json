@@ -35,7 +35,10 @@
       "✅ `CreateOrderUseCase.Command`로 명확한 참조",
       "✅ Compact Constructor에서 입력 검증",
       "✅ 중첩 Record (`OrderItem`)로 복잡한 구조 표현",
-      "✅ 방어적 복사 (`List.copyOf()`)로 불변성 보장"
+      "✅ 방어적 복사 (`List.copyOf()`)로 불변성 보장",
+      "✅ **REST DTO** (`CreateOrderRequest/Response`): 외부 API 스펙",
+      "✅ **UseCase Record** (`Command/Response`): Application Layer 내부 DTO",
+      "✅ Controller에서 변환 책임 (Mapper/Assembler는 Domain ↔ UseCase만 담당)"
     ]
   },
   "documentation": {

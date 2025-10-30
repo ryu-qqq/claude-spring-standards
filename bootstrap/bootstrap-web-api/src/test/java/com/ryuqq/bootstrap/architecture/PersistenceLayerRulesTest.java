@@ -43,100 +43,19 @@ class PersistenceLayerRulesTest {
     }
 
     // ========================================
-    // Long FK 전략 검증
+    // Long FK 전략, Entity 불변성, Adapter/Mapper 규칙
     // ========================================
-
-    @Test
-    @DisplayName("JPA Entity는 @OneToMany 어노테이션 사용 금지 (Long FK 전략)")
-    void jpaEntitiesShouldNotUseOneToMany() {
-        ArchRule rule = fields()
-                .that().areDeclaredInClassesThat().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().notBeAnnotatedWith("jakarta.persistence.OneToMany")
-                .because("Long FK 전략을 사용해야 합니다. @OneToMany는 Law of Demeter 위반과 N+1 문제를 야기합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("JPA Entity는 @ManyToOne 어노테이션 사용 금지 (Long FK 전략)")
-    void jpaEntitiesShouldNotUseManyToOne() {
-        ArchRule rule = fields()
-                .that().areDeclaredInClassesThat().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().notBeAnnotatedWith("jakarta.persistence.ManyToOne")
-                .because("Long FK 전략을 사용해야 합니다. @ManyToOne은 LazyInitializationException과 테스트 복잡도 증가를 야기합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("JPA Entity는 @ManyToMany 어노테이션 사용 금지 (Long FK 전략)")
-    void jpaEntitiesShouldNotUseManyToMany() {
-        ArchRule rule = fields()
-                .that().areDeclaredInClassesThat().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().notBeAnnotatedWith("jakarta.persistence.ManyToMany")
-                .because("Long FK 전략을 사용해야 합니다. @ManyToMany는 명시적 중간 테이블 Entity로 관리하세요.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("JPA Entity는 @OneToOne 어노테이션 사용 금지 (Long FK 전략)")
-    void jpaEntitiesShouldNotUseOneToOne() {
-        ArchRule rule = fields()
-                .that().areDeclaredInClassesThat().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().notBeAnnotatedWith("jakarta.persistence.OneToOne")
-                .because("Long FK 전략을 사용해야 합니다. @OneToOne은 양방향 참조 복잡도를 증가시킵니다.");
-
-        rule.check(persistenceClasses);
-    }
+    //
+    // 다음 규칙들은 더 상세한 컨벤션 테스트로 이동되었습니다:
+    // - JPA Entity 규칙 (Long FK, @Entity, @Table 등) → JpaEntityConventionTest
+    // - Entity Mapper 규칙 (@Component 금지, Utility Class 등) → MapperConventionTest
+    // - Repository Adapter 규칙 (@Component, @Transactional 등) → RepositoryAdapterConventionTest
+    //
+    // 이 파일은 Persistence Layer 전반의 공통 규칙만 포함합니다.
 
     // ========================================
-    // Entity 불변성 검증
+    // 스프링 어노테이션 검증 (QueryDSL Repository만)
     // ========================================
-
-    // TODO: Setter 검증은 Custom ArchCondition으로 구현 필요
-    // ArchUnit의 표준 API로는 "메서드가 존재하지 않아야 한다"를 직접 표현하기 어려움
-    // 대안: Checkstyle, SpotBugs, 또는 Custom ArchCondition 활용
-    /*
-    @Test
-    @DisplayName("JPA Entity는 Setter 메서드 사용 금지 (불변성)")
-    void jpaEntitiesShouldNotHaveSetters() {
-        // Custom ArchCondition 구현 필요
-    }
-    */
-
-    // ========================================
-    // 트랜잭션 경계 검증
-    // ========================================
-
-    @Test
-    @DisplayName("Persistence Adapter는 @Transactional 사용 금지")
-    void persistenceAdaptersShouldNotUseTransactional() {
-        ArchRule rule = classes()
-                .that().resideInAPackage("..adapter.out.persistence..")
-                .and().haveSimpleNameEndingWith("Adapter")
-                .should().notBeAnnotatedWith("org.springframework.transaction.annotation.Transactional")
-                .andShould().notBeAnnotatedWith("jakarta.transaction.Transactional")
-                .because("@Transactional은 Application Layer에서만 사용해야 합니다. Persistence Adapter는 트랜잭션 경계가 아닙니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    // ========================================
-    // 스프링 어노테이션 검증
-    // ========================================
-
-    @Test
-    @DisplayName("Persistence Adapter는 @Component 어노테이션 사용")
-    void persistenceAdaptersShouldBeAnnotatedWithComponent() {
-        ArchRule rule = classes()
-                .that().resideInAPackage("..adapter.out.persistence..adapter..")
-                .and().haveSimpleNameEndingWith("Adapter")
-                .should().beAnnotatedWith("org.springframework.stereotype.Component")
-                .because("Persistence Adapter는 @Component로 Spring Bean으로 등록되어야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
 
     @Test
     @DisplayName("QueryDSL Repository는 @Repository 어노테이션 사용")
@@ -146,18 +65,6 @@ class PersistenceLayerRulesTest {
                 .and().haveSimpleNameEndingWith("Repository")
                 .should().beAnnotatedWith("org.springframework.stereotype.Repository")
                 .because("QueryDSL Repository는 @Repository로 Spring Bean으로 등록되어야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("Entity Mapper는 @Component 어노테이션 사용")
-    void entityMappersShouldBeAnnotatedWithComponent() {
-        ArchRule rule = classes()
-                .that().resideInAPackage("..adapter.out.persistence..mapper..")
-                .and().haveSimpleNameEndingWith("Mapper")
-                .should().beAnnotatedWith("org.springframework.stereotype.Component")
-                .because("Entity Mapper는 @Component로 Spring Bean으로 등록되어야 합니다.");
 
         rule.check(persistenceClasses);
     }
@@ -199,19 +106,8 @@ class PersistenceLayerRulesTest {
     }
 
     // ========================================
-    // 패키지 구조 검증
+    // 패키지 구조 검증 (QueryDSL과 Spring Data JPA만)
     // ========================================
-
-    @Test
-    @DisplayName("JPA Entity는 entity 패키지에 위치")
-    void jpaEntitiesShouldResideInEntityPackage() {
-        ArchRule rule = classes()
-                .that().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().resideInAPackage("..entity..")
-                .because("JPA Entity는 entity 패키지에 위치해야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
 
     @Test
     @DisplayName("Spring Data JPA Repository는 repository 패키지에 위치")
@@ -236,44 +132,9 @@ class PersistenceLayerRulesTest {
         rule.check(persistenceClasses);
     }
 
-    @Test
-    @DisplayName("Persistence Adapter는 adapter 패키지에 위치")
-    void persistenceAdaptersShouldResideInAdapterPackage() {
-        ArchRule rule = classes()
-                .that().haveSimpleNameEndingWith("Adapter")
-                .and().resideInAPackage("..adapter.out.persistence..")
-                .should().resideInAPackage("..adapter..")
-                .because("Persistence Adapter는 adapter 패키지에 위치해야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("Entity Mapper는 mapper 패키지에 위치")
-    void entityMappersShouldResideInMapperPackage() {
-        ArchRule rule = classes()
-                .that().haveSimpleNameEndingWith("Mapper")
-                .and().resideInAPackage("..adapter.out.persistence..")
-                .should().resideInAPackage("..mapper..")
-                .because("Entity Mapper는 mapper 패키지에 위치해야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
     // ========================================
-    // 네이밍 규칙 검증
+    // 네이밍 규칙 검증 (QueryDSL만)
     // ========================================
-
-    @Test
-    @DisplayName("JPA Entity는 *JpaEntity 네이밍 규칙 준수")
-    void jpaEntitiesShouldFollowNamingConvention() {
-        ArchRule rule = classes()
-                .that().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().haveSimpleNameEndingWith("JpaEntity")
-                .because("JPA Entity는 *JpaEntity 네이밍 규칙을 따라야 합니다 (Domain Entity와 구분).");
-
-        rule.check(persistenceClasses);
-    }
 
     @Test
     @DisplayName("QueryDSL Repository는 *QueryDslRepository 네이밍 규칙 준수")
@@ -283,45 +144,6 @@ class PersistenceLayerRulesTest {
                 .and().haveSimpleNameContaining("QueryDsl")
                 .should().haveSimpleNameEndingWith("Repository")
                 .because("QueryDSL Repository는 *QueryDslRepository 네이밍 규칙을 따라야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("Entity Mapper는 *EntityMapper 네이밍 규칙 준수")
-    void entityMappersShouldFollowNamingConvention() {
-        ArchRule rule = classes()
-                .that().resideInAPackage("..mapper..")
-                .and().haveSimpleNameEndingWith("Mapper")
-                .should().haveSimpleNameEndingWith("EntityMapper")
-                .because("Entity Mapper는 *EntityMapper 네이밍 규칙을 따라야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    // ========================================
-    // JPA Entity 설계 검증
-    // ========================================
-
-    @Test
-    @DisplayName("JPA Entity는 @Entity 어노테이션 사용")
-    void jpaEntitiesShouldBeAnnotatedWithEntity() {
-        ArchRule rule = classes()
-                .that().haveSimpleNameEndingWith("JpaEntity")
-                .and().haveSimpleNameNotStartingWith("Q")  // QueryDSL Q-Type 클래스 제외
-                .should().beAnnotatedWith("jakarta.persistence.Entity")
-                .because("*JpaEntity 클래스는 @Entity 어노테이션을 가져야 합니다.");
-
-        rule.check(persistenceClasses);
-    }
-
-    @Test
-    @DisplayName("JPA Entity는 @Table 어노테이션 사용 (명시적 테이블명)")
-    void jpaEntitiesShouldBeAnnotatedWithTable() {
-        ArchRule rule = classes()
-                .that().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().beAnnotatedWith("jakarta.persistence.Table")
-                .because("JPA Entity는 명시적으로 @Table 어노테이션으로 테이블명을 지정해야 합니다.");
 
         rule.check(persistenceClasses);
     }
