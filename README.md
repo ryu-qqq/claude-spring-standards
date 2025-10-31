@@ -139,48 +139,14 @@ Serena MCP: 5개 메모리 생성
 
 ## 📚 Zero-Tolerance 규칙
 
-### 1. Lombok 금지
+다음 규칙은 **예외 없이** 반드시 준수해야 합니다:
 
-```java
-// ❌ 금지
-@Data
-public class Order { }
+- **Lombok 금지** - Plain Java 사용 → [상세](docs/coding_convention/02-domain-layer/law-of-demeter/)
+- **Law of Demeter** - Getter 체이닝 금지 (`order.getCustomer().getAddress()` ❌) → [상세](docs/coding_convention/02-domain-layer/law-of-demeter/)
+- **Long FK 전략** - JPA 관계 어노테이션 금지, Long FK 사용 → [상세](docs/coding_convention/04-persistence-layer/jpa-entity-design/)
+- **Transaction 경계** - `@Transactional` 내 외부 API 호출 절대 금지 → [상세](docs/coding_convention/03-application-layer/transaction-management/)
 
-// ✅ 필수
-public class Order {
-    private final OrderId id;
-    public OrderId getId() { return id; }
-}
-```
-
-### 2. Law of Demeter
-
-```java
-// ❌ Getter chaining
-order.getCustomer().getAddress().getZip();
-
-// ✅ Tell, Don't Ask
-order.getCustomerZip();
-```
-
-### 3. Transaction 경계
-
-```java
-// ❌ Transaction 내 외부 API
-@Transactional
-public Order create() {
-    ExternalData data = apiClient.fetch(); // ❌
-    return save(data);
-}
-
-// ✅ Transaction 외부에서 호출
-public Order create() {
-    ExternalData data = apiClient.fetch(); // ✅
-    return doSomething(data);
-}
-```
-
-**상세**: [코딩 컨벤션 문서](docs/coding_convention/)
+**전체 규칙**: [코딩 컨벤션 문서](docs/coding_convention/) (98개 규칙)
 
 ---
 
