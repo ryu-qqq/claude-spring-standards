@@ -10,7 +10,7 @@ set -e
 
 # 설정
 CLAUDE_LOGS=".claude/hooks/logs/hook-execution.jsonl"
-CASCADE_LOGS=".cascade/metrics.jsonl"
+PIPELINE_METRICS=".pipeline-metrics/metrics.jsonl"
 INTERVAL=${LANGFUSE_MONITOR_INTERVAL:-300}  # 기본 5분
 
 # 텔레메트리 설정 읽기
@@ -70,7 +70,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "🚀 LangFuse Monitor Started (Telemetry Mode)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "   Claude logs:  $CLAUDE_LOGS"
-echo "   Cascade logs: $CASCADE_LOGS"
+echo "   Pipeline metrics: $PIPELINE_METRICS"
 echo "   Interval:     ${INTERVAL}s"
 echo "   Telemetry:    enabled (anonymized)"
 echo "   Host:         https://us.cloud.langfuse.com"
@@ -89,7 +89,7 @@ while true; do
     # 로그 집계 (텔레메트리 모드)
     if python3 "$SCRIPT_DIR/aggregate-logs.py" \
         --claude-logs "$CLAUDE_LOGS" \
-        --cascade-logs "$CASCADE_LOGS" \
+        --cascade-logs "$PIPELINE_METRICS" \
         --output "/tmp/langfuse-data-$$.json" \
         --telemetry 2>&1; then
 

@@ -44,35 +44,30 @@
 
 ```
 프로젝트 루트/
-├── tools/pipeline/                    # ✨ NEW: 단일 진실의 원천 (SSOT)
+├── tools/pipeline/                    # 단일 진실의 원천 (SSOT)
 │   ├── common.sh                      # 공통 설정 및 헬퍼
 │   ├── validate_conventions.sh        # 컨벤션 검증 로직
 │   ├── test_unit.sh                   # 유닛 테스트 로직
 │   └── pr_gate.sh                     # PR 게이트 파이프라인
 │
-├── .cascade/                          # ✨ NEW: 메트릭 & 리포트
-│   ├── metrics.jsonl                  # 실행 메트릭 (시간, 성공률)
-│   └── report.md                      # 실패 리포트
-│
 └── .windsurf/
     ├── README.md (이 파일)
     ├── rules.md ⭐ (핵심 규칙 - 7,000자, Cascade 자동 로드)
-    └── workflows/ (15개 Markdown - SSOT 얇은 래퍼)
+    └── workflows/ (14개 Markdown - SSOT 얇은 래퍼)
         ├── 검증 (3개)
         ├── 테스트 (4개)
         ├── 빌드/배포 (4개)
         ├── 파이프라인 (3개)
         ├── Git 자동화 (4개)
         ├── 코드 품질 (3개)
-        └── 메트릭 (1개) ✨ NEW
+        └── 메트릭 (1개)
             └── upload-langfuse.md
 ```
 
 **주요 사항**:
 - ✅ **SSOT 적용**: 실제 로직은 `tools/pipeline/`에만 존재
-- ✅ **얇은 래퍼**: Cascade workflows는 스크립트 호출만
-- ✅ **메트릭 수집**: 모든 실행 결과 자동 기록
-- ✅ **No Drift**: Cascade와 CI가 동일한 스크립트 사용
+- ✅ **얇은 래퍼**: Windsurf workflows는 스크립트 호출만
+- ✅ **No Drift**: Windsurf와 CI가 동일한 스크립트 사용
 ---
 
 ## 📋 Rules 파일 정보

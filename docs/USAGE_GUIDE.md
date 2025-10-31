@@ -498,7 +498,7 @@ validate_conventions.sh:
   5. Transaction 경계 검사
   6. Spring 프록시 검사
     ↓
-메트릭 기록: .cascade/metrics.jsonl
+메트릭 기록: .pipeline-metrics/metrics.jsonl
     ↓
 결과 출력
 ```
@@ -516,7 +516,7 @@ All Zero-Tolerance rules are followed:
   ✅ Transaction boundaries respected
   ✅ Spring proxy compatible
 
-📊 Metrics saved to .cascade/metrics.jsonl
+📊 Metrics saved to .pipeline-metrics/metrics.jsonl
 ```
 
 #### Step 6: UseCase 구현
@@ -693,7 +693,7 @@ Tests run: 23
 
 Coverage: 89% (line), 85% (branch)
 
-📊 Metrics saved to .cascade/metrics.jsonl
+📊 Metrics saved to .pipeline-metrics/metrics.jsonl
 ```
 
 #### Step 8: IntelliJ Cascade에서 PR 파이프라인 실행
@@ -729,7 +729,7 @@ Duration: 45s
 
 🎉 Ready to merge!
 
-📊 Metrics saved to .cascade/metrics.jsonl
+📊 Metrics saved to .pipeline-metrics/metrics.jsonl
 ```
 
 #### Step 9: Claude Code에서 PR 생성
@@ -857,7 +857,7 @@ Violations found:
 **Cascade 특징**:
 - ✅ **빠른 자동화**: Markdown Workflow → Bash Script 실행
 - ✅ **IDE 통합**: IntelliJ에서 바로 실행, 결과 확인
-- ✅ **메트릭 수집**: 모든 실행 결과 `.cascade/metrics.jsonl`에 기록
+- ✅ **메트릭 수집**: Pipeline 실행 결과 `.pipeline-metrics/metrics.jsonl`에 기록
 - ✅ **SSOT 패턴**: `tools/pipeline/*.sh`를 Cascade와 CI가 공유
 
 ### tools/pipeline/ 스크립트 (SSOT)
@@ -933,7 +933,7 @@ chmod -R 755 .windsurf/
 **해결**:
 ```bash
 # 1. 상세 리포트 확인
-cat .cascade/report.md
+# 실패 상세는 콘솔 출력 참조
 
 # 2. 특정 규칙 확인
 grep -r "@Data\|@Builder" domain/src/  # Lombok 검사

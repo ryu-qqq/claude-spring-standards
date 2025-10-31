@@ -48,5 +48,5 @@ bin/
 .windsurfrules
 
 # Pipeline metrics and reports (auto-generated)
-.cascade/metrics.jsonl
-.cascade/report.md
+.pipeline-metrics/metrics.jsonl
+.pipeline-metrics/report.md

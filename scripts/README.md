@@ -98,7 +98,7 @@ bash /tmp/spring-standards/scripts/install-claude-hooks.sh
 
 **입력**:
 - `.claude/hooks/logs/hook-execution.jsonl` (Claude Code 로그)
-- `.cascade/metrics.jsonl` (Cascade 메트릭, 있으면)
+- `.pipeline-metrics/metrics.jsonl` (Pipeline 메트릭, 있으면)
 
 **출력**:
 - `langfuse-data.json` (LangFuse Ingestion API 형식)

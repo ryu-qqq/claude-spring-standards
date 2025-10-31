@@ -1,7 +1,7 @@
 #!/bin/bash
 # LangFuse 업로드 스크립트
 #
-# 용도: Claude Code 및 Cascade 로그를 LangFuse로 업로드
+# 용도: Claude Code Hook 로그 및 Pipeline 메트릭을 LangFuse로 업로드
 # SSOT: Workflow upload-langfuse.md의 실제 구현체
 
 set -e  # 에러 발생 시 즉시 종료
@@ -61,7 +61,7 @@ check_python() {
 # 로그 파일 확인
 check_logs() {
     local claude_logs="$PROJECT_ROOT/.claude/hooks/logs/hook-execution.jsonl"
-    local cascade_logs="$PROJECT_ROOT/.cascade/metrics.jsonl"
+    local pipeline_metrics="$PROJECT_ROOT/.pipeline-metrics/metrics.jsonl"
 
     if [ ! -f "$claude_logs" ]; then
         echo -e "${YELLOW}⚠️  Warning: Claude logs not found${NC}"
@@ -76,13 +76,13 @@ check_logs() {
         echo ""
     fi
 
-    if [ ! -f "$cascade_logs" ]; then
-        echo -e "${YELLOW}⚠️  Cascade logs not found (optional)${NC}"
-        echo "   Path: $cascade_logs"
+    if [ ! -f "$pipeline_metrics" ]; then
+        echo -e "${YELLOW}⚠️  Pipeline metrics not found (optional)${NC}"
+        echo "   Path: $pipeline_metrics"
         echo ""
     else
-        echo -e "${GREEN}✅ Cascade logs found${NC}"
-        echo "   Path: $cascade_logs"
+        echo -e "${GREEN}✅ Pipeline metrics found${NC}"
+        echo "   Path: $pipeline_metrics"
         echo ""
     fi
 }
@@ -96,7 +96,7 @@ aggregate_logs() {
 
     python3 "$PROJECT_ROOT/scripts/langfuse/aggregate-logs.py" \
         --claude-logs "$PROJECT_ROOT/.claude/hooks/logs/hook-execution.jsonl" \
-        --cascade-logs "$PROJECT_ROOT/.cascade/metrics.jsonl" \
+        --pipeline-metrics "$PROJECT_ROOT/.pipeline-metrics/metrics.jsonl" \
         --output "$output_file" \
         --anonymize
 

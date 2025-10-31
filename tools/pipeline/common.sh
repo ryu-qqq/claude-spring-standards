@@ -10,7 +10,7 @@ export JAVA_TOOL_OPTIONS="-XX:+UseZGC"
 
 # Project root directory
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CACHE_DIR="${PROJECT_ROOT}/.cascade"
+METRICS_DIR="${PROJECT_ROOT}/.pipeline-metrics"
 
 # Colors for output
 RED='\033[0;31m'
@@ -45,10 +45,10 @@ metric() {
     local timestamp=$(date +%s)
 
     # Ensure cache directory exists
-    mkdir -p "${CACHE_DIR}"
+    mkdir -p "${METRICS_DIR}"
 
     # Append to metrics.jsonl
-    echo "${timestamp}\t${task}\t${status}\t${duration}" >> "${CACHE_DIR}/metrics.jsonl"
+    echo "${timestamp}\t${task}\t${status}\t${duration}" >> "${METRICS_DIR}/metrics.jsonl"
 
     if [[ $status -eq 0 ]]; then
         log_success "Task '${task}' completed in ${duration}s"
@@ -64,7 +64,7 @@ report_failure() {
     local error_msg=$2
 
     # Ensure cache directory exists
-    mkdir -p "${CACHE_DIR}"
+    mkdir -p "${METRICS_DIR}"
 
     # Update report.md
     {
@@ -82,9 +82,9 @@ report_failure() {
         echo "- Checkstyle: build/reports/checkstyle/main.html"
         echo "- SpotBugs: build/reports/spotbugs/main.html"
         echo "- Test: build/reports/tests/test/index.html"
-    } > "${CACHE_DIR}/report.md"
+    } > "${METRICS_DIR}/report.md"
 
-    log_warning "Failure report written to ${CACHE_DIR}/report.md"
+    log_warning "Failure report written to ${METRICS_DIR}/report.md"
 }
 
 # Check if Gradle wrapper exists
@@ -113,7 +113,7 @@ init_pipeline() {
     check_java
 
     # Create cache directory if not exists
-    mkdir -p "${CACHE_DIR}"
+    mkdir -p "${METRICS_DIR}"
 
     log "Pipeline initialized successfully"
 }

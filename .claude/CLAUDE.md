@@ -328,7 +328,106 @@ LangFuse (효율 측정)
 **기타**:
 - `/jira-task` - Jira 태스크 분석 및 브랜치 생성
 
-### 3. Git Pre-commit Hooks (별도 시스템)
+### 3. 시스템 검증 도구 ⭐ NEW
+
+**목적**: Serena Memory, Hook 시스템, Cache 통합을 검증하고 모니터링
+
+#### 3.1 Serena 메모리 검증 도구
+
+**위치**: `.claude/hooks/scripts/verify-serena-memories.sh`
+
+**기능**:
+- ✅ `.serena/memories/` 디렉토리 구조 검증
+- ✅ 5개 필수 메모리 파일 존재 확인
+- ✅ 메모리 파일 내용 및 구조 검증
+- ✅ Serena MCP 연결 테스트
+- ✅ Hook 시스템과의 통합 검증
+- ✅ 최근 Hook 로그 분석
+
+**사용법**:
+```bash
+bash .claude/hooks/scripts/verify-serena-memories.sh
+
+# 출력:
+# 🔍 Serena Memory Verification Tool
+# ==================================
+#
+# ## 1. Serena 디렉토리 구조 검증
+# -----------------------------------
+# ✅ PASS: .serena/memories 디렉토리 존재
+# ✅ PASS: 메모리 파일: coding_convention_index.md
+# ✅ PASS: 메모리 파일: coding_convention_domain_layer.md
+# ...
+#
+# ## 📊 검증 결과 요약
+# ==================================
+# 총 테스트: 15
+# 통과: 15
+# 실패: 0
+# ✅ 모든 검증 통과!
+```
+
+#### 3.2 Hook 로그 요약 도구
+
+**위치**: `.claude/hooks/scripts/summarize-hook-logs.py`
+
+**기능**:
+- ✅ `hook-execution.jsonl` 로그 파싱
+- ✅ 세션별 통계 (컨텍스트 점수, 감지된 레이어)
+- ✅ Serena 메모리 로드 이벤트 추적
+- ✅ Cache 규칙 주입 통계
+- ✅ 권장 사항 및 문제 해결
+
+**사용법**:
+```bash
+# 기본 (최근 5개 세션)
+python3 .claude/hooks/scripts/summarize-hook-logs.py
+
+# 최근 10개 세션, 상세 정보
+python3 .claude/hooks/scripts/summarize-hook-logs.py --sessions 10 --verbose
+
+# 출력:
+# 🔍 Hook 로그 요약
+# ============================================================
+#
+# ## 1. 전체 통계
+# ------------------------------------------------------------
+# 총 로그 수: 236
+# 이벤트 분포:
+#   - session_start: 21
+#   - keyword_analysis: 21
+#   - serena_memory_load: 18
+#   - cache_injection: 42
+#   ...
+#
+# ## 3. Serena 메모리 사용 통계
+# ------------------------------------------------------------
+# ✅ Serena 메모리 로드 이벤트: 18회
+#
+# ## 4. Cache 규칙 주입 통계
+# ------------------------------------------------------------
+# ✅ Cache 규칙 주입 이벤트: 42회
+#    총 주입된 규칙 수: 546개
+#
+# 레이어별 주입 횟수:
+#   - application: 15회
+#   - domain: 12회
+#   ...
+```
+
+#### 3.3 실시간 로그 모니터링
+
+```bash
+# 터미널 1: 로그 실시간 모니터링
+tail -f .claude/hooks/logs/hook-execution.jsonl
+
+# 터미널 2: Claude Code 실행
+claude code
+```
+
+**참고**: [전체 시스템 흐름도](../../docs/SYSTEM_FLOW.md) - Serena + Hook + Cache 통합 아키텍처 상세 가이드
+
+### 4. Git Pre-commit Hooks (별도 시스템)
 
 **위치**: `hooks/pre-commit`, `hooks/validators/`
 

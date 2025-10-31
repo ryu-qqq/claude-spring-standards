@@ -1,11 +1,14 @@
-# .cascade/ - Metrics & Reports Directory
+# .pipeline-metrics/ - CI/CD Pipeline Metrics Directory
 
-**Purpose**: Store pipeline execution metrics and failure reports
+**Purpose**: Store CI/CD pipeline execution metrics and failure reports
+
+**⚠️ Important**: This directory is **NOT** related to Windsurf Cascade (IntelliJ plugin).
+It only stores metrics from `tools/pipeline/` shell scripts (pr_gate, test_unit, validate_conventions, etc).
 
 ## Structure
 
 ```
-.cascade/
+.pipeline-metrics/
 ├── README.md (this file)
 ├── metrics.jsonl          # Pipeline execution metrics (auto-generated)
 └── report.md              # Failure report (auto-generated)
@@ -32,10 +35,10 @@
 
 ```bash
 # Average duration by task
-cat .cascade/metrics.jsonl | awk '{sum[$2]+=$4; count[$2]++} END {for (task in sum) print task, sum[task]/count[task]}'
+cat .pipeline-metrics/metrics.jsonl | awk '{sum[$2]+=$4; count[$2]++} END {for (task in sum) print task, sum[task]/count[task]}'
 
 # Success rate by task
-cat .cascade/metrics.jsonl | awk '{total[$2]++; if($3==0) success[$2]++} END {for (task in total) print task, (success[task]/total[task])*100 "%"}'
+cat .pipeline-metrics/metrics.jsonl | awk '{total[$2]++; if($3==0) success[$2]++} END {for (task in total) print task, (success[task]/total[task])*100 "%"}'
 ```
 
 ### report.md
@@ -82,13 +85,13 @@ CI workflows can collect and archive these files:
   uses: actions/upload-artifact@v3
   with:
     name: pipeline-metrics
-    path: .cascade/
+    path: .pipeline-metrics/
 ```
 
 ## Gitignore
 
 These files are gitignored (auto-generated):
-- `.cascade/metrics.jsonl`
-- `.cascade/report.md`
+- `.pipeline-metrics/metrics.jsonl`
+- `.pipeline-metrics/report.md`
 
-Only `.cascade/README.md` and `.cascade/.gitkeep` are tracked.
+Only `.pipeline-metrics/README.md` and `.pipeline-metrics/.gitkeep` are tracked.

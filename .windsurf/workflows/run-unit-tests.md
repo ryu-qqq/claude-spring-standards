@@ -59,13 +59,6 @@ Failed tests summary:
 Check build/reports/tests/test/index.html for details.
 ```
 
-## Metrics
-
-실행 결과는 자동으로 `.cascade/metrics.jsonl`에 기록됩니다:
-- Task name: `test_unit`
-- Status code: `0` (성공) / `1` (실패)
-- Duration: 초 단위
-
 ## Architecture
 
 ```
@@ -89,5 +82,5 @@ tools/pipeline/test_unit.sh (SSOT)
 
 - **Script**: `tools/pipeline/test_unit.sh`
 - **Common**: `tools/pipeline/common.sh`
-- **Metrics**: `.cascade/metrics.jsonl`
 - **Reports**: `build/reports/tests/test/index.html`
+- **LangFuse**: `scripts/langfuse/upload-to-langfuse.py`

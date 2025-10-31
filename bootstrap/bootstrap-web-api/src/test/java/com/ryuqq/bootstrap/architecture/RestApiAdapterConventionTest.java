@@ -40,7 +40,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
  *
  * <p><strong>참고 문서:</strong></p>
  * <ul>
- *   <li>Windsurf Cascade: {@code .cascade/cc-rest-api.md}</li>
+ *   <li>Windsurf Workflows: {@code .windsurf/workflows/}</li>
  *   <li>개발자 가이드: {@code docs/coding_convention/01-adapter-rest-api-layer/00_rest-api-creation-guide.md}</li>
  * </ul>
  *

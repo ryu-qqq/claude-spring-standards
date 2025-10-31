@@ -235,8 +235,10 @@ fi
 
 ### LangFuse 자동 수집
 
+Pipeline 실행 메트릭은 자동으로 `.pipeline-metrics/metrics.jsonl`에 기록되며,
+LangFuse로 업로드됩니다:
+
 ```jsonl
-# .cascade/metrics.jsonl
 {
   "task": "test_runner_smart",
   "status": 0,
@@ -291,7 +293,7 @@ layers:
 
 metrics:
   langfuse_upload: true
-  local_report: .cascade/test-metrics.jsonl
+  # Pipeline metrics는 tools/pipeline/ 스크립트에서 자동 기록
 ```
 
 ---

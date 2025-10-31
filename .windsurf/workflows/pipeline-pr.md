@@ -87,15 +87,7 @@ Please fix the issues above and run again.
 Reports available at:
   - Tests: build/reports/tests/test/index.html
   - Coverage: build/reports/jacoco/test/html/index.html
-  - Failure details: .cascade/report.md
 ```
-
-## Metrics
-
-실행 결과는 자동으로 `.cascade/metrics.jsonl`에 기록됩니다:
-- Task name: `pr_gate`
-- Status code: `0` (성공) / `1` (실패)
-- Duration: 초 단위
 
 ## Architecture
 
@@ -170,8 +162,10 @@ LangFuse 메트릭 업로드
 
 ## LangFuse Metrics
 
+Pipeline 실행 메트릭은 자동으로 `.pipeline-metrics/metrics.jsonl`에 기록되며,
+LangFuse로 업로드됩니다:
+
 ```jsonl
-# .cascade/metrics.jsonl
 {
   "task": "pr_gate_fast",
   "duration_ms": 30000,
@@ -197,6 +191,4 @@ LangFuse 메트릭 업로드
 - **Script**: `tools/pipeline/pr_gate.sh`
 - **Test Runner**: `.windsurf/workflows/test-runner.md`
 - **Common**: `tools/pipeline/common.sh`
-- **Metrics**: `.cascade/metrics.jsonl`
-- **Reports**: `.cascade/report.md`
 - **LangFuse**: `scripts/langfuse/upload-to-langfuse.py`

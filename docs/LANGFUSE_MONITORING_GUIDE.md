@@ -26,7 +26,7 @@
 │                                                           │
 │  Claude Code                    IntelliJ Cascade         │
 │      ↓                                ↓                  │
-│  .claude/hooks/            .cascade/metrics.jsonl        │
+│  .claude/hooks/            .pipeline-metrics/metrics.jsonl        │
 │    logs/hook-execution.jsonl                             │
 │                                                           │
 └──────────────┬──────────────────────┬────────────────────┘
@@ -83,7 +83,7 @@
 ```
 
 #### 2. Cascade 로그
-**위치**: `.cascade/metrics.jsonl`
+**위치**: `.pipeline-metrics/metrics.jsonl`
 
 **형식**: JSONL (JSON Lines)
 
@@ -291,7 +291,7 @@ scripts/langfuse/
 
 **입력**:
 - `.claude/hooks/logs/hook-execution.jsonl`
-- `.cascade/metrics.jsonl`
+- `.pipeline-metrics/metrics.jsonl`
 
 **출력**:
 - LangFuse API 호환 JSON
@@ -495,7 +495,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Aggregate logs for LangFuse')
     parser.add_argument('--claude-logs', default='.claude/hooks/logs/hook-execution.jsonl')
-    parser.add_argument('--cascade-logs', default='.cascade/metrics.jsonl')
+    parser.add_argument('--cascade-logs', default='.pipeline-metrics/metrics.jsonl')
     parser.add_argument('--output', default='langfuse-data.json')
     parser.add_argument('--anonymize', action='store_true', help='Anonymize sensitive data')
 
@@ -615,7 +615,7 @@ if __name__ == '__main__':
 # 실시간 LangFuse 모니터링
 
 CLAUDE_LOGS=".claude/hooks/logs/hook-execution.jsonl"
-CASCADE_LOGS=".cascade/metrics.jsonl"
+CASCADE_LOGS=".pipeline-metrics/metrics.jsonl"
 INTERVAL=300  # 5분마다
 
 echo "🚀 LangFuse Monitor Started"

@@ -70,7 +70,7 @@ pip install requests  # HTTP 요청용
 # 1. 로그 집계 (JSONL → LangFuse 형식)
 python3 scripts/langfuse/aggregate-logs.py \
   --claude-logs .claude/hooks/logs/hook-execution.jsonl \
-  --cascade-logs .cascade/metrics.jsonl \
+  --pipeline-metrics .pipeline-metrics/metrics.jsonl \
   --output langfuse-data.json \
   --anonymize  # 개인정보 익명화 (선택)
 
@@ -87,7 +87,7 @@ python3 scripts/langfuse/upload-to-langfuse.py \
 
 **입력**:
 - `.claude/hooks/logs/hook-execution.jsonl`
-- `.cascade/metrics.jsonl`
+- `.pipeline-metrics/metrics.jsonl`
 
 **출력**:
 - `langfuse-data.json` (LangFuse API 호환 형식)
@@ -269,19 +269,15 @@ python3 scripts/langfuse/upload-to-langfuse.py
 
 ### Q: Windsurf Cascade 로그가 수집되지 않는데?
 
-**A**: Windsurf IDE의 Cascade는 기본적으로 로그를 생성하지 않습니다. 수동 로깅이 필요합니다:
+**A**: Windsurf IDE의 Cascade (IntelliJ 플러그인)는 **로그를 자동으로 생성할 수 없습니다**.
 
-```bash
-# Cascade 작업 완료 후 수동으로 기록
-bash .windsurf/cascade-logger.sh "task_name" "status_code" "duration_seconds"
+- **Claude Code**: ✅ Hook 시스템 → 자동 로깅
+- **Pipeline Scripts**: ✅ tools/pipeline/ → 자동 메트릭 수집
+- **Windsurf Cascade**: ❌ 플러그인 제약 → 로깅 불가능
 
-# 예시
-bash .windsurf/cascade-logger.sh "create_aggregate" 0 120
-```
+따라서 **Windsurf Cascade 작업은 LangFuse에 업로드되지 않습니다**.
 
-자동화 옵션 및 상세 가이드: `.windsurf/CASCADE_LOGGING_GUIDE.md` 참고
-
-**참고**: Claude Code는 자동으로 로깅되지만, Windsurf Cascade는 별도 IDE이므로 수동 설정이 필요합니다.
+Pipeline 스크립트를 통해 실행된 작업만 자동으로 메트릭이 수집됩니다.
 
 ## 📚 참고 문서
 

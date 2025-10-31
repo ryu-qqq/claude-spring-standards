@@ -401,7 +401,7 @@ python3 scripts/langfuse/upload-to-langfuse.py --telemetry
 # 🔒 Telemetry mode: Anonymization enforced
 # 🚀 LangFuse Log Aggregator
 #    Claude logs: .claude/hooks/logs/hook-execution.jsonl
-#    Cascade logs: .cascade/metrics.jsonl
+#    Pipeline metrics: .pipeline-metrics/metrics.jsonl
 #    Anonymize: True
 # ✅ Export complete!
 #    Traces: 1
@@ -419,7 +419,7 @@ bash scripts/langfuse/monitor.sh
 # 🚀 LangFuse Monitor Started (Telemetry Mode)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #    Claude logs:  .claude/hooks/logs/hook-execution.jsonl
-#    Cascade logs: .cascade/metrics.jsonl
+#    Pipeline metrics: .pipeline-metrics/metrics.jsonl
 #    Interval:     300s
 #    Telemetry:    enabled (anonymized)
 #    Host:         https://us.cloud.langfuse.com
@@ -695,7 +695,7 @@ host=https://eu.cloud.langfuse.com
 
 **A**: 네, `aggregate-logs.py`가 두 로그 모두 처리합니다:
 - Claude Code: `.claude/hooks/logs/hook-execution.jsonl`
-- Cascade: `.cascade/metrics.jsonl`
+- Pipeline: `.pipeline-metrics/metrics.jsonl`
 
 ### Q8: 성능에 영향이 있나요?
 

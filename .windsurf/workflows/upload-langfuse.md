@@ -4,7 +4,10 @@ description: langfuse upload
 
 # LangFuse 메트릭 업로드
 
-Claude Code 및 Cascade 로그를 LangFuse로 업로드하여 개발 효율성 메트릭을 추적합니다.
+Claude Code Hook 로그 및 CI/CD Pipeline 메트릭을 LangFuse로 업로드하여 개발 효율성 메트릭을 추적합니다.
+
+**⚠️ 중요**: Windsurf Cascade (IntelliJ 플러그인)는 JSONL 로그를 남기지 않으므로 **LangFuse 통합이 불가능**합니다.
+이 워크플로우는 오직 **Claude Code Hook** 로그와 **Pipeline 스크립트** 메트릭만 처리합니다.
 
 ## 📊 목적
 
@@ -34,7 +37,7 @@ LangFuse에 로그를 업로드해줘
 ```bash
 python3 scripts/langfuse/aggregate-logs.py \
   --claude-logs .claude/hooks/logs/hook-execution.jsonl \
-  --cascade-logs .cascade/metrics.jsonl \
+  --pipeline-metrics .pipeline-metrics/metrics.jsonl \
   --output langfuse-data.json \
   --anonymize
 ```
@@ -89,7 +92,7 @@ echo $LANGFUSE_PUBLIC_KEY
 ```
 🚀 LangFuse Log Aggregator
    Claude logs: .claude/hooks/logs/hook-execution.jsonl
-   Cascade logs: .cascade/metrics.jsonl
+   Pipeline metrics: .pipeline-metrics/metrics.jsonl
    Anonymize: True
 
 ✅ Export complete!

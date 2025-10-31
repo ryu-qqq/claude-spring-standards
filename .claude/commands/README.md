@@ -328,18 +328,123 @@
 
 ### 📋 Jira 통합
 
-#### `/jira-task`
-**목적**: Jira 태스크 분석 및 브랜치 생성
+#### `/jira-analyze`
+**목적**: Jira 이슈 분석 및 TodoList 생성
 
 **사용법**:
 ```bash
-/jira-task
+/jira-analyze PROJ-123
+/jira-analyze https://ryuqqq.atlassian.net/browse/PROJ-123
 ```
 
 **기능**:
-- Jira Issue 분석
-- TodoList 생성
-- Feature 브랜치 자동 생성
+- Jira Issue 상세 정보 조회
+- Epic 정보 포함
+- TodoList 자동 생성
+- Feature 브랜치 자동 생성/체크아웃
+
+**상세**: [jira-analyze.md](./jira-analyze.md)
+
+---
+
+#### `/jira-create`
+**목적**: 새로운 Jira 이슈 생성
+
+**사용법**:
+```bash
+/jira-create --project PROJ --type Task --summary "사용자 로그인 기능"
+/jira-create --project PROJ --type Story --summary "주문 API" --priority High
+/jira-create --project PROJ --type Task --summary "결제 테스트" --epic PROJ-10
+```
+
+**기능**:
+- Task, Story, Bug, Epic 생성
+- 담당자, 우선순위, 라벨 설정
+- Epic Link 연동
+- 브랜치 생성 제안
+
+**상세**: [jira-create.md](./jira-create.md)
+
+---
+
+#### `/jira-transition`
+**목적**: Jira 이슈 상태 변경 (To Do → In Progress → Done)
+
+**사용법**:
+```bash
+/jira-transition PROJ-123 "In Progress"
+/jira-transition PROJ-123 "Code Review" --comment "PR 생성 완료"
+/jira-transition PROJ-123 "Done" --resolution "Fixed"
+```
+
+**기능**:
+- 상태 전환 (To Do, In Progress, Code Review, Done)
+- 해결 방법 설정 (Fixed, Won't Fix 등)
+- 코멘트 추가
+- Git 브랜치 정리 (Done 전환 시)
+
+**상세**: [jira-transition.md](./jira-transition.md)
+
+---
+
+#### `/jira-update`
+**목적**: Jira 이슈 정보 업데이트
+
+**사용법**:
+```bash
+/jira-update PROJ-123 --summary "로그인 기능 개선"
+/jira-update PROJ-123 --priority "High" --story-points 8
+/jira-update PROJ-123 --add-labels "security,authentication"
+/jira-update PROJ-123 --assignee "user@example.com"
+```
+
+**기능**:
+- 제목, 설명, 담당자, 우선순위 변경
+- 라벨 추가/제거
+- Story Points 설정
+- Epic Link 변경
+
+**상세**: [jira-update.md](./jira-update.md)
+
+---
+
+#### `/jira-comment`
+**목적**: Jira 이슈에 코멘트 추가
+
+**사용법**:
+```bash
+/jira-comment PROJ-123 "테스트 완료했습니다."
+/jira-comment PROJ-123 "@john.doe 리뷰 부탁드립니다."
+/jira-comment PROJ-123 "PR 생성: https://github.com/org/repo/pull/456"
+```
+
+**기능**:
+- 텍스트 코멘트 추가
+- 사용자 멘션
+- 코드 스니펫, 링크 포함
+- 진행 상황 업데이트
+
+**상세**: [jira-comment.md](./jira-comment.md)
+
+---
+
+#### `/jira-link-pr`
+**목적**: GitHub PR과 Jira 이슈 연동
+
+**사용법**:
+```bash
+/jira-link-pr PROJ-123  # 현재 브랜치의 PR 자동 감지
+/jira-link-pr PROJ-123 --pr 456
+/jira-link-pr PROJ-123 --pr 456 --transition "Code Review"
+```
+
+**기능**:
+- PR 정보를 Jira 이슈에 링크
+- Jira 이슈를 PR에 링크
+- 상태 자동 전환 (In Progress → Code Review)
+- 코멘트 자동 추가
+
+**상세**: [jira-link-pr.md](./jira-link-pr.md)
 
 ---
 
@@ -420,6 +525,92 @@ gh pr create
 /run-unit-tests
 ```
 
+### 4. Jira 통합 워크플로우 (전체 라이프사이클) ⭐
+
+```bash
+# 1️⃣ Jira 이슈 분석 및 작업 시작
+/jira-analyze PROJ-123
+→ Epic 정보 포함 조회
+→ TodoList 자동 생성 (10개 작업 항목)
+→ feature/PROJ-123-user-login 브랜치 생성
+
+# 2️⃣ 작업 시작 상태로 변경
+/jira-transition PROJ-123 "In Progress"
+→ Jira 상태: To Do → In Progress
+→ 시작 시간 자동 기록
+
+# 3️⃣ 진행 상황 업데이트
+/jira-comment PROJ-123 "## 진행 상황
+- ✅ Domain 모델 작성 완료
+- 🔄 UseCase 구현 중
+- ⏳ 테스트 작성 예정"
+→ 팀원들에게 진행 상황 공유
+
+# 4️⃣ 코드 작업 진행
+/cc:load  # 컨벤션 로드
+"Order Domain에 비즈니스 메서드 구현"
+/test-gen-domain Order
+/test-gen-usecase PlaceOrder
+
+# 5️⃣ PR 생성 및 Jira 연동
+git add . && git commit -m "feat(PROJ-123): 사용자 로그인 구현"
+gh pr create --title "feat(PROJ-123): 사용자 로그인 기능" --body "..."
+
+/jira-link-pr PROJ-123 --transition "Code Review"
+→ PR 링크를 Jira에 자동 추가
+→ Jira 이슈를 PR에 자동 링크
+→ 상태 자동 변경: In Progress → Code Review
+
+# 6️⃣ 코드 리뷰 반영
+/jira-comment PROJ-123 "@reviewer 리뷰 반영 완료했습니다.
+수정 사항:
+- Law of Demeter 적용
+- 엣지 케이스 테스트 추가"
+
+# 7️⃣ PR 머지 후 완료 처리
+/jira-transition PROJ-123 "Done" --resolution "Fixed" --comment "✅ PR #456 머지 완료
+- 모든 테스트 통과
+- 프로덕션 배포 완료"
+
+→ Jira 상태: Code Review → Done
+→ 로컬 브랜치 정리 제안
+
+# 🎯 결과
+# - Jira 이슈 전체 라이프사이클 자동 관리
+# - GitHub PR과 완벽 연동
+# - 팀 투명성 향상 (진행 상황 실시간 공유)
+# - 수동 작업 90% 절감
+```
+
+### 5. 복잡한 Epic 관리
+
+```bash
+# 1️⃣ Epic 분석
+/jira-analyze PROJ-100  # Epic
+→ Epic 목표 및 하위 태스크 조회
+→ Epic 전체 TodoList 생성 (50개 작업)
+
+# 2️⃣ 하위 Task 생성
+/jira-create --project PROJ --type Task --summary "사용자 인증 API" --epic PROJ-100 --priority High
+→ Task PROJ-101 생성
+→ Epic PROJ-100에 자동 링크
+
+/jira-create --project PROJ --type Task --summary "권한 관리 API" --epic PROJ-100
+→ Task PROJ-102 생성
+
+# 3️⃣ 각 Task 작업 및 완료
+/jira-analyze PROJ-101
+→ TodoList 생성 및 작업
+
+/jira-transition PROJ-101 "Done"
+→ Epic 진행률 자동 업데이트 (33%)
+
+# 4️⃣ Epic 완료 확인
+/jira-analyze PROJ-100
+→ 모든 하위 Task 완료 확인
+→ Epic 완료 처리
+```
+
 ---
 
 ## 💡 Claude Code의 핵심 강점
@@ -464,7 +655,12 @@ gh pr create
 | **검증** | /validate-domain | Domain 검증 | 🟡 선택 |
 | **검증** | /validate-architecture | 아키텍처 검증 | 🟡 선택 |
 | **AI 리뷰** | /ai-review | 통합 AI 리뷰 | 🟢 권장 |
-| **Jira** | /jira-task | Task 분석 | 🟡 선택 |
+| **Jira** | /jira-analyze | 이슈 분석 & Todo | 🟢 권장 |
+| **Jira** | /jira-create | 이슈 생성 | 🟡 선택 |
+| **Jira** | /jira-transition | 상태 변경 | 🟢 권장 |
+| **Jira** | /jira-update | 이슈 정보 수정 | 🟡 선택 |
+| **Jira** | /jira-comment | 코멘트 추가 | 🟡 선택 |
+| **Jira** | /jira-link-pr | PR 연동 | 🟢 권장 |
 
 ---
 

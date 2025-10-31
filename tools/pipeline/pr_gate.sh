@@ -111,7 +111,6 @@ else
     log "  - Spotless: Run ./gradlew spotlessApply"
     log "  - Tests: build/reports/tests/test/index.html"
     log "  - Coverage: build/reports/jacoco/test/html/index.html"
-    log "  - Failure details: .cascade/report.md"
 fi
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
