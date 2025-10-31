@@ -1,7 +1,7 @@
 # Claude Spring Standards
 
 > **Spring Boot 3.5.x + Java 21 헥사고날 아키텍처 템플릿**
-> Dynamic Hooks + Cache 시스템을 통한 AI 기반 코딩 표준 자동화
+> AI 기반 코딩 표준 자동화 프로젝트
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
@@ -9,1152 +9,137 @@
 
 ---
 
-## 🎯 CLAUDE 세션 구현 
+## 🎯 이 프로젝트는?
 
-**Dynamic Hooks + Cache System**: 키워드 기반 Layer 감지 → JSON Cache 조회 → 규칙 자동 주입 → 실시간 검증
+**Spring Boot + Java 21** 헥사고날 아키텍처 템플릿으로, **Dynamic Hooks + Cache** 시스템을 통해 AI가 코딩 표준을 자동으로 주입하고 검증합니다.
 
-| 기능 | 기존 방식 | 이 프로젝트 |
-|------|----------|------------|
-| 코딩 표준 | 수동 리뷰 | 자동 주입 + 검증 |
-| 규칙 로딩 | 전체 문서 | JSON Cache |
+### 핵심 특징
 
----
-
-## 📖 목차
-
-- [혁신 시스템](#-혁신-시스템-이-템플릿의-핵심-차별점)
-- [통합 워크플로우 (Claude + Windsurf)](#-통합-워크플로우-claude-code--windsurf)
-- [빠른 시작](#-빠른-시작)
-- [사용 가이드 (필독!)](#-사용-가이드-필독)
-- [시스템 검증 (Serena + Hook + Cache)](#-시스템-검증-serena--hook--cache)
-- [Cache 시스템](#-cache-시스템)
-- [레이어별 작업 모드 (Slash Commands)](#-레이어별-작업-모드-slash-commands)
-- [코딩 표준](#-코딩-표준)
-- [개발 워크플로우](#-개발-워크플로우)
-- [로그 시스템](#-로그-시스템)
-- [문제 해결](#-문제-해결)
+✅ **자동 규칙 주입**: 키워드 감지 → Layer 매핑 → 규칙 자동 주입
+✅ **실시간 검증**: 코드 생성 직후 즉시 컨벤션 검증
+✅ **Zero-Tolerance**: Lombok 금지, Law of Demeter, Transaction 경계 자동 검증
+✅ **헥사고날 아키텍처**: Domain-driven Design + CQRS 패턴
 
 ---
 
-## 🚀 혁신 시스템 (이 템플릿의 핵심 차별점)
+## 🚀 빠른 시작 (3분)
 
-이 템플릿은 **2가지 혁신적 자동화 시스템**을 통합합니다:
-
-### 1️⃣ Dynamic Hooks + Cache 시스템
-
-**목적**: 키워드 기반 Layer 감지 → JSON Cache 조회 → 규칙 자동 주입
-
-**작동**:
-```
-사용자: "Order entity 만들어줘"
-    ↓
-키워드 감지: "entity" (30점) → Layer: adapter-persistence
-    ↓
-Cache 조회: index.json → 10개 규칙 (500 tokens)
-    ↓
-Claude: 규칙 준수 코드 생성
-```
-
-**효과**:
-- ⚡ **90% 토큰 절감**: 50,000 → 500-1,000 tokens
-- 🚀 **73.6% 검증 향상**: 561ms → 148ms
-- 📉 **95% 로딩 향상**: 2-3초 → <100ms
-
-**상세**: [Dynamic Hooks Guide](docs/DYNAMIC_HOOKS_GUIDE.md)
-
----
-
-### 2️⃣ Serena Memory + LangFuse 측정 시스템
-
-**목적**: Serena MCP로 컨벤션을 메모리에 저장 → 컨텍스트 인식 자동 로드 → LangFuse로 효율 측정
-
-**작동**:
-```
-setup-serena-conventions.sh (1회 실행)
-    ↓
-Serena MCP: 5개 메모리 생성
-    - coding_convention_domain_layer
-    - coding_convention_application_layer
-    - coding_convention_persistence_layer
-    - coding_convention_rest_api_layer
-    - coding_convention_index
-    ↓
-사용자: /sc:load (세션 시작 시)
-    ↓
-Claude: Serena 메모리 자동 로드 → 컨텍스트 유지
-    ↓
-LangFuse: 토큰 사용량, 위반 건수 추적 → A/B 테스트
-```
-
-**효과** (A/B 테스트 결과):
-
-| 메트릭 | 전통 방식 | Serena + Cache | 개선율 |
-|--------|----------|----------------|--------|
-| **토큰 사용량** | 50,000 | 15,000 | **70% ↓** |
-| **컨벤션 로드** | 2-3초 | <50ms | **95% ↑** |
-| **위반 건수 (Domain)** | 23회 | 5회 | **78% ↓** |
-| **세션당 평균 시간** | 15분 | 8분 | **47% ↑** |
-
-**상세**: [LangFuse 통합 가이드](docs/LANGFUSE_INTEGRATION_GUIDE.md)
-
-**⚠️ LangFuse 통합 제약사항 및 해결**:
-- ✅ **Claude Code Hook**: UserPromptSubmit, PostToolUse 자동 로깅 → LangFuse 업로드 가능
-- ✅ **Slash Command**: 자동 로깅 시스템 추가 (`/cc:load`, `/code-gen-*` 등) ⭐ NEW
-- ✅ **Pipeline 메트릭**: CI/CD 스크립트 (`.pipeline-metrics/`) → LangFuse 업로드 가능
-- ❌ **Windsurf Cascade**: IntelliJ 플러그인, JSONL 로그 미생성 → **LangFuse 통합 불가능**
-
-**Slash Command 로깅 방법** ⭐ NEW:
-```bash
-# Slash Command 실행 시 자동 로깅
-/cc:load
-# → .claude/hooks/logs/hook-execution.jsonl에 기록
-# → LangFuse 업로드 시 자동 포함
-
-# 수동 업로드
-bash tools/pipeline/upload_langfuse.sh
-```
-
-**상세 가이드**: [Slash Command LangFuse 로깅](docs/LANGFUSE_SLASH_COMMAND_LOGGING.md)
-
-**디렉토리 명칭 주의**:
-- `.pipeline-metrics/` = CI/CD 파이프라인 메트릭 (pr_gate, test_unit 등)
-- **Windsurf Cascade와 무관**함 (혼란 방지)
-
----
-
-## 🔄 통합 워크플로우 (Claude Code + Windsurf)
-
-이 프로젝트는 **Claude Code**와 **Windsurf (IntelliJ 플러그인)**를 통합하여 사용하도록 설계되었습니다.
-
-### 워크플로우 개요
-
-```
-┌─────────────────────────────────────────┐
-│ 1️⃣ Claude Code: 분석 & 설계             │
-│ - PRD 작성                               │
-│ - Jira Task 생성 (/jira-analyze)        │
-│ - 아키텍처 설계                          │
-└──────────────┬──────────────────────────┘
-               ↓
-┌─────────────────────────────────────────┐
-│ 2️⃣ Windsurf: Boilerplate 생성           │
-│ - .windsurf/rules/*.md 자동 로드        │
-│ - .windsurf/workflows/*.yaml 참고       │
-│ - 반복 구조 빠른 생성                    │
-└──────────────┬──────────────────────────┘
-               ↓
-┌─────────────────────────────────────────┐
-│ 3️⃣ Claude Code: 비즈니스 로직 구현      │
-│ - Serena Memory 컨텍스트 유지           │
-│ - Domain 비즈니스 메서드                 │
-│ - Transaction 경계 관리                  │
-└──────────────┬──────────────────────────┘
-               ↓
-┌─────────────────────────────────────────┐
-│ 4️⃣ Claude Code: 자동 검증 & PR          │
-│ - ArchUnit, Pre-commit Hooks            │
-│ - /validate-architecture                │
-│ - gh pr create                          │
-└─────────────────────────────────────────┘
-```
-
-### 실제 예시: Order Aggregate 개발
+### 1️⃣ 시스템 준비 (1회만)
 
 ```bash
-# 1. Claude Code: PRD 작성
-"Order Aggregate PRD를 작성해줘"
-
-# 2. Claude Code: Jira Task
-/jira-analyze
-→ PROJ-100 Epic 생성
-→ feature/PROJ-100-order 브랜치
-
-# 3. Windsurf (IntelliJ): Boilerplate
-"Order Aggregate를 생성해줘"
-→ OrderDomain.java, OrderId.java 등 생성
-
-# 4. Claude Code: 비즈니스 로직
-/sc:load  # Serena 메모리 로드
-"Order Domain에 placeOrder, cancelOrder 메서드 구현해줘"
-→ Law of Demeter, Transaction 경계 자동 준수
-
-# 5. Claude Code: 검증
-/validate-architecture
-→ ArchUnit 통과 → gh pr create
-```
-
-### 성능 비교
-
-| 작업 | Windsurf 없이 | Windsurf + Claude | 개선율 |
-|------|--------------|-------------------|--------|
-| Boilerplate 생성 | 30분 | 2분 | **93%** |
-| 전체 개발 | 110분 | 50분 | **55%** |
-
-**상세 가이드**: [Claude + Windsurf 통합 워크플로우](docs/workflows/CLAUDE_CASCADE_INTEGRATION.md)
-
----
-
-### 시너지 효과
-
-**Cache 시스템 (고속 검색)**:
-- 필요한 규칙만 O(1) 조회
-- 90% 토큰 절감
-
-**Serena Memory (컨텍스트 유지)**:
-- 세션 간 컨벤션 기억
-- 78% 위반 감소
-
-**LangFuse (정량적 증명)**:
-- A/B 테스트로 효율 측정
-- ROI 증명 가능
-
-**결과**: Cache의 효율성 + Serena의 일관성 + LangFuse의 측정 = **최적의 AI 가이드 시스템**
-
----
-
-### 📊 전체 시스템 아키텍처
-
-```mermaid
-graph TB
-    subgraph "📋 준비 단계 (1회 실행)"
-        A1[docs/coding_convention/<br/>90개 마크다운 규칙]
-        A2[build-rule-cache.py]
-        A3[setup-serena-conventions.sh]
-        A1 -->|빌드| A2
-        A2 -->|생성| B1[.claude/cache/rules/<br/>90개 JSON + index.json]
-        A1 -->|메모리 생성| A3
-        A3 -->|저장| B2[Serena MCP<br/>5개 메모리]
-    end
-
-    subgraph "🚀 세션 시작"
-        C1[Claude Code 실행]
-        C2[/sc:load 명령어]
-        C1 --> C2
-        B2 -->|자동 로드| C2
-        C2 -->|활성화| C3[컨벤션 컨텍스트<br/>메모리에 상주]
-    end
-
-    subgraph "💻 개발 워크플로우"
-        D1[사용자 요청<br/>예: Order domain 작성]
-        D2[user-prompt-submit.sh<br/>키워드 감지]
-        D3{Layer 매핑}
-        D4[Serena 메모리<br/>우선 참조]
-        D5[inject-rules.py<br/>Cache 규칙 주입]
-        D6[Claude Code<br/>규칙 준수 생성]
-
-        D1 --> D2
-        D2 --> D3
-        D3 -->|최우선| D4
-        D3 -->|보조| D5
-        B1 -->|O1 조회| D5
-        C3 -->|컨텍스트| D4
-        D4 --> D6
-        D5 --> D6
-    end
-
-    subgraph "✅ 검증 및 측정"
-        E1[after-tool-use.sh<br/>코드 생성 직후]
-        E2[validation-helper.py<br/>Cache 기반 검증]
-        E3[LangFuse<br/>효율 측정]
-
-        D6 --> E1
-        E1 --> E2
-        B1 -->|규칙 참조| E2
-        D6 -->|토큰, 위반 추적| E3
-    end
-
-    style B1 fill:#e1f5ff
-    style B2 fill:#fff4e1
-    style C3 fill:#e8f5e9
-    style D6 fill:#f3e5f5
-    style E3 fill:#ffe4e1
-```
-
-**흐름 설명**:
-1. **준비**: 마크다운 → JSON Cache + Serena 메모리 (1회)
-2. **시작**: `/sc:load` → Serena 메모리 활성화 (매 세션)
-3. **개발**: 키워드 감지 → Serena 우선 + Cache 보조 → 생성
-4. **검증**: Cache 기반 실시간 검증 + LangFuse 측정
-
----
-
-## 🚀 빠른 시작
-
-### Option 1: 완전 통합 시스템 설치 (권장) ⭐ NEW
-
-**모든 컴포넌트를 한 번에 설치 (Claude + Windsurf + Docs + CodeRabbit + Scripts):**
-
-```bash
-# 1. 이 프로젝트를 임시로 클론
-git clone https://github.com/your-org/claude-spring-standards.git /tmp/claude-spring-standards
-
-# 2. 본인 프로젝트로 이동
-cd your-project
-
-# 3. 완전 통합 설치 스크립트 실행
-bash /tmp/claude-spring-standards/scripts/install-complete-system.sh
-
-# 4. 완료 후 임시 디렉토리 삭제
-rm -rf /tmp/claude-spring-standards
-```
-
-**설치되는 컴포넌트**:
-- ✅ **Claude Code** (Hooks + Cache + Commands + Serena)
-- ✅ **Windsurf/Cascade** (Rules + Workflows + Templates)
-- ✅ **Coding Convention Docs** (98개 규칙, Orchestration 포함) ⭐
-- ✅ **CodeRabbit 설정** (.coderabbit.yaml)
-- ✅ **Scripts** (Pipeline, LangFuse)
-- ✅ **Tools** (Gradle 설정, ArchUnit)
-- ✅ **Git Hooks** (Pre-commit 검증, Orchestration 포함) ⭐
-- ✅ **텔레메트리** (익명화된 사용 통계, 선택사항)
-
-**설치 후**:
-```bash
-# 1. Cache 빌드
+# 1. Cache 빌드 (98개 규칙 → JSON)
 python3 .claude/hooks/scripts/build-rule-cache.py
 
 # 2. Serena 메모리 초기화
 bash .claude/hooks/scripts/setup-serena-conventions.sh
 
-# 3. Claude Code 실행
+# 3. Git Hooks 설정
+ln -s ../../hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+### 2️⃣ Claude Code 실행
+
+```bash
 claude code
 /cc:load  # 코딩 컨벤션 로드
 ```
 
----
+### 3️⃣ 첫 코드 생성
 
-### Option 2: Claude 설정만 복사 (부분 설치)
-
-**Claude Hooks + Cache 시스템만 필요한 경우:**
-
-```bash
-# 1. 이 프로젝트를 임시로 클론
-git clone https://github.com/your-org/claude-spring-standards.git /tmp/claude-spring-standards
-
-# 2. 본인 프로젝트로 이동
-cd your-project
-
-# 3. 부분 설치 스크립트 실행
-bash /tmp/claude-spring-standards/scripts/install-claude-hooks.sh
-
-# 3.5. Serena 컨벤션 설정 (NEW!)
-bash /tmp/claude-spring-standards/.claude/hooks/scripts/setup-serena-conventions.sh
-
-# 4. 완료 후 임시 디렉토리 삭제
-rm -rf /tmp/claude-spring-standards
-
-# 5. Claude Code 실행 후 Serena 메모리 로드 (NEW!)
-claude code
-# 첫 명령어 실행:
-/sc:load
-```
-
-**설치되는 컴포넌트**:
-- ✅ `.claude/hooks/` (user-prompt-submit.sh, after-tool-use.sh)
-- ✅ `.claude/hooks/scripts/` (로그, 검증, Cache 빌드)
-- ✅ `.claude/commands/` (코드 생성, 검증 명령어)
-- ✅ `.claude/commands/lib/` (규칙 주입 스크립트)
-- ✅ Python 의존성 확인 (tiktoken, jq)
-- ✅ 선택적: 코딩 규칙 문서, Windsurf, Git Hooks
-- ✅ 코딩 규칙 문서 복사 여부 선택
-- ✅ Cache 빌드 여부 선택
-- ✅ **텔레메트리 활성화 선택** (익명화된 사용 통계, 선택사항)
-
-**설치 중 텔레메트리 프롬프트**:
-```
-📊 텔레메트리 (익명 사용 통계)
-
-Spring Standards 템플릿 개선을 위해 익명화된 사용 통계를
-수집하도록 허용하시겠습니까?
-
-수집 데이터:
-  ✅ 토큰 사용량 (익명)
-  ✅ 검증 시간 (익명)
-  ✅ 컨벤션 위반 통계 (익명)
-  ❌ 사용자 이름 (수집 안 됨)
-  ❌ 파일 이름 (수집 안 됨)
-  ❌ 코드 내용 (수집 안 됨)
-
-텔레메트리를 활성화하시겠습니까? (y/N):
-```
-
-**참고**:
-- 텔레메트리는 **완전히 선택 사항**이며, 비활성화해도 모든 기능이 정상 작동합니다
-- 활성화 시 익명화된 통계만 전송되며, 개인정보는 수집되지 않습니다
-- 언제든지 `rm -f .langfuse.telemetry`로 비활성화 가능합니다
-- 자세한 내용: [텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md)
-
-**텔레메트리 (선택사항)**:
-- 두 스크립트 모두 텔레메트리 활성화 옵션 제공
-- 익명화된 사용 통계만 수집 (개인정보 수집 안 됨)
-- 언제든지 `rm -f .langfuse.telemetry`로 비활성화
-- 자세한 내용: [텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md)
-
----
-
-### Option 2: 전체 템플릿 사용 (헥사고날 아키텍처 포함)
-
-### 사전 요구사항
-
-- Java 21+
-- Gradle 8.5+
-- Python 3.8+
-- jq (JSON 파싱용)
-
-### 설치
-
-```bash
-# 1. 클론
-git clone https://github.com/your-org/claude-spring-standards.git
-cd claude-spring-standards
-
-# 2. Cache 빌드 (96개 규칙 → JSON, 약 5초)
-python3 .claude/hooks/scripts/build-rule-cache.py
-
-# 3. Git Hooks 설정
-ln -s ../../hooks/pre-commit .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-
-# 4. 빌드
-./gradlew build
-```
-
-### Claude Code Hooks 설정 (필수)
-
-**중요**: Claude Code Hooks는 로컬 설정 파일을 통해 활성화됩니다.
-보안상의 이유로 `settings.json` 파일을 Git에 커밋해도 자동으로 활성화되지 않으므로,
-각 개발자가 **로컬에서 `settings.local.json` 파일을 생성**해야 합니다.
-
-#### 방법 1: 템플릿 복사 (권장)
-
-```bash
-# 템플릿을 settings.local.json으로 복사
-cp .claude/settings.local.json.template .claude/settings.local.json
-
-# 권한 설정 확인
-chmod +x .claude/hooks/*.sh
-```
-
-#### 방법 2: /hooks 명령어 사용
-
-1. **Claude Code에서 프로젝트 열기**
-   ```bash
-   claude code
-   ```
-
-2. **`/hooks` 명령어 실행하여 하나씩 등록**
-   - `UserPromptSubmit`: `.claude/hooks/user-prompt-submit.sh`
-   - `PreToolUse` (Matcher: `SlashCommand`): `.claude/hooks/user-prompt-submit.sh`
-   - `PostToolUse` (Matcher: `Write|Edit|MultiEdit`): `.claude/hooks/after-tool-use.sh {{toolName}} {{filePath}}`
-
-#### 설정 확인
-
-```bash
-# Hook이 정상 작동하는지 테스트
-domain aggregate 테스트
-
-# 로그 확인
-cat .claude/hooks/logs/hook-execution.jsonl
-```
-
-**Hook이 정상 작동하면**:
-- ✅ `.claude/hooks/logs/hook-execution.jsonl` 파일 생성됨
-- ✅ 프롬프트에 Layer별 규칙이 자동 주입됨
-- ✅ 코드 생성 후 자동 검증 실행됨
-
-**참고**: `settings.local.json`은 `.gitignore`에 등록되어 있어 Git에 커밋되지 않습니다.
-
-### 첫 코드 생성
-
-```bash
-# Claude Code 실행
-claude code
-
-# Domain Aggregate 생성
-> "/code-gen-domain Order"
-```
-
-**자동 수행**:
-1. `user-prompt-submit.sh`: "aggregate" 키워드 감지 → domain 규칙 주입
-2. Claude: Zero-Tolerance 규칙이 적용된 `Order.java` 생성
-3. `after-tool-use.sh`: 실시간 검증
-4. 결과: ✅ 통과 또는 ⚠️ 실패 (수정 가이드 포함)
-
----
-
-## 📘 사용 가이드 (필독!)
-
-### 🎯 이 프로젝트를 실제로 어떻게 사용하나요?
-
-**상세 사용 가이드**: [docs/USAGE_GUIDE.md](docs/USAGE_GUIDE.md)
-
-이 가이드에는 다음 내용이 포함되어 있습니다:
-
-#### 📋 주요 내용
-- ✅ **초기 설정**: 프로젝트 클론부터 첫 코드 생성까지 (10분)
-- ✅ **실제 예시**: Order Aggregate 개발 전체 프로세스 (Step-by-Step)
-- ✅ **도구별 역할**: Claude Code vs Windsurf 언제 무엇을 사용하는가
-- ✅ **트러블슈팅**: 자주 발생하는 문제와 해결 방법
-
-#### 🚀 빠른 시작 (3분)
-
-**1단계: Serena 메모리 준비 (1회만)**
-```bash
-bash .claude/hooks/scripts/setup-serena-conventions.sh
-```
-
-**2단계: Claude Code 실행 및 컨벤션 로드**
-```bash
-claude code
-/cc:load  # 코딩 컨벤션 자동 로드
-```
-
-**3단계: 첫 코드 생성**
 ```bash
 /code-gen-domain Order
 ```
 
-#### 📊 워크플로우 다이어그램
+**자동 실행**:
+- ✅ "aggregate" 키워드 감지 → Domain 규칙 주입
+- ✅ Zero-Tolerance 규칙 적용 (Lombok 금지, Law of Demeter)
+- ✅ 실시간 검증 (148ms)
 
+---
+
+## 📊 시스템 구조
+
+### 1️⃣ Dynamic Hooks + Cache
+
+**작동**:
 ```
-Claude Code (분석 & 설계)
+사용자: "Order entity 만들어줘"
     ↓
-Claude Code (코딩 컨벤션 로드: /cc:load)
+키워드 감지: "entity" → Layer: domain
     ↓
-Claude Code (비즈니스 로직 구현)
+Cache 조회: domain-layer-*.json (15개 규칙)
     ↓
-Windsurf (IntelliJ 플러그인 - 자동 검증 & 테스트)
+Claude: 규칙 준수 코드 생성
+```
+
+**목표 효율** (🚧 측정 진행중):
+- 토큰 사용량: 90% 절감 예상
+- 검증 속도: 73.6% 향상 예상
+- 문서 로딩: 95% 향상 예상
+
+**상세**: [Dynamic Hooks Guide](docs/DYNAMIC_HOOKS_GUIDE.md)
+
+---
+
+### 2️⃣ Serena Memory + LangFuse
+
+**작동**:
+```
+setup-serena-conventions.sh (1회)
     ↓
-Claude Code (PR 생성 & 머지)
+Serena MCP: 5개 메모리 생성
+    ↓
+/cc:load (매 세션)
+    ↓
+컨텍스트 유지 + LangFuse 측정
 ```
 
-#### 🎓 학습 경로
+**목표** (🚧 A/B 테스트 준비중):
+- 컨벤션 위반 감소 목표: 78%
+- 세션 시간 단축 목표: 47%
 
-**초급 (1일)**:
-1. [사용 가이드](docs/USAGE_GUIDE.md) 읽기
-2. Order Aggregate 예시 따라하기
-3. 첫 PR 생성해보기
-
-**중급 (1주)**:
-1. Domain Layer 규칙 숙지
-2. Application Layer Transaction 경계 이해
-3. Windsurf 워크플로우 활용
-
-**고급 (1개월)**:
-1. DDD Aggregate 설계 패턴
-2. CQRS 패턴 적용
-3. Event-Driven Architecture
-
-**💡 핵심**: 가이드를 먼저 읽으면 이 프로젝트를 훨씬 빠르게 이해할 수 있습니다!
+**상세**: [LangFuse 통합 가이드](docs/LANGFUSE_INTEGRATION_GUIDE.md)
 
 ---
 
-## 🔍 시스템 검증 (Serena + Hook + Cache)
+## 🔄 워크플로우
 
-### 📊 3가지 시스템의 통합 아키텍처
-
-이 프로젝트는 **Serena Memory**, **Dynamic Hooks**, **JSON Cache** 3가지 시스템이 유기적으로 통합되어 작동합니다.
+### Claude Code + Windsurf 통합
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ 1️⃣ Serena Memory (컨텍스트 유지)                        │
-│ - 세션 간 컨벤션 기억                                    │
-│ - /cc:load로 수동 로드                                  │
-│ - 최우선 규칙 소스                                       │
-│ - 효과: 78% 위반 감소                                    │
-└─────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│ 2️⃣ Dynamic Hooks (자동 규칙 주입)                       │
-│ - 키워드 감지 (aggregate, usecase, controller 등)       │
-│ - Layer 매핑 (domain, application, adapter-rest 등)    │
-│ - Cache 규칙 자동 주입                                   │
-│ - 효과: 자동화                                           │
-└─────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│ 3️⃣ JSON Cache (고속 규칙 조회)                          │
-│ - 98개 규칙 → JSON 변환                                  │
-│ - O(1) 인덱스 검색                                       │
-│ - 상세 규칙 제공                                         │
-│ - 효과: 90% 토큰 절감                                    │
-└─────────────────────────────────────────────────────────┘
+1. Claude Code → PRD 작성, Jira Task 생성
+2. Windsurf → Boilerplate 빠른 생성 (.windsurf/rules 자동 로드)
+3. Claude Code → 비즈니스 로직 구현 (Serena 메모리 컨텍스트)
+4. Claude Code → 자동 검증 (ArchUnit, Pre-commit)
 ```
 
-**시너지**: Serena의 컨텍스트 + Hooks의 자동화 + Cache의 효율 = **최적의 AI 가이드**
-
-**상세 가이드**: [시스템 통합 아키텍처 (SYSTEM_FLOW.md)](docs/SYSTEM_FLOW.md)
-
----
-
-### 🔧 검증 도구
-
-#### 1️⃣ Serena 메모리 검증 도구
-
-**목적**: Serena MCP 메모리가 올바르게 설정되었는지 검증
-
+**실제 예시**:
 ```bash
-bash .claude/hooks/scripts/verify-serena-memories.sh
-```
+# 1. PRD 작성
+"Order Aggregate PRD를 작성해줘"
 
-**검증 항목** (총 15개 테스트):
-- ✅ `.serena/memories/` 디렉토리 구조
-- ✅ 5개 필수 메모리 파일 존재
-- ✅ 메모리 파일 내용 및 구조
-- ✅ Serena MCP 연결
-- ✅ Hook 시스템과의 통합
-- ✅ 최근 Hook 로그 분석
+# 2. Jira Task
+/jira-analyze
 
-**출력 예시**:
-```
-🔍 Serena Memory Verification Tool
-==================================
+# 3. Windsurf (IntelliJ)
+"Order Aggregate를 생성해줘"
 
-## 1. Serena 디렉토리 구조 검증
------------------------------------
-✅ PASS: .serena/memories 디렉토리 존재
-✅ PASS: 메모리 파일: coding_convention_index.md
-✅ PASS: 메모리 파일: coding_convention_domain_layer.md
-✅ PASS: 메모리 파일: coding_convention_application_layer.md
-✅ PASS: 메모리 파일: coding_convention_persistence_layer.md
-✅ PASS: 메모리 파일: coding_convention_rest_api_layer.md
-
-## 2. 메모리 파일 내용 검증
------------------------------------
-✅ PASS: coding_convention_index.md: 3783 bytes
-✅ PASS: coding_convention_domain_layer.md: 3058 bytes
-...
-
-## 📊 검증 결과 요약
-==================================
-총 테스트: 15
-통과: 15
-실패: 0
-✅ 모든 검증 통과!
-```
-
----
-
-#### 2️⃣ Hook 로그 요약 도구
-
-**목적**: Hook 실행 로그를 분석하여 시스템 작동 상태 확인
-
-```bash
-# 기본 (최근 5개 세션)
-python3 .claude/hooks/scripts/summarize-hook-logs.py
-
-# 최근 10개 세션, 상세 정보
-python3 .claude/hooks/scripts/summarize-hook-logs.py --sessions 10 --verbose
-```
-
-**분석 항목**:
-- 📊 전체 통계 (총 로그 수, 이벤트 분포)
-- 📋 세션별 분석 (컨텍스트 점수, 감지된 레이어)
-- 🧠 Serena 메모리 로드 이벤트
-- 💾 Cache 규칙 주입 통계
-- 💡 권장 사항 및 문제 해결
-
-**출력 예시**:
-```
-🔍 Hook 로그 요약
-============================================================
-
-## 1. 전체 통계
-------------------------------------------------------------
-총 로그 수: 236
-
-이벤트 분포:
-  - session_start: 21
-  - keyword_analysis: 21
-  - serena_memory_load: 18
-  - cache_injection: 42
-  - cache_injection_complete: 21
-
-## 2. 세션 분석
-------------------------------------------------------------
-총 세션 수: 21
-
-최근 5개 세션:
-
-### 세션 1: 1761875155-77368...
-  시작 시간: 2025-10-31T10:45:55
-  이벤트 수: 12
-  컨텍스트 점수: 75
-  감지된 레이어: application, enterprise
-  감지된 키워드: spring, event, validation_context
-  ✅ Serena 메모리 로드됨
-  ✅ Cache 규칙 주입: 24개
-
-## 3. Serena 메모리 사용 통계
-------------------------------------------------------------
-✅ Serena 메모리 로드 이벤트: 18회
-
-최근 로드:
-  시간: 2025-10-31T10:45:56
-  세션: 1761875155-77368...
-  로드된 레이어 수: 2
-
-## 4. Cache 규칙 주입 통계
-------------------------------------------------------------
-✅ Cache 규칙 주입 이벤트: 42회
-   총 주입된 규칙 수: 546개
-
-레이어별 주입 횟수:
-  - application: 15회
-  - domain: 12회
-  - adapter-rest: 8회
-  - adapter-persistence: 5회
-  - enterprise: 2회
-
-## 5. 권장 사항
-------------------------------------------------------------
-✅ 시스템이 정상적으로 작동하고 있습니다!
-
-💡 최적 사용법:
-   - 세션 시작: /cc:load
-   - 키워드 사용: domain, usecase, controller, entity 등
-   - Serena 메모리가 최우선, Cache는 보조 참조
-```
-
----
-
-#### 3️⃣ 실시간 로그 모니터링
-
-**터미널 1**: 로그 실시간 모니터링
-```bash
-tail -f .claude/hooks/logs/hook-execution.jsonl
-```
-
-**터미널 2**: Claude Code 실행
-```bash
-claude code
-```
-
-**로그 예시**:
-```json
-{"timestamp": "2025-10-31T10:45:55", "event": "session_start", "session_id": "1761875155-77368"}
-{"timestamp": "2025-10-31T10:45:55", "event": "keyword_analysis", "context_score": 75, "detected_layers": ["application", "enterprise"]}
-{"timestamp": "2025-10-31T10:45:56", "event": "serena_memory_load", "layers_loaded": 2}
-{"timestamp": "2025-10-31T10:45:56", "event": "cache_injection", "layer": "application", "rules_loaded": 14}
-```
-
----
-
-### 🎯 올바른 사용 워크플로우
-
-#### ✅ 권장 방법 (Serena First)
-
-```bash
-# 1. 세션 시작 시 (필수!)
-claude code
+# 4. Claude Code
 /cc:load
+"Order에 placeOrder, cancelOrder 메서드 구현해줘"
 
-# 출력:
-# ✅ Memory loaded: coding_convention_index
-# 📋 Available conventions:
-#    - coding_convention_domain_layer
-#    - coding_convention_application_layer
-#    - coding_convention_persistence_layer
-#    - coding_convention_rest_api_layer
-
-# 2. 코드 생성 요청 (키워드 포함)
-"Order aggregate를 생성해줘"
-
-# 3. Hook 자동 실행
-# → Serena 메모리 가이드 출력 (이미 로드됨)
-# → Cache 규칙 자동 주입 (domain layer 15개)
-
-# 4. Claude가 규칙 준수 코드 생성
-# → Serena 메모리 (컨텍스트)
-# → Cache 규칙 (상세)
-# → ✅ Lombok 사용 안 함
-# → ✅ Law of Demeter 준수
-# → ✅ Tell, Don't Ask 패턴
+# 5. 검증 & PR
+/validate-architecture
 ```
 
-#### ❌ 잘못된 방법 (Serena 미로드)
-
-```bash
-# Serena 로드 없이 바로 시작
-claude code
-"Order aggregate를 생성해줘"
-
-# 문제:
-# - Serena 메모리 미로드 → 컨텍스트 없음
-# - Cache 규칙만 주입 → 일관성 저하
-# - 위반 가능성 증가
-```
+**상세**: [사용 가이드 (필독!)](docs/USAGE_GUIDE.md)
 
 ---
 
-### 🚨 문제 해결
+## 📚 Zero-Tolerance 규칙
 
-#### 문제 1: Serena 메모리가 로드되지 않음
-
-**증상**:
-```bash
-python3 .claude/hooks/scripts/summarize-hook-logs.py
-
-# 출력:
-# ⚠️  Serena 메모리 로드 이벤트 없음
-```
-
-**해결**:
-```bash
-# 1. Serena 메모리 검증
-bash .claude/hooks/scripts/verify-serena-memories.sh
-
-# 2. 메모리 재생성
-bash .claude/hooks/scripts/setup-serena-conventions.sh
-
-# 3. /cc:load 명령어 실행
-claude code
-/cc:load
-
-# 4. 키워드 포함하여 프롬프트 작성
-"Order aggregate를 생성해줘"  # "aggregate" 키워드 (30점)
-```
-
----
-
-#### 문제 2: Cache 규칙이 주입되지 않음
-
-**증상**:
-```bash
-python3 .claude/hooks/scripts/summarize-hook-logs.py
-
-# 출력:
-# ⚠️  Cache 규칙 주입 이벤트 없음
-```
-
-**해결**:
-```bash
-# 1. Cache 빌드
-python3 .claude/hooks/scripts/build-rule-cache.py
-
-# 2. index.json 확인
-cat .claude/cache/rules/index.json
-
-# 3. 키워드 포함하여 프롬프트 작성
-"UseCase를 생성해줘"  # "usecase" 키워드 (30점)
-```
-
----
-
-#### 문제 3: Hook이 실행되지 않음
-
-**증상**:
-```bash
-cat .claude/hooks/logs/hook-execution.jsonl
-
-# 출력:
-# (파일 없음 또는 비어있음)
-```
-
-**해결**:
-```bash
-# 1. Hook 설정 확인
-cat .claude/settings.local.json
-
-# 2. Hook 스크립트 실행 권한 부여
-chmod +x .claude/hooks/user-prompt-submit.sh
-chmod +x .claude/hooks/after-tool-use.sh
-
-# 3. Claude Code 재시작
-```
-
----
-
-### 📚 시스템 역할 분리
-
-| 시스템 | 목적 | 형식 | 로드 방법 | 우선순위 | 효과 |
-|--------|------|------|----------|----------|------|
-| **Serena Memory** | 세션 컨텍스트 유지 | Markdown (5개) | `/cc:load` (수동) | ⭐⭐⭐ 최우선 | 78% 위반 감소 |
-| **JSON Cache** | 고속 규칙 조회 | JSON (98개) | Hook 자동 주입 | ⭐⭐ 보조 | 90% 토큰 절감 |
-| **Dynamic Hooks** | 자동 규칙 주입 | Bash + Python | 자동 실행 | ⭐⭐⭐ 필수 | 자동화 |
-
-**핵심 원칙**:
-1. **Serena First**: 세션 시작 시 `/cc:load`로 컨텍스트 로드
-2. **Cache for Details**: Serena는 개요, Cache는 상세 규칙
-3. **Hooks for Automation**: 자동 규칙 주입 및 실시간 검증
-4. **Log for Transparency**: 모든 이벤트를 `hook-execution.jsonl`에 기록
-
----
-
-## 🔥 Cache 시스템
-
-### 작동 원리
-
-**Before (기존 방식)**:
-```
-98개 마크다운 문서 전체 로딩
-→ 예제, 설명 포함 전체 내용
-→ 50,000+ 토큰 소비
-```
-
-**After (JSON Cache)**:
-```
-96개 JSON 파일 (핵심만 구조화)
-→ 필요한 규칙만 O(1) 조회
-→ 500-1,000 토큰 (선택적 로딩)
-```
-
-### Cache 구조
-
-```json
-{
-  "id": "domain-layer-law-of-demeter-01",
-  "metadata": {
-    "layer": "domain",
-    "priority": "critical",
-    "keywords": {
-      "anti": ["order.getCustomer().getAddress()"]
-    }
-  },
-  "rules": {
-    "prohibited": ["❌ Getter chaining"],
-    "required": ["✅ Tell, Don't Ask"]
-  }
-}
-```
-
-**핵심 이점**:
-- **토큰 효율**: 핵심 규칙만 JSON화하여 불필요한 예제/설명 제거
-- **빠른 검색**: index.json을 통한 O(1) Layer → 규칙 매핑
-- **선택적 로딩**: 감지된 Layer의 규칙만 로딩
-
-### 키워드 → Layer 매핑
-
-#### Primary Keywords (30점)
-
-| 키워드 | Layer | 예시 |
-|---------|-------|------|
-| aggregate, entity, getter, factory, policy | domain | Law of Demeter, Aggregate 설계 |
-| usecase, service, command, query, transaction, assembler, spring, proxy, orchestration | application | Transaction 경계, UseCase 패턴 |
-| controller, endpoint, validation, request, response, handling | adapter-rest | REST API 설계, 검증 |
-| repository, jpa, querydsl, batch, specification | adapter-persistence | JPA 전략, QueryDSL 최적화 |
-| test, archunit, testcontainers, benchmark | testing | 아키텍처 검증, 통합 테스트 |
-| record, sealed, virtual, threads, async | java21 | Java 21 패턴, Virtual Thread |
-| dto, mapper, cache, event, circuit-breaker, resilience, saga | enterprise | 캐싱 전략, 이벤트 기반 |
-| exception, error | error-handling | 예외 처리 전략 |
-
-#### Secondary Keywords (15점)
-
-| 키워드 | 설명 |
-|---------|------|
-| domain, 도메인 | 도메인 컨텍스트 |
-| api, rest | API 컨텍스트 |
-| persistence, 영속성 | 영속성 컨텍스트 |
-| transaction, 트랜잭션 | 트랜잭션 컨텍스트 |
-| validation, 검증 | 검증 컨텍스트 |
-
-#### Zero-Tolerance Keywords (20점)
-
-| 키워드 | 규칙 |
-|---------|------|
-| lombok | Lombok 사용 금지 |
-| getter.chaining | Getter 체이닝 금지 |
-| law.of.demeter | Law of Demeter 위반 |
-| @transactional | Transaction 경계 위반 |
-
-**예시**:
-```
-입력: "Create Order aggregate"
-→ "aggregate" 감지 (+30)
-→ Layer: domain
-→ 로드: domain-layer-*.json (13개 규칙)
-→ 주입: Critical 우선순위 규칙
-
-입력: "getter chaining 금지 규칙 적용"
-→ "getter" 감지 (+30, Primary)
-→ "getter.chaining" 감지 (+20, Zero-Tolerance)
-→ Layer: domain
-→ 로드: Law of Demeter 관련 규칙
-```
-
----
-
-## 🎯 레이어별 작업 모드 (Slash Commands)
-
-### 기존 문제점
-
-**키워드 기반 감지의 한계**:
-```
-사용자: "domain 클래스에 reconstitute() 추가해줘"
-→ "domain" 키워드만 감지 (15점)
-→ 임계값 25점 미달 ❌
-→ 규칙 주입 실패!
-```
-
-**문제 원인**:
-- Primary Keywords (30점): `entity`, `aggregate`, `usecase`, `controller` 등
-- Secondary Keywords (15점): `domain`, `api`, `rest`
-- 임계값: 25점
-- **사용자가 정확한 키워드를 기억하고 사용해야 함** ← 비직관적!
-
-### 해결책: 명시적 Slash Commands
-
-**5개 레이어별 Commands 추가**:
-```bash
-/domain      # Domain layer 작업
-/application # Application layer 작업
-/rest        # REST API/Controller 작업
-/persistence # Persistence/Repository 작업
-/test        # 테스트 작업
-```
-
-### 작동 메커니즘
-
-#### 1. Slash Command 파일 구조
-
-```markdown
-# .claude/commands/domain.md
----
-description: Domain layer 작업 (Aggregate, Entity, Value Object 등)
----
-
-domain entity {{args}}
-```
-
-#### 2. 확장 프로세스
-
-```
-사용자 입력:
-  /domain "Order에 reconstitute() 메서드 추가"
-
-       ↓ (Claude Code가 domain.md 읽음)
-
-확장된 프롬프트:
-  domain entity Order에 reconstitute() 메서드 추가
-
-       ↓ (hooks.json의 UserPromptSubmit 트리거)
-
-user-prompt-submit.sh 실행:
-  - "domain" 감지 → +15점 (Secondary)
-  - "entity" 감지 → +30점 (Primary)
-  - 합산: 45점 (임계값 25점 초과 ✅)
-
-       ↓ (inject-rules.py 호출)
-
-Domain Layer 규칙 자동 주입:
-  - 13개 JSON 규칙 파일 로드
-  - 2,120 토큰 주입
-  - Law of Demeter, Lombok 금지 등
-```
-
-#### 3. 점수 설계
-
-| Command | 확장 템플릿 | 점수 | 설명 |
-|---------|------------|------|------|
-| `/domain` | `domain entity {{args}}` | 45점 | entity(30) + domain(15) |
-| `/application` | `usecase service {{args}}` | 60점 | usecase(30) + service(30) |
-| `/rest` | `controller rest api {{args}}` | 60점+ | controller(30) + rest(15) + api(15) |
-| `/persistence` | `repository jpa persistence {{args}}` | 60점+ | repository(30) + jpa(30) |
-| `/test` | `test {{args}}` | 30점 | test(30) |
-
-**모든 Command가 임계값(25점)을 안정적으로 초과!**
-
-### 사용 예시
-
-#### 시나리오 1: Domain 수정
-```bash
-# Before (키워드 기억 필요)
-"Order entity에 cancel() 메서드 추가해줘"  # entity(30) → ✅
-"Order aggregate에 취소 정책 추가해줘"    # aggregate(30) → ✅
-"Order domain에 reconstitute() 추가해줘"  # domain(15) → ❌ 실패!
-
-# After (명시적 Command)
-/domain "Order에 cancel() 메서드 추가해줘"        # ✅ 항상 45점
-/domain "Order에 취소 정책 추가해줘"              # ✅ 항상 45점
-/domain "Order에 reconstitute() 추가해줘"        # ✅ 항상 45점
-```
-
-#### 시나리오 2: 전체 워크플로우
-```bash
-# 1. Domain 작업
-/domain "Payment Aggregate에 환불 로직 추가"
-
-# 2. Application 작업
-/application "RefundUseCase에 정산 로직 추가"
-
-# 3. REST API 작업
-/rest "PaymentController에 환불 엔드포인트 추가"
-
-# 4. Persistence 작업
-/persistence "PaymentRepository에 환불 이력 조회 추가"
-
-# 5. 테스트 작업
-/test "환불 기능 통합 테스트 작성"
-```
-
-### 코드 생성 Commands와의 차이
-
-| 구분 | 레이어별 작업 모드 | 코드 생성 Commands |
-|------|------------------|------------------|
-| **Command** | `/domain`, `/application` 등 | `/code-gen-domain`, `/code-gen-usecase` |
-| **목적** | 기존 코드 수정/추가 | 전체 구조 새로 생성 |
-| **범위** | 자유로운 부분 수정 | 파일 + 테스트 + 구조 |
-| **출력** | 요청한 내용만 | 완전한 파일 세트 |
-| **사용 시점** | 세부 구현/수정 | 초기 구조 생성 |
-
-**권장 워크플로우**:
-```bash
-# 1. 초기 구조 생성
-/code-gen-domain Order
-/code-gen-usecase PlaceOrder
-
-# 2. 세부 구현 및 수정
-/domain "Order에 추가 비즈니스 로직"
-/application "PlaceOrderUseCase에 검증 로직 추가"
-```
-
-### 핵심 이점
-
-✅ **직관적**: `/domain` 타이핑만으로 Domain 작업 모드 진입
-✅ **안정적**: 항상 임계값 초과 보장 (키워드 망각 문제 해결)
-✅ **명시적**: 어떤 Layer 작업인지 명확히 선언
-✅ **일관적**: 모든 팀원이 동일한 방식으로 사용
-
----
-
-### 세션 관리 Commands
-
-#### `/sc:load`
-
-**목적**: Serena MCP 메모리에서 코딩 컨벤션 자동 로드
-
-**사용 시점**:
-- ✅ 세션 시작 시 (첫 작업 전)
-- ✅ 새 프로젝트로 전환 시
-- ✅ 메모리를 업데이트한 후
-
-**실행 예시**:
-```bash
-# Claude Code 실행 후 첫 명령어
-/sc:load
-
-# 출력:
-# ✅ Project activated: claude-spring-standards
-# ✅ Memory loaded: coding_convention_index
-# 📋 Available conventions:
-#    - coding_convention_domain_layer (13개 규칙)
-#    - coding_convention_application_layer (18개 규칙)
-#    - coding_convention_persistence_layer (10개 규칙)
-#    - coding_convention_rest_api_layer (18개 규칙)
-```
-
-**효과**:
-- 세션 간 컨텍스트 유지
-- 78% 위반 감소 (23회 → 5회)
-- 일관된 코드 품질
-
----
-
-## 📚 코딩 표준
-
-### Zero-Tolerance 규칙 (자동 검증)
-
-#### 1. Lombok 금지
+### 1. Lombok 금지
 
 ```java
 // ❌ 금지
@@ -1164,31 +149,24 @@ public class Order { }
 // ✅ 필수
 public class Order {
     private final OrderId id;
-
-    public Order(OrderId id) {
-        this.id = id;
-    }
-
-    public OrderId getId() {
-        return this.id;
-    }
+    public OrderId getId() { return id; }
 }
 ```
 
-#### 2. Law of Demeter
+### 2. Law of Demeter
 
 ```java
 // ❌ Getter chaining
-String zip = order.getCustomer().getAddress().getZip();
+order.getCustomer().getAddress().getZip();
 
 // ✅ Tell, Don't Ask
-String zip = order.getCustomerZip();
+order.getCustomerZip();
 ```
 
-#### 3. Transaction 경계
+### 3. Transaction 경계
 
 ```java
-// ❌ Transaction 내 외부 API 호출
+// ❌ Transaction 내 외부 API
 @Transactional
 public Order create() {
     ExternalData data = apiClient.fetch(); // ❌
@@ -1198,241 +176,113 @@ public Order create() {
 // ✅ Transaction 외부에서 호출
 public Order create() {
     ExternalData data = apiClient.fetch(); // ✅
-    return anyClass.doSomething(data);
-}
-
-```
-
-#### 4. Javadoc 필수
-
-```java
-/**
- * Order Aggregate Root
- *
- * @author YourName
- * @since 2025-10-17
- */
-public class Order { }
-```
-
-#### 5. Orchestration Pattern (NEW) ⭐
-
-```java
-// ❌ executeInternal()에 @Transactional 사용
-@Transactional
-@Async
-protected Outcome executeInternal(Command cmd) { }
-
-// ✅ @Async 필수, @Transactional 금지
-@Async
-protected Outcome executeInternal(Command cmd) { }
-
-// ❌ Command에 Lombok 사용
-@Data
-public class OrderCommand { }
-
-// ✅ Command는 Record 패턴
-public record OrderCommand(String idemKey, OrderId orderId) { }
-
-// ❌ boolean/void 반환 또는 Exception throw
-protected boolean executeInternal(Command cmd) throws Exception { }
-
-// ✅ Outcome 반환 (Ok/Retry/Fail)
-protected Outcome executeInternal(Command cmd) {
-    return Outcome.ok();
+    return doSomething(data);
 }
 ```
 
-**자동 검증**:
-- validation-helper.py (실시간)
-- Git pre-commit hook (커밋 시)
-- ArchUnit (빌드 시, 12개 규칙)
+**상세**: [코딩 컨벤션 문서](docs/coding_convention/)
 
 ---
 
-## 💻 개발 워크플로우
+## 🎯 주요 Commands
 
-### 기본 워크플로우
-
+### 세션 관리
 ```bash
-# 1. Feature 브랜치
-git checkout -b feature/order
-
-# 2. Domain 생성
-/code-gen-domain Order
-
-# 3. Application 생성
-/code-gen-usecase PlaceOrder
-
-# 4. Adapter 생성
-/code-gen-controller Order
-
-# 5. 테스트
-./gradlew test
-
-# 6. 커밋 (pre-commit hook 자동 검증)
-git add .
-git commit -m "feat: order management"
+/cc:load  # 코딩 컨벤션 로드 (매 세션 시작 시)
 ```
 
-### Orchestration Pattern 워크플로우 (NEW) ⭐
-
+### 코드 생성
 ```bash
-# 1. Orchestrator 자동 생성 (10개 파일, 80-85% 완성)
-/code-gen-orchestrator Order PlacementConfirmed
-
-# 자동 생성되는 파일:
-# - OrderPlacementConfirmedOrchestrator.java (@Async)
-# - OrderPlacementConfirmedCommand.java (Record)
-# - OrderPlacementConfirmedOperationEntity.java (@UniqueConstraint)
-# - OrderPlacementConfirmedFinalizer.java (@Scheduled)
-# - OrderPlacementConfirmedReaper.java (@Scheduled)
-# - OrderPlacementConfirmedOutcome.java (Sealed)
-# - OrderPlacementConfirmedMapper.java
-# - OrderPlacementConfirmedOperationRepository.java
-# - OrderPlacementConfirmedOperationStatus.java (Enum)
-# - OrderPlacementConfirmedWriteAheadLog.java
-
-# 2. 비즈니스 로직 구현 (15-20%)
-# - executeInternal(): 외부 API 호출 로직
-# - Mapper: Command → Domain Entity 변환
-# - Outcome: 성공/재시도/실패 조건
-
-# 3. 자동 검증 (3-Tier)
-# Tier 1: validation-helper.py (실시간)
-# Tier 2: Git pre-commit hook (커밋 시)
-# Tier 3: ArchUnit (빌드 시)
-
-# 4. 테스트 및 커밋
-./gradlew test
-git add .
-git commit -m "feat: order placement orchestration"
+/code-gen-domain <name>      # Domain Aggregate
+/code-gen-usecase <name>     # Application UseCase
+/code-gen-controller <name>  # REST Controller
 ```
 
-**예상 효율**:
-- 생성 시간: 8분 → 2분 (75% 단축)
-- 컨벤션 위반: 평균 12회 → 0-2회 (83-100% 감소)
-- 개발자 집중: Boilerplate → 비즈니스 로직
+### 검증
+```bash
+/validate-domain <file>       # Domain 검증
+/validate-architecture        # 전체 아키텍처 검증
+```
+
+### AI 리뷰
+```bash
+/ai-review [pr-number]        # 통합 AI 리뷰 (Gemini + CodeRabbit)
+/jira-analyze                 # Jira Task 분석
+```
+
+**전체 목록**: [Commands README](.claude/commands/README.md)
 
 ---
 
-## 📊 로그 시스템
+## 🔍 시스템 검증
 
-### JSON 로그 구조
-
-**위치**: `.claude/hooks/logs/hook-execution.jsonl`
-
-**형식**: JSONL (JSON Lines, 1줄 = 1개 JSON 이벤트)
-
-```json
-{"timestamp":"2025-10-17T14:30:15","event":"session_start","project":"claude-spring-standards","hook":"user-prompt-submit","user_command":"domain aggregate"}
-{"timestamp":"2025-10-17T14:30:15","event":"keyword_analysis","session_id":"1729152615-12345","context_score":45,"detected_layers":["domain"],"detected_keywords":["aggregate"]}
-{"timestamp":"2025-10-17T14:30:15","event":"cache_injection","layer":"domain","rules_loaded":5,"total_rules_available":15,"estimated_tokens":2500}
-{"timestamp":"2025-10-17T14:30:16","event":"validation_complete","file":"Order.java","status":"passed","total_rules":5,"validation_time_ms":148}
-```
-
-### 로그 뷰어
-
+### Serena 메모리 검증
 ```bash
-# 실시간 모니터링
-./.claude/hooks/scripts/view-logs.sh -f
-
-# 통계 정보
-./.claude/hooks/scripts/view-logs.sh -s
-
-# 특정 이벤트만
-./.claude/hooks/scripts/view-logs.sh -e validation_complete
-
-# 원본 JSON
-./.claude/hooks/scripts/view-logs.sh -r
+bash .claude/hooks/scripts/verify-serena-memories.sh
 ```
 
-**출력 예시**:
-```
-[14:30:15] 🚀 SESSION_START | project=claude-spring-standards | command=domain aggregate
-[14:30:15] 🔍 KEYWORD_ANALYSIS | score=45 | layers=domain | keywords=aggregate
-[14:30:15] 💉 CACHE_INJECTION | layer=domain | rules=5/15 | tokens=2500
-[14:30:16] ✅ VALIDATION_PASSED | file=Order.java | rules=5 | time=148ms
+### Hook 로그 분석
+```bash
+python3 .claude/hooks/scripts/summarize-hook-logs.py
 ```
 
-### 이벤트 타입
+### 실시간 모니터링
+```bash
+tail -f .claude/hooks/logs/hook-execution.jsonl
+```
 
-- `SESSION_START`: Hook 실행 시작
-- `KEYWORD_ANALYSIS`: 키워드 분석 결과
-- `DECISION`: 규칙 주입 결정
-- `CACHE_INJECTION`: Cache 로딩
-- `VALIDATION_START`: 검증 시작
-- `VALIDATION_PASSED/FAILED`: 검증 결과
-- `VALIDATION_ERROR`: 검증 오류
-
-### 로그 활용 계획
-
-**현재**: 모든 Hook 실행을 JSON으로 로깅
-
-**향후 계획**:
-1. **효과성 분석**: 실제 Layer 감지 정확도 측정
-2. **토큰 사용량 분석**: Cache 시스템의 실제 토큰 절감량 확인
-3. **검증 패턴 분석**: 자주 위반되는 규칙 파악 및 개선
-4. **성능 최적화**: 검증 시간 병목 지점 찾기
-5. **AWS CloudWatch 연동**: 로그 집계 및 실시간 모니터링 (검토 중)
+**상세**: [시스템 검증 가이드](docs/SYSTEM_FLOW.md)
 
 ---
 
-## 🐛 문제 해결
+## 📖 문서
 
-### Cache 파일 없음
-
-```bash
-# Cache 재빌드
-python3 .claude/hooks/scripts/build-rule-cache.py
-```
-
-### Hooks 미실행
-
-```bash
-# 권한 확인
-ls -la .claude/hooks/*.sh
-
-# 권한 부여
-chmod +x .claude/hooks/*.sh
-
-# 로그 확인
-./.claude/hooks/scripts/view-logs.sh -f
-```
-
-### 검증 실패
-
-```bash
-# 로그에서 실패 원인 확인
-./.claude/hooks/scripts/view-logs.sh -e validation_complete
-
-# 수동 검증
-python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
-```
-
----
-
-## 📚 문서
-
-### 핵심 가이드
+### 필수 가이드
 - **[사용 가이드 (필독!)](docs/USAGE_GUIDE.md)** - 실제 사용 방법 완벽 가이드
 - [Getting Started](docs/tutorials/01-getting-started.md) - 5분 튜토리얼
 - [Dynamic Hooks 가이드](docs/DYNAMIC_HOOKS_GUIDE.md) - 시스템 전체 설명
-- [Cache README](.claude/cache/rules/README.md) - JSON Cache 상세
-- **[Cache 시스템 완전 설명 (FAQ)](docs/CACHE_SYSTEM_EXPLAINED.md)** - total_rules: 0 정상인가요? 다른 프로젝트 적용 방법 ⭐ NEW
 
 ### Serena + LangFuse
-- [Serena 설정 가이드](.claude/hooks/scripts/setup-serena-conventions.sh) - 메모리 생성 (5분)
-- **[LangFuse 모니터링 가이드](docs/LANGFUSE_MONITORING_GUIDE.md)** - 로그 모니터링 및 분석 (필독!)
-- **[Slash Command 로깅 가이드](docs/LANGFUSE_SLASH_COMMAND_LOGGING.md)** - `/cc:load` 등 Slash Command 자동 추적 ⭐ NEW
-- [LangFuse 통합 가이드](docs/LANGFUSE_INTEGRATION_GUIDE.md) - 효율 측정 및 A/B 테스트 (10분)
-- **[텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md)** - 익명화된 사용 통계 (사용자용)
-- [텔레메트리 구현 가이드](docs/TELEMETRY_IMPLEMENTATION_GUIDE.md) - 텔레메트리 시스템 구현 (개발자용)
+- [LangFuse 모니터링 가이드](docs/LANGFUSE_MONITORING_GUIDE.md) - 로그 분석
+- [Slash Command 로깅](docs/LANGFUSE_SLASH_COMMAND_LOGGING.md) - Command 추적
+- [텔레메트리 가이드](docs/LANGFUSE_TELEMETRY_GUIDE.md) - 익명 통계
 
-### 전문 주제
-- [DDD Aggregate Migration](docs/DDD_AGGREGATE_MIGRATION_GUIDE.md)
-- [DTO Patterns](docs/DTO_PATTERNS_GUIDE.md)
-- [Exception Handling](docs/EXCEPTION_HANDLING_GUIDE.md)
+### Windsurf IDE
+- [Windsurf 가이드](.windsurf/README.md) - 14개 워크플로우
+- [Windsurf Rules](.windsurf/rules/) - Layer별 규칙 (자동 로드)
+- [Windsurf Workflows](.windsurf/workflows/) - 코드 생성 워크플로우
+
+---
+
+## 🔧 설치 옵션
+
+### Option 1: 완전 통합 설치 (권장)
+
+```bash
+# 1. 임시 클론
+git clone https://github.com/your-org/claude-spring-standards.git /tmp/claude-spring-standards
+
+# 2. 본인 프로젝트로 이동
+cd your-project
+
+# 3. 통합 설치
+bash /tmp/claude-spring-standards/scripts/install-complete-system.sh
+
+# 4. 정리
+rm -rf /tmp/claude-spring-standards
+```
+
+**설치되는 컴포넌트**:
+- ✅ Claude Code (Hooks + Cache + Commands + Serena)
+- ✅ Windsurf (Rules + Workflows + Templates)
+- ✅ Coding Convention Docs (98개 규칙)
+- ✅ Scripts (Pipeline, LangFuse)
+
+### Option 2: Claude 설정만 복사
+
+```bash
+bash /tmp/claude-spring-standards/scripts/install-claude-hooks.sh
+```
 
 ---
 
@@ -1446,7 +296,60 @@ python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
 | **설계 패턴** | DDD, CQRS |
 | **ORM** | JPA + QueryDSL |
 | **테스팅** | JUnit 5, Mockito, Testcontainers, ArchUnit |
-| **AI 통합** | Claude Code + Dynamic Hooks |
+
+---
+
+## 🚨 문제 해결
+
+### Cache 파일 없음
+```bash
+python3 .claude/hooks/scripts/build-rule-cache.py
+```
+
+### Hooks 미실행
+```bash
+chmod +x .claude/hooks/*.sh
+tail -f .claude/hooks/logs/hook-execution.jsonl
+```
+
+### 검증 실패
+```bash
+python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
+```
+
+---
+
+## 📝 최근 업데이트
+
+### 2025-10-31
+- ✅ **Cascade → Pipeline 메트릭 통합**: `.cascade/` → `.pipeline-metrics/`
+- ✅ **Jira 명령어 확장**: 5개 명령어 추가 (comment, create, link-pr, transition, update)
+- ✅ **Hook 스크립트 추가**: 3개 (log-slash-command, summarize-hook-logs, verify-serena-memories)
+
+### 2025-10-30
+- ✅ **Windsurf Workflows 최적화**: 15개 → 12개 (중복 제거, 통합)
+- 🚧 **지능형 Auto-Fix**: 컨벤션 위반 자동 수정 (개발중)
+- 🚧 **Serena Memory 학습**: 위반 패턴 학습 시스템 (테스트중)
+
+### 2025-10-22
+- ✅ **Hook 키워드 확장**: 33개 추가 (커버리지 85%+)
+- ✅ **Slash Commands**: 5개 레이어별 작업 모드 (`/domain`, `/application` 등)
+
+---
+
+## 📊 진행 상황
+
+| 기능 | 상태 | 설명 |
+|------|------|------|
+| Dynamic Hooks + Cache | ✅ 완료 | 키워드 감지 → 규칙 주입 |
+| Serena Memory | ✅ 완료 | 세션 컨텍스트 유지 |
+| Zero-Tolerance 검증 | ✅ 완료 | Lombok, Law of Demeter, Transaction |
+| LangFuse 통합 | 🚧 진행중 | Hook 로그 → LangFuse 업로드 |
+| A/B 테스트 | 📊 준비중 | 효율 측정 시스템 |
+| Auto-Fix | 🚧 개발중 | 컨벤션 위반 자동 수정 |
+| CloudWatch 연동 | 📋 계획중 | 로그 집계 및 모니터링 |
+
+**범례**: ✅ 완료 | 🚧 진행중 | 📊 측정/테스트중 | 📋 계획중
 
 ---
 
@@ -1456,38 +359,4 @@ python3 .claude/hooks/scripts/validation-helper.py YourFile.java layer
 
 ---
 
-## 📝 최근 업데이트
-
-### 2025-10-30
-- ✅ **Windsurf Workflows 최적화**: 15개 → 12개 (7개 제거, 통합 및 개선)
-  - **제거**: 4개 test runners, 3개 git workflows (중복 제거)
-  - **통합**: `/test-runner` (지능형 테스트 실행), `/git-complete-workflow` (통합 Git 워크플로우)
-  - **개선**: `/validate-conventions`, `/validate-architecture`, `/format-code` (Auto-Fix + Serena Memory)
-  - **신규**: `/pipeline-pr` Fast Lane (30초 빠른 검증)
-  - **전환**: `/create-test-fixtures` → Claude Code `/test-gen-fixtures` 명령어 위임
-
-- ✅ **지능형 자동화 강화**:
-  - **Auto-Fix**: 컨벤션/아키텍처 위반 자동 수정 (Before/After 제시 → 승인 → 적용)
-  - **Serena Memory**: 위반 패턴 학습 → 재발 방지 (78% 위반 감소)
-  - **Fast Lane vs Full Lane**: 로컬 30초 / PR 5분 전략
-  - **Pre-commit Hook**: 자동 설치 및 검증
-
-- ✅ **성능 개선**:
-  - 토큰 사용량: 90% 절감 (50,000 → 500-1,000)
-  - 검증 속도: 73.6% 향상 (561ms → 148ms)
-  - 워크플로우 유지보수성: 중복 제거로 일관성 향상
-
-### 2025-10-22
-- ✅ **Hook 키워드 확장**: 33개 추가로 Cache 매핑 커버리지 46.9% → 85%+ 달성
-- ✅ **Slash Commands 추가**: 5개 레이어별 작업 모드 구현 (`/domain`, `/application`, `/rest`, `/persistence`, `/test`)
-- ✅ **Secondary Keywords 확장**: persistence, transaction, validation (15점)
-- ✅ **Zero-Tolerance 강화**: Law of Demeter 패턴 감지 추가
-
-### 2025-10-17
-- ✅ Dynamic Hooks + Cache 시스템 초기 구현
-- ✅ 96개 규칙 JSON 캐시 구축
-- ✅ 자동 검증 시스템 구현
-
----
-
-*최종 업데이트: 2025-10-30*
+*최종 업데이트: 2025-10-31*
