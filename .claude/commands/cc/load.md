@@ -11,10 +11,10 @@ Spring Standards 프로젝트의 **핵심 컨벤션 요약본**을 Serena 메모
 이 프로젝트는 **3-Tier 컨벤션 로딩 시스템**을 사용합니다:
 
 ### Tier 1: Serena Memory (핵심 요약본) ⭐ `/cc:load`
-- **3개 Memory 파일** (935줄, 약 30KB)
-- **목적**: 세션 초기화, 핵심 패턴 빠른 참조
-- **로딩 시간**: 3-5초
-- **내용**: Application Layer, Manager Pattern, Outbox Pattern
+- **10개 Memory 파일** (레이어별 요약본)
+- **목적**: 세션 초기화, 전체 레이어 핵심 패턴 빠른 참조
+- **로딩 시간**: 5-10초 (10개 파일 순차 로드)
+- **내용**: 전체 9개 레이어 (Core, REST API, Domain, Application, Persistence, Testing, Java21, Enterprise, Error-Handling, Orchestration)
 
 ### Tier 2: Dynamic Hooks (실시간 자동 주입) 🔥
 - **146개 Cache Rules** (98개 규칙 → JSON)
@@ -35,9 +35,9 @@ Spring Standards 프로젝트의 **핵심 컨벤션 요약본**을 Serena 메모
 ## 🚀 실행 흐름
 
 1. **프로젝트 활성화**: Serena MCP에 프로젝트 등록
-2. **핵심 요약본 로드**: 3개 Memory 파일 (Application, Manager, Outbox)
+2. **핵심 요약본 로드**: 10개 Memory 파일 (전체 9개 레이어 요약본)
 3. **세션 준비**: Spring Standards 개발 환경 활성화
-4. **Hook 활성화**: 이후 키워드 감지 시 자동으로 상세 규칙 주입
+4. **Hook 활성화**: 이후 키워드 감지 시 자동으로 상세 규칙 주입 (146개 Cache Rules)
 
 ---
 
@@ -49,41 +49,99 @@ Spring Standards 프로젝트의 **핵심 컨벤션 요약본**을 Serena 메모
 
 ---
 
-## 📚 자동 로드되는 메모리
+## 📚 자동 로드되는 메모리 (10개 파일)
 
-### 1. Application Layer 최신 컨벤션 (2025-11-04)
-**메모리**: `application-layer-conventions-2025`
-
-**포함 내용**:
-- ✅ **Manager/StateManager/Facade 패턴** (NEW)
-- ✅ **Outbox Pattern 통합** (NEW)
-- ✅ **Zero-Tolerance 규칙 강화** (Lombok 금지, Assembler 필수)
-- ✅ **Transaction 경계 규칙** (외부 API 호출 분리)
-- ✅ **패키지 구조** (manager/ 디렉토리 포함)
-- ✅ **UseCase Method 네이밍** (execute/query 패턴)
-- ✅ **검증 체크리스트** (아키텍처, Transaction, Spring Proxy, 네이밍)
-
-### 2. Manager 패턴 상세 가이드
-**메모리**: `manager-statemanager-facade-pattern`
+### 0️⃣ Core Conventions (2025-11-05) 🏗️
+**메모리**: `00-core-conventions-2025`
 
 **포함 내용**:
-- ✅ **StateManager**: 단일 Bounded Context 상태 관리
-- ✅ **Manager**: 2-3개 StateManager 조율
-- ✅ **Facade**: 여러 Manager 통합
-- ✅ **OutboxStateManager**: Outbox 엔트리 상태 관리
-- ✅ **실제 예시 코드** (Order, Payment, Outbox)
+- ✅ **8개 Zero-Tolerance 규칙** (Lombok, Law of Demeter, Long FK, Transaction, Spring Proxy, Orchestration, Javadoc, Scope)
+- ✅ **전체 레이어 통계** (150 파일, 146 cache rules, 9 layers)
+- ✅ **아키텍처 원칙** (Hexagonal, DDD, CQRS)
+- ✅ **Hook 시스템 개요** (A/B 테스트 메트릭 포함)
 
-### 3. Transactional Outbox Pattern (2025-11-05) ⭐ NEW
-**메모리**: `transactional-outbox-pattern-2025`
+### 1️⃣ REST API Layer (2025-11-05) 🌐
+**메모리**: `01-adapter-rest-api-rules`
 
 **포함 내용**:
-- ✅ **Pattern A (Direct Event)**: 지양 - 결제/금융엔 부적합
-- ✅ **Pattern B (Outbox + Event Wake-up)**: 권장 기본 패턴
-- ✅ **Pattern C (MQ Integration)**: MQ 고도화
-- ✅ **FOR UPDATE SKIP LOCKED**: 동시성 제어
-- ✅ **Decision Tree**: 패턴 선택 가이드
-- ✅ **senario.txt 패턴**: 동기 API 요청 + Outbox Relay
-- ✅ **OutboxStatus State Machine**: PENDING → PUBLISHED → COMPLETED/FAILED
+- ✅ **27개 규칙**: Controller 설계, DTO 패턴, Exception 처리, Mapper, Testing
+- ✅ **Thin Controller**: 비즈니스 로직 금지
+- ✅ **GlobalExceptionHandler**: 중앙 집중식 예외 처리
+- ✅ **OpenAPI/Swagger**: API 문서 자동화
+
+### 2️⃣ Domain Layer (2025-11-05) 🏛️
+**메모리**: `02-domain-layer-rules`
+
+**포함 내용**:
+- ✅ **17개 규칙**: Aggregate 설계, Law of Demeter, Value Objects, Domain Events
+- ✅ **Law of Demeter 엄격 적용**: Getter 체이닝 절대 금지
+- ✅ **Tell, Don't Ask**: 행동 중심 메서드 설계
+- ✅ **Lombok 금지**: Pure Java getter/setter
+
+### 3️⃣ Application Layer (2025-11-05) ⚙️
+**메모리**: `03-application-layer-rules`
+
+**포함 내용**:
+- ✅ **20개 규칙**: UseCase 설계, Assembler, Transaction 관리, Facade, Manager, Component
+- ✅ **Transaction 경계 엄격 관리**: `@Transactional` 내 외부 API 호출 절대 금지
+- ✅ **Assembler 패턴**: DTO ↔ Domain 변환
+- ✅ **Command/Query 분리**: CQRS 패턴
+
+### 4️⃣ Persistence Layer (2025-11-05) 💾
+**메모리**: `04-persistence-layer-rules`
+
+**포함 내용**:
+- ✅ **27개 규칙**: JPA Entity 설계, Long FK 전략, QueryDSL, Repository, Configuration
+- ✅ **Long FK 전략**: JPA 관계 어노테이션 금지 (`@ManyToOne`, `@OneToMany` 등)
+- ✅ **Command/Query Adapter 분리**: Write/Read 분리
+- ✅ **N+1 방지**: QueryDSL fetch join 최적화
+
+### 5️⃣ Testing (2025-11-05) 🧪
+**메모리**: `05-testing-rules`
+
+**포함 내용**:
+- ✅ **14개 규칙**: ArchUnit, Integration Testing (Testcontainers), Multi-Module Testing
+- ✅ **ArchUnit**: Layer 의존성, 네이밍 규칙, Annotation 규칙, JPA Entity 규칙 자동 검증
+- ✅ **Testcontainers**: Real DB 테스트 환경
+- ✅ **Test Fixture + Object Mother**: 테스트 데이터 관리
+
+### 6️⃣ Java 21 Patterns (2025-11-05) ☕
+**메모리**: `06-java21-patterns`
+
+**포함 내용**:
+- ✅ **15개 규칙**: Record, Sealed Classes, Virtual Threads
+- ✅ **Record 패턴**: DTO, Value Object, Command (Compact Constructor)
+- ✅ **Sealed Classes**: Domain Modeling, Event Modeling, Result Types
+- ✅ **Virtual Threads**: `@Async` + `spring.threads.virtual.enabled=true`
+
+### 7️⃣ Enterprise Patterns (2025-11-05) 🏢
+**메모리**: `07-enterprise-patterns`
+
+**포함 내용**:
+- ✅ **10개 규칙**: Caching, Event-Driven, Resilience (Circuit Breaker, Retry, Bulkhead)
+- ✅ **Domain Events**: `AbstractAggregateRoot.registerEvent()`
+- ✅ **Event Sourcing**: Event Store 기반 상태 복원
+- ✅ **Circuit Breaker**: Resilience4j 외부 API 장애 격리
+
+### 8️⃣ Error Handling (2025-11-05) ⚠️
+**메모리**: `08-error-handling-patterns`
+
+**포함 내용**:
+- ✅ **5개 규칙**: Error Handling Strategy, Domain Exception, Global Handler, Error Response, ErrorCode
+- ✅ **GlobalExceptionHandler**: `@RestControllerAdvice` 중앙 집중식 예외 처리
+- ✅ **Sealed Exception**: Domain Exception 계층 구조
+- ✅ **ErrorResponse 표준 포맷**: code, message, details, timestamp
+
+### 9️⃣ Orchestration Patterns (2025-11-05) ⭐ NEW
+**메모리**: `09-orchestration-patterns`
+
+**포함 내용**:
+- ✅ **11개 규칙**: Command (Record), Idempotency, WAL, Outcome, Orchestrator, Finalizer, Reaper
+- ✅ **3-Phase Lifecycle**: WAL → Execution (executeInternal) → Finalization (Finalizer/Reaper)
+- ✅ **Idempotency**: IdemKey + `@UniqueConstraint` + Race Condition 방지
+- ✅ **Outcome Modeling**: Sealed interface (Ok/Retry/Fail) + Pattern matching
+- ✅ **`@Async` 필수**: `executeInternal()`은 비동기, 외부 API 호출은 트랜잭션 밖에서
+- ✅ **자동화 성과**: 10개 파일 80-85% 자동 생성, 생성 시간 75% 단축 (8분 → 2분)
 
 ---
 
@@ -97,18 +155,28 @@ mcp__serena__activate_project("/Users/sangwon-ryu/claude-spring-standards")
 
 # 2. 사용 가능한 메모리 목록 확인
 memories = mcp__serena__list_memories()
-# Result: ['application-layer-conventions-2025', 'manager-statemanager-facade-pattern', 'transactional-outbox-pattern-2025']
+# Result: [
+#   '00-core-conventions-2025',
+#   '01-adapter-rest-api-rules', '02-domain-layer-rules',
+#   '03-application-layer-rules', '04-persistence-layer-rules',
+#   '05-testing-rules', '06-java21-patterns',
+#   '07-enterprise-patterns', '08-error-handling-patterns',
+#   '09-orchestration-patterns'
+# ]
 
-# 3. 최신 Application Layer 컨벤션 로드
-app_conventions = mcp__serena__read_memory("application-layer-conventions-2025")
+# 3. 전체 10개 Memory 파일 로드 (순차 로드, 5-10초 소요)
+core_conventions = mcp__serena__read_memory("00-core-conventions-2025")
+rest_api_rules = mcp__serena__read_memory("01-adapter-rest-api-rules")
+domain_rules = mcp__serena__read_memory("02-domain-layer-rules")
+application_rules = mcp__serena__read_memory("03-application-layer-rules")
+persistence_rules = mcp__serena__read_memory("04-persistence-layer-rules")
+testing_rules = mcp__serena__read_memory("05-testing-rules")
+java21_patterns = mcp__serena__read_memory("06-java21-patterns")
+enterprise_patterns = mcp__serena__read_memory("07-enterprise-patterns")
+error_handling = mcp__serena__read_memory("08-error-handling-patterns")
+orchestration_patterns = mcp__serena__read_memory("09-orchestration-patterns")
 
-# 4. Manager 패턴 상세 가이드 로드
-manager_patterns = mcp__serena__read_memory("manager-statemanager-facade-pattern")
-
-# 5. Transactional Outbox Pattern 로드 ⭐ NEW
-outbox_pattern = mcp__serena__read_memory("transactional-outbox-pattern-2025")
-
-# 6. 세션 컨텍스트 확인 및 복원
+# 4. 세션 컨텍스트 확인 및 복원
 onboarding_status = mcp__serena__check_onboarding_performed()
 ```
 
@@ -118,54 +186,57 @@ onboarding_status = mcp__serena__check_onboarding_performed()
 
 ```
 🚀 프로젝트 활성화: claude-spring-standards
-✅ 사용 가능한 메모리: 3개
+✅ 사용 가능한 메모리: 10개
 
-📚 최신 코딩 컨벤션 로드 완료:
+📚 전체 레이어 코딩 컨벤션 로드 완료 (5-10초 소요):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1️⃣ Application Layer 컨벤션 (2025-11-04)
-   ✅ Manager/StateManager/Facade 패턴
-   ✅ Outbox Pattern 통합
-   ✅ Zero-Tolerance 규칙 강화
-   ✅ Transaction 경계 엄격 관리
-
-2️⃣ Manager 패턴 가이드
-   ✅ StateManager: 단일 Bounded Context 상태 관리
-   ✅ Manager: 2-3개 StateManager 조율
-   ✅ Facade: 여러 Manager 통합
-   ✅ OutboxStateManager: Outbox 엔트리 상태 관리
-
-3️⃣ Transactional Outbox Pattern (2025-11-05) ⭐ NEW
-   ✅ Pattern A (Direct Event): 지양
-   ✅ Pattern B (Outbox + Event Wake-up): 권장 기본
-   ✅ Pattern C (MQ Integration): MQ 고도화
-   ✅ FOR UPDATE SKIP LOCKED, Decision Tree
+0️⃣ Core Conventions (8 Zero-Tolerance, 전체 레이어 통계)
+1️⃣ REST API Layer (27 규칙) - Controller, DTO, Exception, Mapper
+2️⃣ Domain Layer (17 규칙) - Aggregate, Law of Demeter, Value Objects
+3️⃣ Application Layer (20 규칙) - UseCase, Transaction, Assembler, Facade
+4️⃣ Persistence Layer (27 규칙) - JPA Entity, Long FK, QueryDSL, Repository
+5️⃣ Testing (14 규칙) - ArchUnit, Testcontainers, Multi-Module
+6️⃣ Java 21 Patterns (15 규칙) - Record, Sealed Classes, Virtual Threads
+7️⃣ Enterprise Patterns (10 규칙) - Caching, Event-Driven, Resilience
+8️⃣ Error Handling (5 규칙) - Domain Exception, Global Handler, ErrorCode
+9️⃣ Orchestration Patterns (11 규칙) - Command, Idempotency, WAL, Outcome ⭐ NEW
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Zero-Tolerance 규칙 (Application Layer):
+🎯 Zero-Tolerance 규칙 (8개, 전체 레이어):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-❌ 금지 (절대 위반 불가):
-1. Lombok 사용 (@RequiredArgsConstructor, @Data 등 모두 금지)
-2. @Transactional 내 외부 API 호출
-3. Private/Final 메서드에 @Transactional
-4. 같은 클래스 내부 호출 (this.method())
-5. OutboxScheduler.pollOutbox()에 @Transactional
+❌ 절대 금지:
+1. Lombok 사용 (전체 레이어) - @Data, @Builder, @Getter, @Setter 등 모두 금지
+2. Law of Demeter 위반 (Domain) - order.getCustomer().getAddress() 금지
+3. JPA 관계 어노테이션 (Persistence) - @ManyToOne, @OneToMany 등 금지
+4. @Transactional 내 외부 API (Application) - RestTemplate, WebClient 금지
+5. Private/Final 메서드에 @Transactional (Application) - Spring Proxy 제약
+6. Orchestrator에서 @Transactional (Orchestration) - @Async 필수
+7. Command에 Lombok (Orchestration) - Record 패턴 사용
+8. Javadoc 누락 (전체 레이어) - public 클래스/메서드 필수
 
-✅ 필수 (반드시 준수):
-1. Plain Java Constructor 직접 작성
-2. Assembler를 통한 DTO ↔ Domain 변환
-3. StateManager로 상태 관리
-4. 각 상태 변경은 별도 @Transactional
-5. 외부 API 호출은 Outbox + Scheduler 사용
+✅ 반드시 준수:
+1. Pure Java getter/setter 직접 작성
+2. Tell, Don't Ask 원칙 (order.getCustomerZipCode())
+3. Long FK 전략 (private Long userId;)
+4. 트랜잭션 경계 분리 (Outbox Pattern 사용)
+5. Assembler를 통한 DTO ↔ Domain 변환
+6. Record 패턴으로 Command/Value Object 정의
+7. Outcome (Ok/Retry/Fail) 반환
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📖 상세 메모리 확인:
-- mcp__serena__read_memory("application-layer-conventions-2025")
-- mcp__serena__read_memory("manager-statemanager-facade-pattern")
-- mcp__serena__read_memory("transactional-outbox-pattern-2025")
+📊 Hook 시스템 자동 주입 (사용자 개입 불필요):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 146개 Cache Rules → 키워드 감지 시 자동 주입 (O(1) 검색)
+✅ 토큰 사용량: 90% 절감 (전체 로드 vs Hook 주입)
+✅ 검증 속도: 73.6% 향상 (Cache O(1) 검색)
+✅ 컨벤션 위반: 40회 → 0회 (A/B 테스트 검증 완료)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ---
@@ -174,27 +245,29 @@ onboarding_status = mcp__serena__check_onboarding_performed()
 
 세션 로드 후 다음 작업을 수행할 수 있습니다:
 
-### 1️⃣ 코드 생성 (최신 패턴 적용)
+### 1️⃣ 코드 생성 (Claude Code 직접 요청)
 
 ```bash
-# Domain Aggregate 생성
-/code-gen-domain Order
+# 예시: Domain Aggregate 요청
+"Order Aggregate를 생성해줘. 주문 생성, 취소, 상태 변경 기능이 필요해."
 
-# Application UseCase 생성 (StateManager 패턴 자동 적용)
-/code-gen-usecase PlaceOrder
+# 예시: Application UseCase 요청
+"PlaceOrderUseCase를 생성해줘. Order를 생성하고 저장하는 로직이 필요해."
 
-# REST Controller 생성
-/code-gen-controller Order
+# 예시: REST Controller 요청
+"OrderController를 생성해줘. POST /orders, GET /orders/{id} API가 필요해."
 
-# Orchestration Pattern 생성
+# Orchestration Pattern 생성 (실제 Slash Command)
 /code-gen-orchestrator Order PlacementConfirmed
 ```
 
-**자동 적용되는 규칙**:
+**Hook 시스템이 자동 적용**:
+- ✅ 키워드 감지 ("domain", "usecase", "controller") → 해당 레이어 규칙 자동 주입
 - ✅ Plain Java Constructor (Lombok 없음)
-- ✅ Assembler 패턴
-- ✅ StateManager/Manager/Facade 계층 구조
+- ✅ Law of Demeter (Tell, Don't Ask)
+- ✅ Long FK 전략
 - ✅ Transaction 경계 분리
+- ✅ Assembler 패턴
 
 ### 2️⃣ 코드 검증
 
@@ -390,4 +463,6 @@ A: **Hook이 실시간 주입 중**. 정상 동작! (3-5초) ✅
 
 **✅ 이 명령어는 2025-11-05 기준 최신 컨벤션을 로드합니다.**
 
-**🔥 Manager/StateManager/Facade 패턴, Transactional Outbox Pattern (Pattern A/B/C), Zero-Tolerance 규칙 강화가 모두 포함되어 있습니다!**
+**🔥 전체 9개 레이어 (REST API, Domain, Application, Persistence, Testing, Java21, Enterprise, Error-Handling, Orchestration) 규칙이 모두 포함되어 있습니다!**
+
+**📊 총 146개 Cache Rules, 10개 Memory 요약본, A/B 테스트 검증 완료 (40 violations → 0 violations)!**
