@@ -31,8 +31,8 @@
 # 1. Cache 빌드 (98개 규칙 → JSON)
 python3 .claude/hooks/scripts/build-rule-cache.py
 
-# 2. Git Hooks 설정
-ln -s ../../hooks/pre-commit .git/hooks/pre-commit
+# 2. Git Hooks 설정 (선택)
+ln -s ../../config/hooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
@@ -42,10 +42,11 @@ chmod +x .git/hooks/pre-commit
 claude code
 ```
 
-### 3️⃣ 첫 코드 생성
+### 3️⃣ 첫 사용 (Claude Skills)
 
 ```bash
-/code-gen-domain Order
+# Claude Code에서
+"domain-expert Skill로 Order Aggregate를 생성해줘"
 ```
 
 **자동 실행** (Hook 시스템):
@@ -79,41 +80,40 @@ Claude: 규칙 100% 준수 코드 생성 (Hook ON)
 - 검증 속도: 73.6% 향상
 - 문서 로딩: 95% 향상
 
-**상세**: [Dynamic Hooks Guide](docs/DYNAMIC_HOOKS_GUIDE.md)
+**상세**: [Hook README](.claude/hooks/README.md)
 
 ---
 
 ## 🔄 워크플로우
 
-### Claude Code + Windsurf 통합
+### Claude Code + Cursor AI 통합
 
 ```
-1. Claude Code → PRD 작성, Jira Task 생성
-2. Windsurf → Boilerplate 빠른 생성 (.windsurf/rules 자동 로드)
-3. Claude Code → 비즈니스 로직 구현 (Serena 메모리 컨텍스트)
+1. Claude Code → PRD 작성, Jira Task 분석
+2. Cursor AI → Boilerplate 빠른 생성 (.cursorrules 자동 로드)
+3. Claude Code → 비즈니스 로직 구현 (Hook이 규칙 자동 주입)
 4. Claude Code → 자동 검증 (ArchUnit, Pre-commit)
 ```
 
 **실제 예시**:
 ```bash
-# 1. PRD 작성
+# 1. PRD 작성 (Claude Code)
 "Order Aggregate PRD를 작성해줘"
 
-# 2. Jira Task
+# 2. Jira Task 분석 (Claude Code)
 /jira-analyze
 
-# 3. Windsurf (IntelliJ)
+# 3. Boilerplate 생성 (Cursor AI)
 "Order Aggregate를 생성해줘"
+→ .cursorrules 자동 로드 → 컨벤션 준수 코드 생성
 
-# 4. Claude Code
+# 4. 비즈니스 로직 구현 (Claude Code)
 "Order에 placeOrder, cancelOrder 메서드 구현해줘"
-(Hook이 자동으로 Law of Demeter, Tell Don't Ask 규칙 주입)
+→ Hook이 자동으로 Law of Demeter, Tell Don't Ask 규칙 주입
 
-# 5. 검증 & PR
+# 5. 검증 & PR (Claude Code)
 /validate-architecture
 ```
-
-**상세**: [사용 가이드 (필독!)](docs/USAGE_GUIDE.md)
 
 ---
 
@@ -132,23 +132,38 @@ Claude: 규칙 100% 준수 코드 생성 (Hook ON)
 
 ## 🎯 주요 Commands
 
-### 코드 생성
+### 검증 & 분석
 ```bash
-/code-gen-domain <name>      # Domain Aggregate
-/code-gen-usecase <name>     # Application UseCase
-/code-gen-controller <name>  # REST Controller
+/validate-architecture        # 전체 아키텍처 검증 (ArchUnit)
+/validate-domain <file>       # Domain layer 파일 검증
+/validate-cursor-changes      # Cursor AI 변경사항 검증
+/design-analysis              # 설계 분석
 ```
 
-### 검증
+### AI 리뷰 & Jira
 ```bash
-/validate-domain <file>       # Domain 검증
-/validate-architecture        # 전체 아키텍처 검증
+/ai-review [pr-number]        # 통합 AI 리뷰 (Gemini + CodeRabbit + Codex)
+/jira-analyze                 # Jira Task 분석 및 TodoList 생성
+/jira-create                  # Jira 이슈 생성
+/jira-comment                 # Jira 이슈에 코멘트 추가
+/jira-transition              # Jira 이슈 상태 변경
+/jira-update                  # Jira 이슈 정보 업데이트
+/jira-link-pr                 # GitHub PR과 Jira 이슈 연동
 ```
 
-### AI 리뷰
+### Queue 시스템 (Cursor AI 통합)
 ```bash
-/ai-review [pr-number]        # 통합 AI 리뷰 (Gemini + CodeRabbit)
-/jira-analyze                 # Jira Task 분석
+/queue-add                    # 작업 큐에 추가
+/queue-list                   # 큐 목록 조회
+/queue-start                  # 작업 시작
+/queue-status                 # 작업 상태 확인
+/queue-complete               # 작업 완료 처리
+```
+
+### 기타
+```bash
+/generate-fixtures            # Test Fixture 생성
+/cc/load                      # Serena 메모리 로드
 ```
 
 ### Claude Skills (⭐ NEW v2.3)
@@ -225,14 +240,15 @@ tail -f .claude/hooks/logs/hook-execution.jsonl
 
 ## 📖 문서
 
-### 필수 가이드
-- **[사용 가이드 (필독!)](docs/USAGE_GUIDE.md)** - 실제 사용 방법 완벽 가이드
-- [Getting Started](docs/tutorials/01-getting-started.md) - 5분 튜토리얼
-- [Dynamic Hooks 가이드](docs/DYNAMIC_HOOKS_GUIDE.md) - 시스템 전체 설명
+### 핵심 문서
+- **[Commands README](.claude/commands/README.md)** - 모든 Slash Commands 설명
+- **[Claude Skills](.claude/skills/)** - 5개 전문가 에이전트 가이드
+- **[코딩 컨벤션](docs/coding_convention/)** - 98개 규칙 (Layer별)
+- **[ArchUnit 템플릿](.claude/templates/archunit/)** - 5개 테스트 템플릿
 
-### Hook 로깅 + LangFuse
-- [LangFuse 사용 가이드](docs/LANGFUSE_USAGE_GUIDE.md) - 로그 업로드 및 모니터링
-- [Hook 로그 요약](.claude/hooks/scripts/summarize-hook-logs.py) - A/B 테스트 분석
+### 시스템 분석
+- [Hook 로그 요약 도구](.claude/hooks/scripts/summarize-hook-logs.py) - A/B 테스트 분석
+- [Hook README](.claude/hooks/README.md) - Dynamic Hooks 시스템 설명
 
 ---
 
@@ -255,18 +271,14 @@ rm -rf /tmp/claude-spring-standards
 ```
 
 **설치되는 컴포넌트** (v2.3):
-- ✅ Claude Code (Hooks + Cache + Commands + Serena)
+- ✅ `.claude/` (Hooks + Cache + Commands + Skills)
 - ✅ **Claude Skills** (5개 전문가 에이전트) - ⭐ NEW
-- ✅ Coding Convention Docs (98개 규칙)
-- ✅ Scripts (Pipeline, LangFuse)
-- ✅ ArchUnit Tests (선택)
+- ✅ `docs/coding_convention/` (98개 규칙)
+- ✅ `.cursorrules` (Cursor AI 통합)
+- ✅ `.env.example` (LangFuse 템플릿)
+- ✅ `langfuse/` 스크립트 (선택)
+- ✅ ArchUnit 테스트 (선택)
 - ✅ Git Hooks (선택)
-
-### Option 2: Claude 설정만 복사
-
-```bash
-bash /tmp/claude-spring-standards/scripts/install-claude-hooks.sh
-```
 
 ---
 
@@ -312,19 +324,10 @@ python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
 - ✅ **install-template.sh v2.3**: Skills 자동 설치 기능 추가
 - ✅ **Cursor AI 통합 워크플로우**: Skills → Queue → Cursor 자동 리팩토링
 
-### 2025-10-31
-- ✅ **Cascade → Pipeline 메트릭 통합**: `.cascade/` → `.pipeline-metrics/`
-- ✅ **Jira 명령어 확장**: 5개 명령어 추가 (comment, create, link-pr, transition, update)
-- ✅ **Hook 스크립트 추가**: 3개 (log-slash-command, summarize-hook-logs, verify-serena-memories)
-
-### 2025-10-30
-- ✅ **Windsurf Workflows 최적화**: 15개 → 12개 (중복 제거, 통합)
-- 🚧 **지능형 Auto-Fix**: 컨벤션 위반 자동 수정 (개발중)
-- 🚧 **Serena Memory 학습**: 위반 패턴 학습 시스템 (테스트중)
-
-### 2025-10-22
-- ✅ **Hook 키워드 확장**: 33개 추가 (커버리지 85%+)
-- ✅ **Slash Commands**: 5개 레이어별 작업 모드 (`/domain`, `/application` 등)
+### 이전 버전
+- ✅ **Windsurf 제거**: Cursor AI로 완전 통합 (.cursorrules 자동 로드)
+- ✅ **Jira 명령어 확장**: 6개 명령어 추가 (analyze, comment, create, link-pr, transition, update)
+- ✅ **Queue 시스템**: Cursor AI 통합 워크플로우 (5개 명령어)
 
 ---
 
