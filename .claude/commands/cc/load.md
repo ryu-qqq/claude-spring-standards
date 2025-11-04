@@ -1,17 +1,43 @@
 # /cc:load - 최신 코딩 컨벤션 로드 (2025)
 
-Spring Standards 프로젝트의 **최신 코딩 컨벤션**을 Serena 메모리에서 자동으로 로드합니다.
+Spring Standards 프로젝트의 **핵심 컨벤션 요약본**을 Serena 메모리에서 빠르게 로드합니다.
 
 **cc** = **C**oding **C**onvention
+
+---
+
+## 🎯 시스템 아키텍처 (중요!)
+
+이 프로젝트는 **3-Tier 컨벤션 로딩 시스템**을 사용합니다:
+
+### Tier 1: Serena Memory (핵심 요약본) ⭐ `/cc:load`
+- **3개 Memory 파일** (935줄, 약 30KB)
+- **목적**: 세션 초기화, 핵심 패턴 빠른 참조
+- **로딩 시간**: 3-5초
+- **내용**: Application Layer, Manager Pattern, Outbox Pattern
+
+### Tier 2: Dynamic Hooks (실시간 자동 주입) 🔥
+- **146개 Cache Rules** (98개 규칙 → JSON)
+- **목적**: 키워드 감지 → 필요한 규칙만 실시간 주입
+- **로딩 시간**: 즉시 (O(1) Cache 검색)
+- **내용**: 전체 레이어별 상세 규칙 (Domain, Application, Persistence, REST API 등)
+
+### Tier 3: 원본 문서 (참조용)
+- **152개 Markdown 파일** (docs/coding_convention/)
+- **목적**: 상세 규칙 참조, 수동 검색
+- **로딩 시간**: 불필요 (Hook이 자동 주입)
+- **내용**: 전체 규칙 상세 설명
+
+**핵심**: `/cc:load`는 **요약본만** 로드! **전체 규칙**은 **Hook이 자동 주입**합니다!
 
 ---
 
 ## 🚀 실행 흐름
 
 1. **프로젝트 활성화**: Serena MCP에 프로젝트 등록
-2. **최신 컨벤션 로드**: Application Layer 2025 최신 규칙 로드
-3. **패턴 메모리 로드**: Manager/StateManager/Facade 패턴 로드
-4. **세션 준비**: Spring Standards 개발 환경 활성화
+2. **핵심 요약본 로드**: 3개 Memory 파일 (Application, Manager, Outbox)
+3. **세션 준비**: Spring Standards 개발 환경 활성화
+4. **Hook 활성화**: 이후 키워드 감지 시 자동으로 상세 규칙 주입
 
 ---
 
@@ -248,18 +274,34 @@ Port (Out)
 
 ---
 
-## 📊 Hook 시스템 통합
+## 📊 Hook 시스템 통합 (전체 규칙 자동 로딩)
 
-`/cc:load` 실행 시 자동으로:
-- ✅ **Dynamic Hooks** 활성화 (키워드 감지 → 규칙 자동 주입)
-- ✅ **Cache 시스템** 활성화 (98개 규칙 → JSON → O(1) 검색)
-- ✅ **실시간 검증** 활성화 (validation-helper.py)
-- ✅ **Hook 로깅** 활성화 (A/B 테스트 데이터 수집)
+`/cc:load` 실행 후, **사용자가 코드를 작성할 때** 자동으로 작동:
+
+### 실시간 규칙 주입 (Dynamic Hooks)
+```
+사용자: "domain aggregate 작업"
+    ↓
+Hook: "domain" 키워드 감지 (30점)
+    ↓
+Cache: Domain Layer 규칙 15개 자동 주입 (O(1) 검색)
+    ↓
+Claude: Domain Layer 규칙 100% 준수 코드 생성
+```
+
+**자동으로 주입되는 규칙**:
+- ✅ **Domain Layer**: Law of Demeter, Lombok 금지, Aggregate 설계 등 (15개 규칙)
+- ✅ **Application Layer**: Transaction 경계, Manager 패턴, Assembler 등 (18개 규칙)
+- ✅ **Persistence Layer**: Long FK 전략, QueryDSL, N+1 방지 등 (10개 규칙)
+- ✅ **REST API Layer**: Controller 설계, DTO 패턴, Exception 처리 등 (18개 규칙)
+- ✅ **Orchestration**: Outbox Pattern, Idempotency, WAL 등 (8개 규칙)
+
+**총 146개 Cache Rules → 필요한 규칙만 실시간 주입!**
 
 **성능 (A/B 테스트 검증)**:
-- 컨벤션 위반: 40회 → 0회 (100% 제거)
-- 토큰 사용량: 90% 절감
-- 검증 속도: 73.6% 향상
+- 컨벤션 위반: 40회 → 0회 (100% 제거) ✅
+- 토큰 사용량: 90% 절감 (전체 로드 vs Hook 주입)
+- 검증 속도: 73.6% 향상 (Cache O(1) 검색)
 
 ---
 
@@ -301,23 +343,35 @@ export LANGFUSE_HOST="https://us.cloud.langfuse.com"
 
 ## 💡 중요 참고사항
 
+### 📌 핵심 개념
+
+**Q: `/cc:load`는 3개만 로드하는데 전체 규칙은?**
+A: **Hook이 자동으로 146개 규칙 주입!** 수동 로드 불필요 ✅
+
+**Q: 152개 마크다운 파일은 언제 읽어?**
+A: **읽지 않음!** Cache 시스템이 이미 JSON으로 변환 완료 ✅
+
+**Q: 느린 이유는?**
+A: **Hook이 실시간 주입 중**. 정상 동작! (3-5초) ✅
+
+### 🎯 사용 가이드
+
 1. **이 명령어는 세션 시작 시 한 번만 실행**하면 됩니다
 2. **Serena 메모리는 세션 간 지속**되므로 재로드 불필요
-3. **토큰 사용 없이** 최신 컨벤션 로드 가능 (Serena Memory 읽기만)
-4. **Dynamic Hooks**가 자동으로 규칙을 주입하므로 수동 적용 불필요
-5. **실시간 검증**이 자동으로 실행되어 위반 시 즉시 경고
+3. **전체 146개 규칙은 Hook이 자동 주입** (사용자 개입 불필요)
+4. **실시간 검증**이 자동으로 실행되어 위반 시 즉시 경고
 
 ### ⚡ 성능 최적화
 
 **로딩 시간**:
-- Serena Memory 로드: **3-5초** (3개 메모리 순차 로드)
-- `.claude/cache/rules/` 읽기: **불필요** (Hook이 자동 주입)
-- 총 예상 시간: **5초 이내**
+- **Serena Memory 로드**: 3-5초 (3개 요약본 순차 로드)
+- **Cache Rules 주입**: 즉시 (Hook이 O(1) 검색으로 자동 주입)
+- **총 예상 시간**: 5초 이내
 
-**느리게 느껴지는 경우**:
-- ❌ Hook이 APPLICATION + ENTERPRISE 레이어 규칙 주입 (자동)
-- ❌ Claude가 모든 규칙을 한 번에 처리 (대용량 텍스트)
-- ✅ **해결**: `/cc:load` 실행 후 **간단한 명령어로 시작** (예: "안녕")
+**3-Tier 시스템의 장점**:
+- ✅ **Tier 1 (요약본)**: 3-5초 로드 vs 전체 로드 시 30초+
+- ✅ **Tier 2 (Hook 주입)**: 필요한 규칙만 주입 → 토큰 90% 절감
+- ✅ **Tier 3 (원본 문서)**: 참조용으로만 사용 → 로드 불필요
 
 **권장 워크플로우**:
 ```bash
@@ -327,11 +381,9 @@ export LANGFUSE_HOST="https://us.cloud.langfuse.com"
 # 2. 로딩 완료 대기 (3-5초)
 # ...
 
-# 3. 간단한 인사로 Hook 트리거 초기화
-"안녕"
-
-# 4. 본격적인 작업 시작
+# 3. 작업 시작 (Hook이 자동으로 규칙 주입)
 /code-gen-domain Order
+# → Hook이 자동으로 Domain Layer 15개 규칙 주입!
 ```
 
 ---
