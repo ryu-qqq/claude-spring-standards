@@ -53,6 +53,12 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit)
 
+    // ArchUnit for architecture validation
+    testImplementation(libs.archunit.junit5)
+
+    // Bootstrap testFixtures (ArchUnit 유틸리티 사용)
+    testImplementation(testFixtures(project(":bootstrap:bootstrap-web-api")))
+
     // ========================================
     // Test Fixtures Dependencies
     // ========================================

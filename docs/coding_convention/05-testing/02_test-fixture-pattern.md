@@ -1,5 +1,20 @@
 # TestFixture 패턴 (전체 레이어 공통)
 
+## 📚 레이어별 전용 문서
+
+각 레이어는 **자체 testing 폴더**에 상세한 Test Fixture 가이드를 제공합니다:
+
+| 레이어 | 전용 문서 | 설명 |
+|--------|----------|------|
+| **Domain** | [Domain Test Fixture](../02-domain-layer/testing/03_test-fixture-pattern.md) | Domain 객체 (Aggregate, Entity, Value Object) 생성 패턴 |
+| **Application** | Application Test Fixture (작성 예정) | Command/Query/Response DTO 생성 패턴 |
+| **REST API** | REST API Test Fixture (작성 예정) | ApiRequest/ApiResponse DTO 생성 패턴 |
+| **Persistence** | Persistence Test Fixture (작성 예정) | JPA Entity, QueryDSL 테스트용 객체 생성 패턴 |
+
+**✅ 레이어별 상세 가이드를 먼저 참조하세요!** 이 문서는 전체 레이어 공통 규칙만 다룹니다.
+
+---
+
 ## 개요
 
 모든 레이어(Domain, Application, REST API, Persistence)의 테스트 코드는 **TestFixture 패턴**을 사용하여 테스트 객체를 생성해야 합니다.
@@ -174,168 +189,87 @@ public class ExampleDomainFixture {
 
 ## 레이어별 Fixture 가이드
 
+**⚠️ 중요**: 각 레이어의 **상세 가이드는 해당 레이어 문서**를 참조하세요!
+
 ### 1. Domain Layer Fixture
 
 **목적**: Domain 객체 (Aggregate, Entity, Value Object) 생성
-**위치**: `domain/src/testFixtures/java/com/ryuqq/domain/example/fixture/`
+**위치**: `domain/src/testFixtures/java/com/ryuqq/domain/{aggregate}/fixture/`
 
+**📖 상세 가이드**: [Domain Test Fixture Pattern](../02-domain-layer/testing/03_test-fixture-pattern.md)
+
+**간단 예시**:
 ```java
-// ExampleDomainFixture.java (✅ 구현 완료)
-public class ExampleDomainFixture {
-    public static ExampleDomain create() {
-        return createWithMessage("Test Message");
-    }
-
-    public static ExampleDomain createWithMessage(String message) {
-        return ExampleDomain.create(message);
-    }
-
-    public static ExampleDomain createWithId(Long id, String message) {
-        LocalDateTime now = LocalDateTime.now();
-        return ExampleDomain.of(id, message, "ACTIVE", now, now);
-    }
-
-    public static ExampleDomain[] createMultiple(int count) { ... }
-    public static ExampleDomain[] createMultipleWithId(long startId, int count) { ... }
-
-    private ExampleDomainFixture() {
-        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
-    }
+public class OrderFixture {
+    public static Order create() { ... }
+    public static Order createWithId(Long id) { ... }
+    public static Order createWithCustomer(CustomerId customerId) { ... }
 }
 ```
 
-**파일 경로**:
-- `domain/src/testFixtures/java/com/ryuqq/domain/example/fixture/ExampleDomainFixture.java`
+**추가 패턴**: [Object Mother Pattern](../02-domain-layer/testing/04_object-mother-pattern.md) - 비즈니스 시나리오 표현
 
 ---
 
 ### 2. Application Layer Fixture
 
 **목적**: Command, Query, Response DTO 생성
-**위치**: `application/src/testFixtures/java/com/ryuqq/application/example/fixture/`
+**위치**: `application/src/testFixtures/java/com/ryuqq/application/{usecase}/fixture/`
 
+**📖 상세 가이드**: Application Test Fixture Pattern (작성 예정)
+
+**간단 예시**:
 ```java
-// CreateExampleCommandFixture.java (✅ 구현 완료)
-public class CreateExampleCommandFixture {
-    public static CreateExampleCommand create() {
-        return createWithMessage("Test Message");
-    }
-
-    public static CreateExampleCommand createWithMessage(String message) {
-        return new CreateExampleCommand(message);
-    }
-
-    public static CreateExampleCommand[] createMultiple(int count) { ... }
-
-    private CreateExampleCommandFixture() {
-        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
-    }
+public class CreateOrderCommandFixture {
+    public static CreateOrderCommand create() { ... }
+    public static CreateOrderCommand createWithCustomer(Long customerId) { ... }
 }
 
-// ExampleResponseFixture.java (✅ 구현 완료)
-public class ExampleResponseFixture {
-    public static ExampleResponse create() {
-        return createWithIdAndMessage(1L, "Test Message");
-    }
-
-    public static ExampleResponse createWithId(Long id) { ... }
-    public static ExampleResponse createWithMessage(String message) { ... }
-    public static ExampleResponse createWithIdAndMessage(Long id, String message) { ... }
-    public static ExampleResponse[] createMultiple(long startId, int count) { ... }
-
-    private ExampleResponseFixture() {
-        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
-    }
+public class OrderResponseFixture {
+    public static OrderResponse create() { ... }
+    public static OrderResponse createWithId(Long id) { ... }
 }
 ```
-
-**파일 경로**:
-- `application/src/testFixtures/java/com/ryuqq/application/example/fixture/CreateExampleCommandFixture.java`
-- `application/src/testFixtures/java/com/ryuqq/application/example/fixture/ExampleResponseFixture.java`
 
 ---
 
 ### 3. REST API Layer Fixture
 
 **목적**: ApiRequest, ApiResponse DTO 생성
-**위치**: `adapter-in/rest-api/src/testFixtures/java/com/ryuqq/adapter/in/rest/example/fixture/`
+**위치**: `adapter-in/rest-api/src/testFixtures/java/com/ryuqq/adapter/in/rest/{controller}/fixture/`
 
+**📖 상세 가이드**: REST API Test Fixture Pattern (작성 예정)
+
+**간단 예시**:
 ```java
-// ExampleApiRequestFixture.java (✅ 구현 완료)
-public class ExampleApiRequestFixture {
-    public static ExampleApiRequest create() {
-        return createWithMessage("Test Message");
-    }
-
-    public static ExampleApiRequest createWithMessage(String message) {
-        return new ExampleApiRequest(message);
-    }
-
-    public static ExampleApiRequest[] createMultiple(int count) { ... }
-
-    private ExampleApiRequestFixture() {
-        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
-    }
+public class OrderApiRequestFixture {
+    public static OrderApiRequest create() { ... }
+    public static OrderApiRequest createWithCustomer(Long customerId) { ... }
 }
 
-// ExampleApiResponseFixture.java (✅ 구현 완료)
-public class ExampleApiResponseFixture {
-    public static ExampleApiResponse create() {
-        return createWithMessage("Test Message");
-    }
-
-    public static ExampleApiResponse createWithMessage(String message) {
-        return new ExampleApiResponse(message);
-    }
-
-    public static ExampleApiResponse[] createMultiple(int count) { ... }
-
-    private ExampleApiResponseFixture() {
-        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
-    }
+public class OrderApiResponseFixture {
+    public static OrderApiResponse create() { ... }
+    public static OrderApiResponse createWithId(Long id) { ... }
 }
 ```
-
-**파일 경로**:
-- `adapter-in/rest-api/src/testFixtures/java/com/ryuqq/adapter/in/rest/example/fixture/ExampleApiRequestFixture.java`
-- `adapter-in/rest-api/src/testFixtures/java/com/ryuqq/adapter/in/rest/example/fixture/ExampleApiResponseFixture.java`
 
 ---
 
 ### 4. Persistence Layer Fixture
 
 **목적**: JPA Entity, QueryDSL 테스트용 객체 생성
-**위치**: `adapter-out/persistence-mysql/src/testFixtures/java/com/ryuqq/adapter/out/persistence/example/fixture/`
+**위치**: `adapter-out/persistence-mysql/src/testFixtures/java/com/ryuqq/adapter/out/persistence/{entity}/fixture/`
 
+**📖 상세 가이드**: Persistence Test Fixture Pattern (작성 예정)
+
+**간단 예시**:
 ```java
-// ExampleJpaEntityFixture.java (✅ 구현 완료)
-public class ExampleJpaEntityFixture {
-    public static ExampleJpaEntity create() {
-        return createWithMessage("Test Message");
-    }
-
-    public static ExampleJpaEntity createWithMessage(String message) {
-        LocalDateTime now = LocalDateTime.now();
-        return new ExampleJpaEntity(null, message, ExampleStatus.ACTIVE, now, now);
-    }
-
-    public static ExampleJpaEntity createWithId(Long id, String message) {
-        LocalDateTime now = LocalDateTime.now();
-        return new ExampleJpaEntity(id, message, ExampleStatus.ACTIVE, now, now);
-    }
-
-    public static ExampleJpaEntity createWithIdAndStatus(Long id, String message, ExampleStatus status) { ... }
-    public static List<ExampleJpaEntity> createMultiple(int count) { ... }
-    public static List<ExampleJpaEntity> createMultipleWithId(long startId, int count) { ... }
-
-    private ExampleJpaEntityFixture() {
-        throw new AssertionError("Fixture 클래스는 인스턴스화할 수 없습니다.");
-    }
+public class OrderJpaEntityFixture {
+    public static OrderJpaEntity create() { ... }
+    public static OrderJpaEntity createWithId(Long id) { ... }
+    public static OrderJpaEntity createWithStatus(OrderStatus status) { ... }
 }
 ```
-
-**파일 경로**:
-- `adapter-out/persistence-mysql/src/testFixtures/java/com/ryuqq/adapter/out/persistence/example/fixture/ExampleJpaEntityFixture.java`
 
 ---
 

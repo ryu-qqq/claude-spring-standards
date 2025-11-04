@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/07-enterprise-patterns/caching/02_distributed-cache.md

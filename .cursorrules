@@ -1,0 +1,63 @@
+# Spring DDD Standards - Cursor AI Rules
+
+> **컨벤션 원본**: `docs/coding_convention/` (98개 규칙)
+> **Cache**: `.claude/cache/rules/` (JSON 검색용)
+
+---
+
+## 🚨 Zero-Tolerance (절대 금지)
+
+### 1. Lombok 금지
+- ❌ `@Data`, `@Builder`, `@Getter`, `@Setter`, `@AllArgsConstructor`, `@NoArgsConstructor`
+- ✅ **Pure Java getter/setter 직접 작성**
+
+### 2. Law of Demeter (Getter 체이닝 금지)
+- ❌ `order.getCustomer().getAddress().getZipCode()`
+- ✅ `order.getCustomerZipCode()` **(Tell, Don't Ask)**
+
+### 3. Long FK Strategy (JPA 관계 금지)
+- ❌ `@ManyToOne`, `@OneToMany`, `@OneToOne`, `@ManyToMany`
+- ✅ **`private Long userId;` (Long FK 사용)**
+
+### 4. Transaction 경계
+- ❌ `@Transactional` 내 외부 API 호출
+- ✅ **트랜잭션은 짧게 유지, 외부 호출은 밖에서**
+
+### 5. Javadoc 필수
+- ❌ `@author`, `@since` 없는 public 클래스/메서드
+- ✅ **모든 public 클래스/메서드에 Javadoc**
+
+---
+
+## 📋 필수 규칙
+
+### Domain Layer
+- ✅ Aggregate Root, Value Object, Domain Event, Factory Pattern
+
+### Application Layer
+- ✅ UseCase Single Responsibility, Command/Query 분리, `@Transactional` 경계, Assembler
+
+### Persistence Layer
+- ✅ CQRS, QueryDSL, N+1 방지
+
+### REST API Layer
+- ✅ Controller Thin, GlobalExceptionHandler, ApiResponse 표준화
+
+---
+
+## 🔗 상세 규칙 참조
+
+**Cursor AI는 아래 디렉토리의 마크다운 파일을 자동으로 읽을 수 있습니다:**
+
+- `docs/coding_convention/02-domain-layer/`
+- `docs/coding_convention/03-application-layer/`
+- `docs/coding_convention/04-persistence-layer/`
+- `docs/coding_convention/01-adapter-rest-api-layer/`
+- `docs/coding_convention/05-testing/`
+- `docs/coding_convention/06-java21-patterns/`
+- `docs/coding_convention/07-enterprise-patterns/`
+- `docs/coding_convention/09-orchestration-patterns/`
+
+---
+
+**✅ 이 규칙들을 준수하면 Claude Code 검증을 통과할 수 있습니다!**

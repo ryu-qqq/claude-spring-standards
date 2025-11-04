@@ -279,20 +279,20 @@ File: adapter/out/persistence/jpa/OrderEntity.java
 ### 로그 위치
 
 ```bash
-.claude/hooks/logs/hook-execution.log
+.claude/hooks/logs/hook-execution.jsonl
 ```
 
 ### 로그 확인
 
 ```bash
 # 전체 로그
-cat .claude/hooks/logs/hook-execution.log
+cat .claude/hooks/logs/hook-execution.jsonl
 
 # 최근 50줄
-tail -50 .claude/hooks/logs/hook-execution.log
+tail -50 .claude/hooks/logs/hook-execution.jsonl
 
 # 실시간 로그 (새 터미널에서)
-tail -f .claude/hooks/logs/hook-execution.log
+tail -f .claude/hooks/logs/hook-execution.jsonl
 ```
 
 ### 로그 예시
@@ -324,7 +324,7 @@ Exit Code: 0
 echo "Order entity 만들어줘" | bash .claude/hooks/user-prompt-submit.sh
 
 # after-tool-use.sh 테스트 (수동 트리거 어려움, 로그로 확인)
-cat .claude/hooks/logs/hook-execution.log | grep "after-tool-use"
+cat .claude/hooks/logs/hook-execution.jsonl | grep "after-tool-use"
 
 # validation-helper.py 직접 테스트
 python3 .claude/hooks/scripts/validation-helper.py \
@@ -456,4 +456,4 @@ after-tool-use.sh
 
 ---
 
-© 2024 Ryu-qqq. All Rights Reserved.
+© 2025 Ryu-qqq. All Rights Reserved.

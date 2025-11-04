@@ -11,6 +11,7 @@ import java.time.Instant
 
 plugins {
     java
+    `java-test-fixtures`  // ← ArchUnit 유틸리티를 testFixtures로 제공
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
 }
@@ -70,6 +71,9 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.rest.assured)
+
+    // ArchUnit (for testFixtures utility classes)
+    testFixturesApi(libs.archunit.junit5)  // ← testFixtures에서 ArchUnit 사용
 
     // TestFixtures from all modules (for CommonTestingRulesTest)
     testImplementation(testFixtures(project(":domain")))

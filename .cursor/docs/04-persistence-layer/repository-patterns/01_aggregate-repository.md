@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/repository-patterns/01_aggregate-repository.md

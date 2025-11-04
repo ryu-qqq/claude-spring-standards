@@ -43,6 +43,7 @@ bin/
 
 # LangFuse telemetry (contains credentials)
 .langfuse.telemetry
+langfuse/data/langfuse-data.json
 
 # Windsurf IDE settings (personal configuration)
 .windsurfrules
@@ -50,3 +51,4 @@ bin/
 # Pipeline metrics and reports (auto-generated)
 .pipeline-metrics/metrics.jsonl
 .pipeline-metrics/report.md
+.env

@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/02-domain-layer/testing/05_domain-event-testing.md

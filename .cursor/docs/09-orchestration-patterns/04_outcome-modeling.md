@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/09-orchestration-patterns/04_outcome-modeling.md

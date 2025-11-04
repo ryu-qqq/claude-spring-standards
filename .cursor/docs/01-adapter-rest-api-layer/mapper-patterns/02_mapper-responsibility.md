@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/01-adapter-rest-api-layer/mapper-patterns/02_mapper-responsibility.md

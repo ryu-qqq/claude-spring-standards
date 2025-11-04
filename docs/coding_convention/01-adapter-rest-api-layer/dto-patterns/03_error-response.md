@@ -226,7 +226,7 @@ public record ErrorResponse(
 ```java
 package com.company.adapter.in.web.exception;
 
-import com.company.domain.exception.BusinessException;
+import com.company.domain.exception.DomainException;
 import com.company.domain.exception.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -276,9 +276,9 @@ public class GlobalExceptionHandler {
     /**
      * Business Exception 처리 (409 Conflict)
      */
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex,
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomainException(
+            DomainException ex,
             HttpServletRequest request) {
 
         log.warn("Business exception: {}", ex.getMessage());
@@ -502,7 +502,7 @@ Content-Type: application/json
 ```java
 package com.company.domain.order.exception;
 
-import com.company.domain.exception.BusinessException;
+import com.company.domain.exception.DomainException;
 
 /**
  * Insufficient Stock Exception
@@ -510,7 +510,7 @@ import com.company.domain.exception.BusinessException;
  * @author Development Team
  * @since 1.0.0
  */
-public class InsufficientStockException extends BusinessException {
+public class InsufficientStockException extends DomainException {
 
     public InsufficientStockException(Long productId, int requested, int available) {
         super(
@@ -681,7 +681,7 @@ public ResponseEntity<ErrorResponse> handleInsufficientStock(
 | **401 Unauthorized** | `UNAUTHORIZED`, `INVALID_TOKEN` | 인증 필요, 토큰 만료 | `UnauthorizedException` |
 | **403 Forbidden** | `FORBIDDEN` | 권한 없음 | `AccessDeniedException` |
 | **404 Not Found** | `ORDER_NOT_FOUND`, `CUSTOMER_NOT_FOUND` | 리소스 없음 | `EntityNotFoundException` |
-| **409 Conflict** | `INSUFFICIENT_STOCK`, `DUPLICATE_EMAIL` | 비즈니스 규칙 위반 | `BusinessException` |
+| **409 Conflict** | `INSUFFICIENT_STOCK`, `DUPLICATE_EMAIL` | 비즈니스 규칙 위반 | `DomainException` |
 | **500 Internal Server Error** | `INTERNAL_ERROR`, `DATABASE_ERROR` | 서버 오류 | `Exception`, `RuntimeException` |
 
 ---

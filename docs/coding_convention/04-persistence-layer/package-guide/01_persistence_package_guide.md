@@ -2,16 +2,29 @@
 
 > 멀티모듈 기반 Persistence Layer. **MySQL/Redis 기술 스택 분리**, **Bounded Context 단위 구성**.
 
+## 🎯 핵심 원칙
+
+> **Persistence는 저장/조회만! 절대 데이터 변경하지 않음.**
+>
+> - ✅ Domain ↔ JPA Entity 변환
+> - ✅ 쿼리 최적화 (N+1 방지, Fetch Join)
+> - ✅ JPA Dirty Checking으로 UPDATE 자동 처리
+> - ❌ 비즈니스 로직 작성 금지
+> - ❌ 데이터 직접 변경 금지 (setter 호출 금지)
+> - ❌ 상태 전이 금지 (Domain 메서드 없이 필드 수정 금지)
+>
+> 상세한 Layer별 책임은 [비즈니스 로직 배치 원칙](../_shared/business-logic-placement.md) 참조.
+
 ## 모듈 구조
 
 ```
 root/
 ├─ domain/                          # 순수 도메인 모델
 ├─ application/                     # UseCase, Port 인터페이스
-├─ adapter-in-web/                  # REST API
-├─ adapter-out-persistence-mysql/   # ✅ MySQL 영속성
-├─ adapter-out-persistence-redis/   # ✅ Redis 영속성
-└─ adapter-out-external/            # 외부 API
+├─ adapter-in/rest-api/                  # REST API
+├─ adapter-out/persistence-mysql/   # ✅ MySQL 영속성
+├─ adapter-out/persistence-redis/   # ✅ Redis 영속성
+└─ adapter-out/external/            # 외부 API
 ```
 
 ---

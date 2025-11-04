@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/testing/02_query-adapter-unit-testing.md

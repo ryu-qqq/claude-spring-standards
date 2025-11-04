@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/05-testing/integration-testing/04_test-data-management.md

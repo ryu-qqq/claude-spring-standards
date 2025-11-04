@@ -1,6 +1,43 @@
 # UseCase 내부 Command/Response 패턴
 
-**목적**: UseCase 인터페이스에 Command/Response를 내부 Record로 정의
+> ## ⚠️ DEPRECATED (비권장)
+>
+> **이 패턴은 더 이상 권장되지 않습니다.**
+>
+> ### 📌 문제점
+> - **가독성 저하**: `CreateOrderUseCase.Command.OrderItem` 같은 긴 접근 경로
+> - **네이밍 중복**: `CreateOrderUseCase.Command` vs `CreateOrderCommand` 혼란
+> - **IDE 자동완성 불편**: 내부 클래스 탐색 어려움
+>
+> ### ✅ 새로운 권장 패턴
+> **DTO를 별도 파일로 분리하여 `dto/` 패키지에 배치:**
+>
+> ```
+> application/
+> └─ [context]/
+>    ├─ dto/
+>    │  ├─ command/
+>    │  │  └─ CreateOrderCommand.java  # ⭐ 별도 Record 파일
+>    │  ├─ query/
+>    │  │  └─ GetOrderQuery.java       # ⭐ 별도 Record 파일
+>    │  └─ response/
+>    │     └─ OrderResponse.java       # ⭐ 별도 Record 파일
+>    └─ port/
+>       └─ in/
+>          └─ CreateOrderUseCase.java
+> ```
+>
+> ### 📖 새 패턴 상세 가이드
+> - **[Application Package Guide](../package-guide/01_application_package_guide.md)** - DTO 패키지 구조 및 네이밍 규칙
+> - **[DTO Naming Convention](../dto-patterns/04_dto-naming-convention.md)** - Command/Query/Response 네이밍 가이드
+>
+> ---
+>
+> **⚠️ 아래 내용은 레거시 참고용입니다. 새 프로젝트는 위 권장 패턴을 사용하세요.**
+
+---
+
+**목적**: UseCase 인터페이스에 Command/Response를 내부 Record로 정의 (DEPRECATED)
 
 **위치**: `application/[context]/port/in/`
 

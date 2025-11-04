@@ -35,6 +35,79 @@ domain
 
 ---
 
+## 🎯 Rule of 3 (Facade 사용 기준)
+
+**Facade는 다음 3가지 조건 중 하나라도 만족하면 사용합니다:**
+
+### 1️⃣ UseCase 3개 이상 호출 필요
+- Controller가 3개 이상의 UseCase에 의존하는 경우
+- 생성자 의존성이 많아져 복잡도 증가
+- **예시**: Create, Update, Delete UseCase를 하나의 Facade로 통합
+
+### 2️⃣ Transaction + 외부 호출 분리 필요
+- 트랜잭션 내에서는 DB 작업만 수행
+- 외부 API, 메시징, 파일 업로드 등은 트랜잭션 밖에서
+- Facade가 트랜잭션 경계를 명확히 분리
+- **예시**: 주문 생성(트랜잭션) → 이메일 발송(외부 호출)
+
+### 3️⃣ Controller 의존성 감소 필요
+- Controller가 여러 UseCase에 직접 의존하면 결합도 증가
+- Facade로 간접 의존하여 결합도 감소
+- 테스트 시 Mocking 간소화
+- **예시**: 5개 UseCase → 1개 Facade
+
+### ✅ 사용 예시
+
+```java
+// ✅ 조건 1: 3개 이상 UseCase → Facade 필수
+@Service
+public class OrderFacade {
+    private final CreateOrderUseCase createOrderUseCase;
+    private final UpdateOrderUseCase updateOrderUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
+    // ... 더 많은 UseCase
+}
+
+// ✅ 조건 2: Transaction + 외부 호출 분리 → Facade 권장
+@Service
+public class OrderFacade {
+    private final CreateOrderUseCase createOrderUseCase;
+    private final SendEmailPort sendEmailPort;
+
+    @Transactional
+    public OrderResponse createOrder(CreateOrderCommand command) {
+        // ✅ 트랜잭션 내: DB 작업만
+        OrderResponse response = createOrderUseCase.execute(command);
+
+        // ✅ 트랜잭션 밖: 외부 호출 (@Transactional 메서드 종료 후 실행)
+        sendEmailConfirmation(response.orderId());
+
+        return response;
+    }
+
+    // 외부 호출은 별도 메서드로 (트랜잭션 밖)
+    private void sendEmailConfirmation(Long orderId) {
+        sendEmailPort.send(orderId);
+    }
+}
+```
+
+### ❌ 불필요한 경우
+
+```java
+// ❌ UseCase 1-2개만 + 단순 위임 → Facade 불필요
+@Service
+public class UserFacade {
+    private final GetUserUseCase getUserUseCase;  // 1개만
+
+    public UserResponse getUser(GetUserQuery query) {
+        return getUserUseCase.execute(query);  // 단순 위임만
+    }
+}
+```
+
+---
+
 ## Facade 위치
 
 ### 패키지 구조
@@ -76,20 +149,23 @@ application/iam/tenant/
 ```
 Controller에서 호출할 UseCase가 있음
     ↓
-┌─────────────────────────────────────┐
-│ UseCase가 2개 이상인가?             │
-└─────────────────────────────────────┘
-    ├─ Yes → ✅ Facade 필수
-    │         (Controller 의존성 감소)
+┌───────────────────────────────────────┐
+│ Rule of 3 중 하나라도 해당하는가?    │
+│ 1. UseCase 3개 이상 호출?            │
+│ 2. Transaction + 외부 호출 분리?     │
+│ 3. Controller 의존성 감소 필요?      │
+└───────────────────────────────────────┘
+    ├─ Yes → ✅ Facade 사용
+    │         (Rule of 3 조건 만족)
     │
-    └─ No → UseCase가 1개만 있음
+    └─ No → UseCase 1-2개만 + 단순 위임
               ↓
-        ┌───────────────────────────────────────┐
-        │ 추가 로직이 필요한가?                 │
-        │ - 트랜잭션 조율                       │
-        │ - 데이터 변환/통합                    │
-        │ - 여러 UseCase 순차 호출              │
-        └───────────────────────────────────────┘
+        ┌──────────────────────────────────────┐
+        │ 추가 로직이 필요한가?                │
+        │ - 트랜잭션 조율                      │
+        │ - 데이터 변환/통합                   │
+        │ - 여러 UseCase 순차 호출             │
+        └──────────────────────────────────────┘
               ├─ Yes → ✅ Facade 권장
               │         (조율 로직 중앙화)
               │
@@ -505,12 +581,16 @@ public class UserContextController {
 
 ## 명확한 규칙 정리
 
+### Rule of 3 기준표
+
 | 상황 | Facade | 이유 |
 |------|--------|------|
-| UseCase 2개 이상 | ✅ 필수 | Controller 의존성 감소 |
-| UseCase 1개 + 트랜잭션 조율 | ✅ 권장 | 트랜잭션 경계 명확화 |
-| UseCase 1개 + 데이터 통합 | ✅ 권장 | 비즈니스 로직 캡슐화 |
-| UseCase 1개 + 단순 위임 | ❌ 불필요 | YAGNI 원칙 위배 |
+| **UseCase 3개 이상** | ✅ 필수 | Controller 의존성 감소 (Rule of 3 #1) |
+| **Transaction + 외부 호출 분리** | ✅ 필수 | 트랜잭션 경계 명확화 (Rule of 3 #2) |
+| **Controller 의존성 감소 필요** | ✅ 필수 | 결합도 감소 (Rule of 3 #3) |
+| UseCase 1-2개 + 트랜잭션 조율 | ✅ 권장 | 트랜잭션 경계 명확화 |
+| UseCase 1-2개 + 데이터 통합 | ✅ 권장 | 비즈니스 로직 캡슐화 |
+| UseCase 1-2개 + 단순 위임 | ❌ 불필요 | YAGNI 원칙 위배 |
 | 단순 CRUD | ❌ 불필요 | Over-engineering |
 
 ---

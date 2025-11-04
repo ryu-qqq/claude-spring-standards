@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/07-enterprise-patterns/event-driven/04_multi-module-event-design.md

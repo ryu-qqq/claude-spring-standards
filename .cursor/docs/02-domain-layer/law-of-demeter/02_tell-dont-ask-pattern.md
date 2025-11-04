@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/02-domain-layer/law-of-demeter/02_tell-dont-ask-pattern.md

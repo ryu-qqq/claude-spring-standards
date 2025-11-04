@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/querydsl-optimization/02_dynamic-query.md

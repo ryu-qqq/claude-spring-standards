@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/06-java21-patterns/record-patterns/01_dto-with-records.md

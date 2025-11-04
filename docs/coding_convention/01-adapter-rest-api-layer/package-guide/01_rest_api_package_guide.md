@@ -14,22 +14,21 @@
 root/
 ├─ domain/                          # 순수 도메인 모델
 ├─ application/                     # UseCase, Port 인터페이스
-├─ adapter/in/rest-api-admin/       # ✅ REST API Adapter (Admin)
-├─ adapter/in/rest-api-mobile/      # ✅ REST API Adapter (Mobile)
-├─ adapter/out/persistence-mysql/   # MySQL 영속성
-└─ adapter/out/external/            # 외부 API
+├─ adapter-in/rest-api/       # ✅ REST API Adapter (Admin)
+├─ adapter-in/rest-api/      # ✅ REST API Adapter (Mobile)
+├─ adapter-out/persistence-mysql/   # MySQL 영속성
+└─ adapter-out/external/            # 외부 API
 ```
 
 ### REST API Layer 내부 구조 (Bounded Context 중심)
 
 ```
-adapter/in/rest-api-admin/
+adapter-in/rest-api/
 └─ src/main/java/com/company/adapter/in/rest/
-   ├─ shared/                        # 공통 모듈
+   ├─ common/                        # 공통 모듈
    │  ├─ dto/                        # 공통 DTO
    │  │  ├─ ErrorResponse.java
-   │  │  ├─ PageResponse.java
-   │  │  └─ ApiResponse.java
+   │  │  ├─ ErrorInfo.java
    │  ├─ exception/                  # 글로벌 예외 처리
    │  │  ├─ GlobalExceptionHandler.java
    │  │  └─ ErrorCode.java

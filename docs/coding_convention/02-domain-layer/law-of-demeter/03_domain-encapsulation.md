@@ -51,11 +51,11 @@ final class Cancelled implements OrderState {}
 
 ```java
 public final class Order {
-    private Long id;
+    private OrderId id;
     private OrderStatus status;
     private final List<OrderLine> lines;
 
-    Order(Long id, List<OrderLine> lines) { // package-private
+    Order(OrderId id, List<OrderLine> lines) { // package-private
         this.id = id;
         this.lines = List.copyOf(lines); // 불변
         this.status = OrderStatus.CREATED;

@@ -45,15 +45,15 @@ JSON Response
 
 ```java
 // ✅ Good: 표준 ErrorResponse 사용
-@ExceptionHandler(BusinessException.class)
-public ResponseEntity<ErrorResponse> handleBusinessException(...) {
+@ExceptionHandler(DomainException.class)
+public ResponseEntity<ErrorResponse> handleDomainException(...) {
     return ResponseEntity.status(ex.getHttpStatus())
         .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage(), path));
 }
 
 // ❌ Bad: 비표준 응답 형식
-@ExceptionHandler(BusinessException.class)
-public ResponseEntity<Map<String, String>> handleBusinessException(...) {
+@ExceptionHandler(DomainException.class)
+public ResponseEntity<Map<String, String>> handleDomainException(...) {
     Map<String, String> error = Map.of("error", ex.getMessage());  // ❌ 비표준
     return ResponseEntity.status(500).body(error);
 }
@@ -167,7 +167,7 @@ public class CustomerController {
 package com.company.adapter.in.web.exception;
 
 import com.company.adapter.in.web.dto.ErrorResponse;
-import com.company.domain.shared.exception.BusinessException;
+import com.company.domain.shared.exception.DomainException;
 import com.company.domain.shared.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -184,7 +184,7 @@ import java.util.List;
  * REST API Layer 전역 예외 핸들러
  *
  * <p>모든 Controller에서 발생하는 예외를 중앙에서 처리합니다.
- * Domain Layer의 BusinessException을 표준 ErrorResponse로 변환합니다.
+ * Domain Layer의 DomainException을 표준 ErrorResponse로 변환합니다.
  *
  * <p><b>핵심 원칙</b>:
  * <ul>
@@ -197,7 +197,7 @@ import java.util.List;
  * @author Development Team
  * @since 1.0.0
  * @see ErrorResponse
- * @see BusinessException
+ * @see DomainException
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -205,7 +205,7 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * BusinessException 처리
+     * DomainException 처리
      *
      * <p>Domain Layer에서 발생한 모든 비즈니스 예외를 처리합니다.
      * ErrorCode 인터페이스를 통해 HTTP 상태 코드를 추출하고,
@@ -219,13 +219,13 @@ public class GlobalExceptionHandler {
      * 4. ResponseEntity 반환
      * </pre>
      *
-     * @param ex BusinessException (OrderNotFoundException, InsufficientStockException 등)
+     * @param ex DomainException (OrderNotFoundException, InsufficientStockException 등)
      * @param request HttpServletRequest (URI 추출용)
      * @return ResponseEntity with ErrorResponse
      */
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex,
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomainException(
+            DomainException ex,
             HttpServletRequest request) {
 
         ErrorCode errorCode = ex.getErrorCode();  // ✅ 인터페이스 의존
@@ -398,14 +398,14 @@ public class GlobalExceptionHandler {
 
 ## 🎯 예외 타입별 처리 전략
 
-### 1. BusinessException (Domain 예외)
+### 1. DomainException (Domain 예외)
 
 **처리**: ErrorCode의 HTTP 상태 코드 사용
 
 ```java
-@ExceptionHandler(BusinessException.class)
-public ResponseEntity<ErrorResponse> handleBusinessException(
-        BusinessException ex,
+@ExceptionHandler(DomainException.class)
+public ResponseEntity<ErrorResponse> handleDomainException(
+        DomainException ex,
         HttpServletRequest request) {
 
     ErrorCode errorCode = ex.getErrorCode();  // ✅ 인터페이스
@@ -789,7 +789,7 @@ loadProductPort.findById(999)
     ↓
 ProductNotFoundException 발생
     ↓
-GlobalExceptionHandler.handleBusinessException()
+GlobalExceptionHandler.handleDomainException()
     ↓
 404 Not Found + ErrorResponse
 ```
@@ -813,7 +813,7 @@ product.checkStock(100)
     ↓
 InsufficientStockException 발생
     ↓
-GlobalExceptionHandler.handleBusinessException()
+GlobalExceptionHandler.handleDomainException()
     ↓
 409 Conflict + ErrorResponse
 ```
@@ -845,7 +845,7 @@ GlobalExceptionHandler.handleBusinessException()
 - ❌ Domain 구체 타입 의존
 - ❌ 예외 생성 (Domain/Application에서 생성)
 
-### Domain Layer (BusinessException)
+### Domain Layer (DomainException)
 
 **책임**:
 - ✅ 비즈니스 예외 정의
@@ -877,7 +877,7 @@ GlobalExceptionHandler.handleBusinessException()
 - [ ] Domain 구체 타입 의존을 피하는가?
 
 ### 예외 타입별 처리
-- [ ] `BusinessException` 핸들러가 있는가?
+- [ ] `DomainException` 핸들러가 있는가?
 - [ ] `MethodArgumentNotValidException` 핸들러가 있는가?
 - [ ] `IllegalArgumentException` 핸들러가 있는가?
 - [ ] `IllegalStateException` 핸들러가 있는가?

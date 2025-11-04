@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/03-application-layer/transaction-management/02_spring-proxy-limitations.md

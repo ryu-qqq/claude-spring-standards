@@ -46,9 +46,9 @@ GlobalExceptionHandler → ErrorResponse 생성
 // ✅ Good: 인터페이스 의존
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex, ...) {
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomainException(
+            DomainException ex, ...) {
 
         ErrorCode errorCode = ex.getErrorCode();  // ✅ 인터페이스
         int httpStatus = errorCode.getHttpStatus();  // ✅ 인터페이스 메서드
@@ -250,7 +250,7 @@ public enum OrderErrorCode implements ErrorCode {
 package com.company.adapter.in.web.exception;
 
 import com.company.adapter.in.web.dto.ErrorResponse;
-import com.company.domain.shared.exception.BusinessException;
+import com.company.domain.shared.exception.DomainException;
 import com.company.domain.shared.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -273,19 +273,19 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * BusinessException 처리 (모든 Domain 예외)
+     * DomainException 처리 (모든 Domain 예외)
      *
      * <p>ErrorCode 인터페이스를 통해 HTTP 상태 코드와 메시지를 추출합니다.
      * OrderErrorCode, CustomerErrorCode, PaymentErrorCode 등 모든 Domain ErrorCode를
      * 하나의 핸들러로 처리합니다.
      *
-     * @param ex BusinessException
+     * @param ex DomainException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex,
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomainException(
+            DomainException ex,
             HttpServletRequest request) {
 
         ErrorCode errorCode = ex.getErrorCode();  // ✅ 인터페이스 의존
@@ -307,7 +307,7 @@ public class GlobalExceptionHandler {
 ```
 
 **핵심 특징**:
-1. ✅ **하나의 핸들러**: 모든 BusinessException을 하나의 메서드로 처리
+1. ✅ **하나의 핸들러**: 모든 DomainException을 하나의 메서드로 처리
 2. ✅ **ErrorCode 인터페이스 의존**: 구체 enum 타입 의존 없음
 3. ✅ **HTTP 상태 코드 자동 추출**: ErrorCode.getHttpStatus() 사용
 4. ✅ **확장성**: 새로운 Domain ErrorCode 추가 시 Handler 수정 불필요
@@ -476,7 +476,7 @@ public enum OrderErrorCode implements ErrorCode {
 // 2. Domain Layer - Exception 정의
 package com.company.domain.order.exception;
 
-public class InsufficientStockException extends BusinessException {
+public class InsufficientStockException extends DomainException {
 
     private final Long productId;
     private final int requestedQuantity;
@@ -552,9 +552,9 @@ public class CreateOrderService implements CreateOrderUseCase {
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex,
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomainException(
+            DomainException ex,
             HttpServletRequest request) {
 
         ErrorCode errorCode = ex.getErrorCode();  // OrderErrorCode.INSUFFICIENT_STOCK
@@ -634,7 +634,7 @@ Content-Type: application/json
 ### 통합
 - [ ] `GlobalExceptionHandler`와 연동되는가?
 - [ ] `ErrorResponse` DTO 표준과 일치하는가?
-- [ ] `BusinessException`을 통해 ErrorCode를 전달하는가?
+- [ ] `DomainException`을 통해 ErrorCode를 전달하는가?
 
 ---
 

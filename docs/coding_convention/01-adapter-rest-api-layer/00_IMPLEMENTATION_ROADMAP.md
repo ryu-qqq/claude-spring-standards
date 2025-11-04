@@ -230,7 +230,7 @@ public record ErrorResponse(
     Instant timestamp,
     List<FieldError> fieldErrors
 ) {
-    public static ErrorResponse from(BusinessException ex) {
+    public static ErrorResponse from(DomainException ex) {
         return new ErrorResponse(
             ex.getErrorCode().name(),
             ex.getMessage(),
@@ -323,7 +323,7 @@ public class OrderApiMapper {
 **포함 내용**:
 - [ ] `@RestControllerAdvice` 사용
 - [ ] `@ExceptionHandler` 메서드
-- [ ] BusinessException 처리
+- [ ] DomainException 처리
 - [ ] ValidationException 처리
 - [ ] System Exception 처리
 - [ ] 로깅 전략
@@ -336,8 +336,8 @@ public class OrderApiMapper {
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomainException(DomainException ex) {
         return ResponseEntity
             .status(ex.getErrorCode().getStatus())
             .body(ErrorResponse.from(ex));

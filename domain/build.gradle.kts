@@ -24,6 +24,18 @@ dependencies {
     implementation(libs.jakarta.validation.api)
 
     // ========================================
+    // Test Dependencies
+    // ========================================
+    // JUnit 5
+    testImplementation(libs.junit.jupiter)
+
+    // ArchUnit for architecture validation
+    testImplementation(libs.archunit.junit5)
+
+    // Bootstrap testFixtures (ArchUnit 유틸리티 사용)
+    testImplementation(testFixtures(project(":bootstrap:bootstrap-web-api")))
+
+    // ========================================
     // Test Fixtures Dependencies
     // ========================================
     // Domain TestFixtures는 순수 Java만 사용 (Domain Purity 유지)

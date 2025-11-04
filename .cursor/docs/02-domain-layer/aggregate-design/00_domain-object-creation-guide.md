@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/02-domain-layer/aggregate-design/00_domain-object-creation-guide.md

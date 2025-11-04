@@ -55,12 +55,6 @@ public record OrderId(Long value) {
         return new OrderId(value);
     }
 
-    /**
-     * 새 ID 생성 (UUID 기반)
-     */
-    public static OrderId generate() {
-        return new OrderId(System.currentTimeMillis()); // 실제는 UUID 사용
-    }
 }
 ```
 

@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/03-application-layer/assembler-pattern/02_usecase-inner-dto.md

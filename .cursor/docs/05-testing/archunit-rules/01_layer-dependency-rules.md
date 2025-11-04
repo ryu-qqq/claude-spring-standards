@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/05-testing/archunit-rules/01_layer-dependency-rules.md

@@ -1,0 +1,1 @@
+/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/command-adapter-patterns/02_delete-port-pattern.md
