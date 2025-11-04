@@ -125,6 +125,7 @@ Claude: 규칙 100% 준수 코드 생성 (Hook ON)
 - **Law of Demeter** - Getter 체이닝 금지 (`order.getCustomer().getAddress()` ❌) → [상세](docs/coding_convention/02-domain-layer/law-of-demeter/)
 - **Long FK 전략** - JPA 관계 어노테이션 금지, Long FK 사용 → [상세](docs/coding_convention/04-persistence-layer/jpa-entity-design/)
 - **Transaction 경계** - `@Transactional` 내 외부 API 호출 절대 금지 → [상세](docs/coding_convention/03-application-layer/transaction-management/)
+- **Transactional Outbox Pattern** - 외부 API 호출 시 Outbox 패턴 사용 (Pattern B 권장) → [상세](docs/coding_convention/09-orchestration-patterns/04_outbox-pattern.md)
 
 **전체 규칙**: [코딩 컨벤션 문서](docs/coding_convention/) (98개 규칙)
 

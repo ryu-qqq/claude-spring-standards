@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "buildDate": "2025-11-04T14:06:07.350935Z",
-  "totalRules": 145,
+  "buildDate": "2025-11-04T15:55:52.482987Z",
+  "totalRules": 146,
   "keywordIndex": {
     "rest": [
       "adapter-rest-api-layer-00_rest-api-creation-guide",
@@ -80,6 +80,7 @@
       "enterprise-patterns-resilience-03_bulkhead-pattern",
       "orchestration-patterns-01_command-pattern",
       "orchestration-patterns-03_write-ahead-log-pattern",
+      "orchestration-patterns-04_outbox-pattern-ecs-legacy",
       "orchestration-patterns-04_outbox-pattern"
     ],
     "request": [
@@ -702,7 +703,14 @@
       "orchestration-patterns-03_write-ahead-log-pattern"
     ],
     "outbox": [
+      "orchestration-patterns-04_outbox-pattern-ecs-legacy",
       "orchestration-patterns-04_outbox-pattern"
+    ],
+    "ecs": [
+      "orchestration-patterns-04_outbox-pattern-ecs-legacy"
+    ],
+    "legacy": [
+      "orchestration-patterns-04_outbox-pattern-ecs-legacy"
     ],
     "outcome": [
       "orchestration-patterns-04_outcome-modeling"

@@ -6,10 +6,11 @@
 - [Command Pattern](./01_command-pattern.md)
 - [Idempotency Handling](./02_idempotency-handling.md)
 - [Write-Ahead Log Pattern](./03_write-ahead-log-pattern.md)
+- [Transactional Outbox Pattern](./04_outbox-pattern.md) - 트랜잭션 경계 외부 API 호출
 - [Outcome Modeling](./04_outcome-modeling.md)
-- [State Machine Pattern](./05_state-machine-pattern.md)
-- [Recovery Mechanisms](./06_recovery-mechanisms.md)
-- [Implementation Guide](./07_implementation-guide.md)
+- [Quick Start Guide](./05_quick-start-guide.md)
+- [Security Guide](./06_security-guide.md)
+- [Automation Analysis](./07_automation-analysis.md)
 
 **필수 버전**: Java 21+, Spring Framework 6.0+
 

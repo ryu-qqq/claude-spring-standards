@@ -1,1585 +1,808 @@
-# Outbox Pattern: ECS 환경에 최적화된 메시지 발행 패턴
+# Transactional Outbox Pattern: 외부 API 호출의 안전한 조율
 
-## 개요
+**목적**: 비즈니스 로직과 외부 API 호출을 동일한 트랜잭션으로 처리하여 강력한 원자성 보장
 
-Outbox Pattern은 비즈니스 로직과 메시지 발행을 동일한 트랜잭션으로 처리하여 강력한 원자성을 보장하는 패턴입니다.
+**관련 문서**:
+- [Orchestration Pattern Overview](./00_orchestration-pattern-overview.md)
+- [Idempotency Handling](./02_idempotency-handling.md)
+- [Domain Events](../07-enterprise-patterns/event-driven/01_domain-events.md)
 
-ECS 환경에서는 별도의 Message Queue(SQS, Kafka) 없이 **MySQL + Scheduler Worker**만으로 구현 가능합니다.
-
-## ✅ 왜 Outbox Pattern인가?
-
-### SQS/Kafka 대신 Outbox를 사용하는 이유
-
-| 측면 | SQS/Kafka | Outbox Pattern |
-|------|-----------|----------------|
-| **인프라** | 별도 Message Queue 필요 | MySQL만 사용 |
-| **트랜잭션** | At-Least-Once (중복 가능성) | 강력한 원자성 보장 |
-| **비용** | SQS 요금 발생 | 추가 비용 없음 |
-| **레이턴시** | 네트워크 호출 (50-200ms) | DB 쿼리 (5-20ms) |
-| **복잡도** | Producer/Consumer 분리 | 단순한 Scheduler |
-| **ECS 통합** | 별도 Consumer Task 필요 | 동일 ECS Task 재사용 |
-| **확장성** | 매우 높음 (메시지 큐 특화) | 중간 (DB 성능 의존) |
-| **모니터링** | CloudWatch Metrics | MySQL Query + Logs |
-
-### 적합한 경우
-
-✅ **ECS 환경** (현재 환경)
-✅ **중간 규모 처리량** (<10,000 msg/min)
-✅ **강력한 트랜잭션 보장 필요**
-✅ **인프라 단순화 선호**
-✅ **MySQL 이미 사용 중**
-
-### 부적합한 경우
-
-❌ **대규모 처리량** (>100,000 msg/min)
-❌ **지리적 분산** (Multi-Region)
-❌ **다양한 Consumer 패턴** (Fan-out, Topic 분리)
+**필수 버전**: Spring Boot 3.0+, Java 21+
 
 ---
 
-## 🏗️ 아키텍처
+## 📌 핵심 문제: 외부 API 호출의 불확실성
 
-### 전체 흐름
-
-```
-┌─────────────────────────────────────────────────┐
-│ 1. 비즈니스 로직 + Outbox 저장 (동일 트랜잭션)   │
-│    → Order 생성                                 │
-│    → BoundedContextOutbox 기록 (PENDING)        │
-└─────────────────────────────────────────────────┘
-           ↓
-┌─────────────────────────────────────────────────┐
-│ 2. Outbox Scheduler (ECS Worker Task)           │
-│    → PENDING 엔트리 폴링 (1초마다)              │
-│    → 외부 API 호출                              │
-│    → COMPLETED/FAILED 상태 전이                 │
-└─────────────────────────────────────────────────┘
-           ↓
-┌─────────────────────────────────────────────────┐
-│ 3. 크래시 복구 (Reaper)                         │
-│    → PROCESSING 상태가 5분 이상 → PENDING 복구  │
-│    → FAILED 엔트리 정리 (7일 후)                │
-└─────────────────────────────────────────────────┘
-```
-
-### 트랜잭션 원자성 보장
+### ❌ 기존 방식의 문제점
 
 ```java
-@Transactional
-public void createOrder(CreateOrderCommand cmd) {
-    // 1. Order 생성
-    Order order = orderRepository.save(cmd.toEntity());
-
-    // 2. Outbox 기록 (동일 트랜잭션)
-    BoundedContextOutboxEntry outbox = BoundedContextOutboxEntry.builder()
-        .aggregateType("ORDER")
-        .aggregateId(order.getId().toString())
-        .eventType("ORDER_CREATED")
-        .payload(toJson(order))
-        .status(OutboxStatus.PENDING)
-        .build();
-
-    outboxRepository.save(outbox);
-
-    // ✅ 둘 다 성공하거나 둘 다 실패 (원자성 보장)
-}
-```
-
-**핵심**: Order 생성과 Outbox 기록이 **동일 트랜잭션**이므로, 하나라도 실패하면 전체 롤백됩니다.
-
----
-
-## 🗄️ MySQL Schema 설계
-
-### BoundedContextOutbox 테이블
-
-```sql
--- BoundedContextOutbox: 도메인 이벤트 발행 대기열
-CREATE TABLE bounded_context_outbox (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    aggregate_type VARCHAR(50) NOT NULL COMMENT '집합 루트 타입 (ORDER, PAYMENT 등)',
-    aggregate_id VARCHAR(255) NOT NULL COMMENT '집합 루트 ID',
-    event_type VARCHAR(50) NOT NULL COMMENT '이벤트 타입 (ORDER_CREATED, PAYMENT_COMPLETED 등)',
-    payload JSON NOT NULL COMMENT '이벤트 페이로드 (JSON)',
-    status VARCHAR(20) NOT NULL COMMENT '처리 상태 (PENDING, PROCESSING, COMPLETED, FAILED)',
-    retry_count INT NOT NULL DEFAULT 0 COMMENT '재시도 횟수',
-    max_retries INT NOT NULL DEFAULT 3 COMMENT '최대 재시도 횟수',
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 시각',
-    processed_at DATETIME(6) NULL COMMENT '처리 완료 시각',
-    error_message TEXT NULL COMMENT '에러 메시지 (실패 시)',
-
-    INDEX idx_outbox_status_created (status, created_at),
-    INDEX idx_outbox_aggregate (aggregate_type, aggregate_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bounded Context Outbox: 도메인 이벤트 발행 대기열';
-```
-
-### 설계 포인트
-
-#### 1. 테이블명: `bounded_context_outbox`
-
-**이유**: 나중에 여러 Bounded Context가 생길 때 명확한 구분
-- `order_outbox`, `payment_outbox` 등으로 분리 가능
-- 현재는 단일 테이블로 `aggregate_type`으로 구분
-
-#### 2. MySQL JSON 타입
-
-**PostgreSQL과의 차이**:
-- PostgreSQL: `JSONB` (Binary JSON, 인덱싱 가능)
-- MySQL: `JSON` (Native JSON, 8.0+ 인덱싱 가능)
-
-```sql
--- MySQL JSON 인덱스 (8.0+)
-ALTER TABLE bounded_context_outbox
-ADD INDEX idx_payload_order_id ((CAST(payload->>'$.orderId' AS CHAR(255))));
-```
-
-#### 3. Index 전략
-
-```sql
--- 1. 폴링 쿼리 최적화 (status, created_at)
-INDEX idx_outbox_status_created (status, created_at)
-
--- 2. 집합 조회 최적화 (aggregate_type, aggregate_id)
-INDEX idx_outbox_aggregate (aggregate_type, aggregate_id)
-```
-
-#### 4. `DATETIME(6)`: 마이크로초 정밀도
-
-```sql
-created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
-```
-
-**이유**: 동시성 높은 환경에서 정확한 순서 보장
-
----
-
-## 📦 Entity 설계
-
-### BoundedContextOutboxEntry.java
-
-```java
-package com.company.template.application.outbox.entity;
-
-import jakarta.persistence.*;
-import java.time.Instant;
-
-/**
- * BoundedContextOutbox Entity
- *
- * <p>도메인 이벤트 발행을 위한 Outbox Pattern 구현체</p>
- *
- * <h3>책임</h3>
- * <ul>
- *   <li>비즈니스 로직과 동일한 트랜잭션으로 이벤트 저장</li>
- *   <li>Scheduler Worker가 폴링하여 이벤트 처리</li>
- *   <li>크래시 복구 및 재시도 지원</li>
- * </ul>
- *
- * <h3>상태 전이</h3>
- * <pre>
- * PENDING → PROCESSING → COMPLETED
- *                      ↘ FAILED (max retries 초과)
- * </pre>
- *
- * @author Your Name
- * @since 2024-01-01
- */
-@Entity
-@Table(
-    name = "bounded_context_outbox",
-    indexes = {
-        @Index(name = "idx_outbox_status_created", columnList = "status, created_at"),
-        @Index(name = "idx_outbox_aggregate", columnList = "aggregate_type, aggregate_id")
-    }
-)
-public class BoundedContextOutboxEntry {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "aggregate_type", nullable = false, length = 50)
-    private String aggregateType;
-
-    @Column(name = "aggregate_id", nullable = false, length = 255)
-    private String aggregateId;
-
-    @Column(name = "event_type", nullable = false, length = 50)
-    private String eventType;
-
-    @Column(name = "payload", nullable = false, columnDefinition = "JSON")
-    private String payload;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
-    private OutboxStatus status;
-
-    @Column(name = "retry_count", nullable = false)
-    private int retryCount;
-
-    @Column(name = "max_retries", nullable = false)
-    private int maxRetries;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "processed_at")
-    private Instant processedAt;
-
-    @Column(name = "error_message", columnDefinition = "TEXT")
-    private String errorMessage;
-
-    // ========================================
-    // Constructor
-    // ========================================
-
-    protected BoundedContextOutboxEntry() {
-        // JPA only
-    }
-
-    private BoundedContextOutboxEntry(Builder builder) {
-        this.aggregateType = builder.aggregateType;
-        this.aggregateId = builder.aggregateId;
-        this.eventType = builder.eventType;
-        this.payload = builder.payload;
-        this.status = builder.status;
-        this.retryCount = builder.retryCount;
-        this.maxRetries = builder.maxRetries;
-        this.createdAt = builder.createdAt;
-        this.processedAt = builder.processedAt;
-        this.errorMessage = builder.errorMessage;
-    }
-
-    // ========================================
-    // Business Methods
-    // ========================================
+// ❌ Before - 외부 API가 트랜잭션 내부 (위험!)
+@Service
+public class PaymentService {
 
     /**
-     * PROCESSING 상태로 전이
-     *
-     * @throws IllegalStateException PENDING 상태가 아닐 때
+     * ❌ 문제점:
+     * 1. Payment 저장 성공 → PG 호출 실패 → 불일치 상태
+     * 2. PG 호출 타임아웃 → 재시도 시 중복 결제
+     * 3. 크래시 발생 시 복구 불가능
      */
-    public void markProcessing() {
-        if (this.status != OutboxStatus.PENDING) {
-            throw new IllegalStateException(
-                "PROCESSING 상태로 전이할 수 없습니다. 현재 상태: " + this.status
-            );
-        }
-        this.status = OutboxStatus.PROCESSING;
-    }
-
-    /**
-     * COMPLETED 상태로 전이
-     *
-     * @param processedAt 처리 완료 시각
-     * @throws IllegalStateException PROCESSING 상태가 아닐 때
-     */
-    public void markCompleted(Instant processedAt) {
-        if (this.status != OutboxStatus.PROCESSING) {
-            throw new IllegalStateException(
-                "COMPLETED 상태로 전이할 수 없습니다. 현재 상태: " + this.status
-            );
-        }
-        this.status = OutboxStatus.COMPLETED;
-        this.processedAt = processedAt;
-    }
-
-    /**
-     * 재시도 처리 (PENDING 상태로 되돌림)
-     *
-     * @param errorMessage 에러 메시지
-     * @return 재시도 가능 여부 (true: PENDING 복구, false: FAILED 전이)
-     */
-    public boolean retry(String errorMessage) {
-        this.retryCount++;
-        this.errorMessage = errorMessage;
-
-        if (this.retryCount >= this.maxRetries) {
-            // Max retries 초과 → FAILED
-            this.status = OutboxStatus.FAILED;
-            return false;
-        } else {
-            // 재시도 가능 → PENDING
-            this.status = OutboxStatus.PENDING;
-            return true;
-        }
-    }
-
-    /**
-     * FAILED 상태로 전이 (즉시 실패)
-     *
-     * @param errorMessage 에러 메시지
-     */
-    public void markFailed(String errorMessage) {
-        this.status = OutboxStatus.FAILED;
-        this.errorMessage = errorMessage;
-    }
-
-    // ========================================
-    // Getters
-    // ========================================
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getAggregateType() {
-        return aggregateType;
-    }
-
-    public String getAggregateId() {
-        return aggregateId;
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public OutboxStatus getStatus() {
-        return status;
-    }
-
-    public int getRetryCount() {
-        return retryCount;
-    }
-
-    public int getMaxRetries() {
-        return maxRetries;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getProcessedAt() {
-        return processedAt;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    // ========================================
-    // Builder
-    // ========================================
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private String aggregateType;
-        private String aggregateId;
-        private String eventType;
-        private String payload;
-        private OutboxStatus status = OutboxStatus.PENDING;
-        private int retryCount = 0;
-        private int maxRetries = 3;
-        private Instant createdAt = Instant.now();
-        private Instant processedAt;
-        private String errorMessage;
-
-        public Builder aggregateType(String aggregateType) {
-            this.aggregateType = aggregateType;
-            return this;
-        }
-
-        public Builder aggregateId(String aggregateId) {
-            this.aggregateId = aggregateId;
-            return this;
-        }
-
-        public Builder eventType(String eventType) {
-            this.eventType = eventType;
-            return this;
-        }
-
-        public Builder payload(String payload) {
-            this.payload = payload;
-            return this;
-        }
-
-        public Builder status(OutboxStatus status) {
-            this.status = status;
-            return this;
-        }
-
-        public Builder retryCount(int retryCount) {
-            this.retryCount = retryCount;
-            return this;
-        }
-
-        public Builder maxRetries(int maxRetries) {
-            this.maxRetries = maxRetries;
-            return this;
-        }
-
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public Builder processedAt(Instant processedAt) {
-            this.processedAt = processedAt;
-            return this;
-        }
-
-        public Builder errorMessage(String errorMessage) {
-            this.errorMessage = errorMessage;
-            return this;
-        }
-
-        public BoundedContextOutboxEntry build() {
-            if (aggregateType == null || aggregateType.isBlank()) {
-                throw new IllegalArgumentException("aggregateType은 필수입니다.");
-            }
-            if (aggregateId == null || aggregateId.isBlank()) {
-                throw new IllegalArgumentException("aggregateId는 필수입니다.");
-            }
-            if (eventType == null || eventType.isBlank()) {
-                throw new IllegalArgumentException("eventType은 필수입니다.");
-            }
-            if (payload == null || payload.isBlank()) {
-                throw new IllegalArgumentException("payload는 필수입니다.");
-            }
-
-            return new BoundedContextOutboxEntry(this);
-        }
-    }
-}
-```
-
-### OutboxStatus.java
-
-```java
-package com.company.template.application.outbox.entity;
-
-/**
- * Outbox 처리 상태
- *
- * <h3>상태 전이</h3>
- * <pre>
- * PENDING → PROCESSING → COMPLETED
- *                      ↘ FAILED (max retries 초과)
- * </pre>
- *
- * @author Your Name
- * @since 2024-01-01
- */
-public enum OutboxStatus {
-
-    /**
-     * 처리 대기 중
-     *
-     * <p>Scheduler가 폴링하여 처리할 엔트리</p>
-     */
-    PENDING,
-
-    /**
-     * 처리 중
-     *
-     * <p>외부 API 호출 등 실제 처리가 진행 중</p>
-     */
-    PROCESSING,
-
-    /**
-     * 처리 완료
-     *
-     * <p>정상적으로 처리가 완료됨</p>
-     */
-    COMPLETED,
-
-    /**
-     * 처리 실패
-     *
-     * <p>최대 재시도 횟수를 초과하여 실패</p>
-     */
-    FAILED
-}
-```
-
----
-
-## 🔧 Repository 설계
-
-### BoundedContextOutboxRepository.java
-
-```java
-package com.company.template.application.outbox.repository;
-
-import com.company.template.application.outbox.entity.BoundedContextOutboxEntry;
-import com.company.template.application.outbox.entity.OutboxStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.time.Instant;
-import java.util.List;
-
-/**
- * BoundedContextOutbox Repository
- *
- * @author Your Name
- * @since 2024-01-01
- */
-@Repository
-public interface BoundedContextOutboxRepository extends JpaRepository<BoundedContextOutboxEntry, Long> {
-
-    /**
-     * PENDING 엔트리 조회 (폴링용)
-     *
-     * <p>Scheduler가 1초마다 호출하여 처리할 엔트리 조회</p>
-     *
-     * @param status 상태 (PENDING)
-     * @param cutoff 생성 시각 기준 (N초 이전 엔트리만 조회)
-     * @return PENDING 엔트리 목록 (최대 100개)
-     */
-    @Query("SELECT o FROM BoundedContextOutboxEntry o " +
-           "WHERE o.status = :status " +
-           "AND o.createdAt < :cutoff " +
-           "ORDER BY o.createdAt ASC")
-    List<BoundedContextOutboxEntry> findPendingEntries(
-        @Param("status") OutboxStatus status,
-        @Param("cutoff") Instant cutoff
-    );
-
-    /**
-     * FAILED 엔트리 조회 (정리용)
-     *
-     * <p>Reaper가 매일 자정에 호출하여 오래된 FAILED 엔트리 정리</p>
-     *
-     * @param status 상태 (FAILED)
-     * @param cutoff 생성 시각 기준 (N일 이전 엔트리만 조회)
-     * @return FAILED 엔트리 목록
-     */
-    List<BoundedContextOutboxEntry> findByStatusAndCreatedAtBefore(
-        OutboxStatus status,
-        Instant cutoff
-    );
-
-    /**
-     * PROCESSING 엔트리 조회 (크래시 복구용)
-     *
-     * <p>Reaper가 5분마다 호출하여 5분 이상 PROCESSING 상태인 엔트리를 PENDING으로 복구</p>
-     *
-     * @param status 상태 (PROCESSING)
-     * @param cutoff 생성 시각 기준 (N분 이전 엔트리만 조회)
-     * @return PROCESSING 엔트리 목록 (stuck entries)
-     */
-    List<BoundedContextOutboxEntry> findByStatusAndCreatedAtBefore(
-        OutboxStatus status,
-        Instant cutoff
-    );
-}
-```
-
----
-
-## 🔄 Scheduler Worker 설계
-
-### OutboxScheduler.java
-
-```java
-package com.company.template.application.outbox.scheduler;
-
-import com.company.template.application.outbox.entity.BoundedContextOutboxEntry;
-import com.company.template.application.outbox.entity.OutboxStatus;
-import com.company.template.application.outbox.processor.OutboxProcessor;
-import com.company.template.application.outbox.repository.BoundedContextOutboxRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-
-/**
- * Outbox Scheduler: Bounded Context Outbox 폴링 및 처리
- *
- * <h3>책임</h3>
- * <ul>
- *   <li>PENDING 엔트리 폴링 (1초마다)</li>
- *   <li>OutboxProcessor에 처리 위임</li>
- *   <li>크래시 복구 (PROCESSING → PENDING)</li>
- *   <li>FAILED 엔트리 정리 (7일 후)</li>
- * </ul>
- *
- * <h3>ECS 배포</h3>
- * <ul>
- *   <li>Main Application과 별도의 ECS Task로 실행</li>
- *   <li>Replica 1개만 실행 (중복 처리 방지)</li>
- *   <li>spring.profiles.active=production,scheduler</li>
- * </ul>
- *
- * @author Your Name
- * @since 2024-01-01
- */
-@Component
-public class OutboxScheduler {
-
-    private static final Logger log = LoggerFactory.getLogger(OutboxScheduler.class);
-
-    private final BoundedContextOutboxRepository outboxRepository;
-    private final OutboxProcessor outboxProcessor;
-
-    public OutboxScheduler(
-            BoundedContextOutboxRepository outboxRepository,
-            OutboxProcessor outboxProcessor) {
-        this.outboxRepository = outboxRepository;
-        this.outboxProcessor = outboxProcessor;
-    }
-
-    /**
-     * Outbox 폴링 스케줄러
-     *
-     * <p>1초마다 실행하여 5초 이상 된 PENDING 엔트리 처리</p>
-     *
-     * <h4>왜 5초 기준?</h4>
-     * <ul>
-     *   <li>트랜잭션 커밋 후 즉시 폴링하면 DB Replication Lag 발생 가능</li>
-     *   <li>5초 버퍼로 DB 동기화 보장</li>
-     * </ul>
-     */
-    @Scheduled(fixedRate = 1000)  // 1초마다
     @Transactional
-    public void pollOutbox() {
-        Instant cutoff = Instant.now().minus(5, ChronoUnit.SECONDS);
+    public void processPayment(PaymentRequest request) {
+        // 1. DB에 결제 기록 저장
+        Payment payment = paymentRepository.save(Payment.create(request));
 
-        // 1. PENDING 엔트리 조회 (최대 100개)
-        List<BoundedContextOutboxEntry> entries = outboxRepository.findPendingEntries(
-            OutboxStatus.PENDING,
-            cutoff
+        // 2. 외부 PG API 호출 (트랜잭션 내부!)
+        PaymentApiResponse response = paymentGateway.charge(
+            request.amount(),
+            request.cardNumber()
+        );  // ⚠️ 네트워크 실패? 타임아웃? 중복 요청?
+
+        // 3. 결과 업데이트
+        payment.markAsCompleted(response.transactionId());
+        paymentRepository.save(payment);
+    }
+}
+```
+
+**발생 가능한 문제**:
+- 🔴 **중복 요청**: 타임아웃 후 재시도 시 동일 결제가 2번 실행
+- 🔴 **부분 실패**: DB는 저장되었지만 API 호출 실패 (불일치)
+- 🔴 **복구 불가**: 실패 후 재시도 지점 불명확
+- 🔴 **크래시 유실**: 앱 재시작 시 진행 중이던 요청 유실
+
+---
+
+## 🎯 Transactional Outbox Pattern의 해결책
+
+### 핵심 아이디어
+
+**"외부 API 호출을 DB에 먼저 기록하고, 별도 프로세스가 안전하게 처리"**
+
+```
+┌──────────────────────────────────────────────────┐
+│ 1. 동일 트랜잭션                                 │
+│    Payment 생성 + Outbox 기록                    │
+│    → 둘 다 성공 or 둘 다 실패 (원자성)          │
+└──────────────────────────────────────────────────┘
+           ↓
+┌──────────────────────────────────────────────────┐
+│ 2. 트랜잭션 커밋 후 이벤트 발행                  │
+│    → @TransactionalEventListener(AFTER_COMMIT)   │
+└──────────────────────────────────────────────────┘
+           ↓
+┌──────────────────────────────────────────────────┐
+│ 3. 별도 스레드/프로세스에서 외부 API 호출        │
+│    → 실패 시 재시도                              │
+│    → 최종 실패 시 DLQ (Dead Letter Queue)       │
+└──────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ 3가지 구현 패턴 비교
+
+### 패턴 A: Direct Event (In-Proc) - ⚠️ 지양
+
+**흐름**: Payment + Outbox 저장 → 커밋 → `@Async` 리스너가 **바로** PG 호출
+
+```java
+// ⚠️ Pattern A - 단순하지만 결제엔 부적합
+@Component
+public class PaymentEventHandler {
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onPaymentCreated(PaymentCreated event) {
+        // ⚠️ 이벤트 리스너가 직접 외부 API 호출
+        paymentGateway.charge(event.paymentId(), event.amount());
+    }
+}
+```
+
+| 항목 | 평가 |
+|------|------|
+| **레이턴시** | ⚡ 최소 (즉시 호출) |
+| **구현 복잡도** | ✅ 단순 |
+| **크래시 안전성** | ❌ 이벤트 유실 위험 |
+| **재시도/DLQ** | ❌ 없음 (직접 구현 필요) |
+| **백프레셔** | ❌ 없음 |
+| **적합 케이스** | 🟡 **저위험 호출** (알림, 로그) |
+| **결제 도메인** | ❌ **부적합** |
+
+**문제점**:
+- ❌ 앱 크래시/재시작 시 **메모리 이벤트 유실**
+- ❌ 재시도 로직 직접 구현 필요
+- ❌ DLQ (Dead Letter Queue) 부재
+- ❌ 동시 처리량 제어 어려움
+
+**언제 사용?**:
+- ✅ Push 알림, 로그 전송 등 **유실 허용 가능한 호출**
+- ✅ 프로토타입, PoC 단계
+- ❌ 결제, 주문, 재고 등 **critical 호출에는 부적합**
+
+---
+
+### 패턴 B: Outbox + Event Wake-up (Hybrid) - ✅ **권장 기본 패턴**
+
+**흐름**: Payment + Outbox 저장 → 커밋 → 이벤트가 **Relay를 깨움** → Relay가 Outbox 조회 → 외부 API 호출
+
+```java
+// ✅ Pattern B - 프로덕션 표준 패턴
+@Service
+public class PaymentService {
+
+    /**
+     * ✅ 1. 동일 트랜잭션으로 Payment + Outbox 저장
+     */
+    @Transactional
+    public PaymentId createPayment(CreatePaymentCommand command) {
+        // Payment 저장
+        Payment payment = paymentRepository.save(
+            Payment.create(command)
         );
 
-        if (entries.isEmpty()) {
-            return;  // 조용히 종료 (로그 불필요)
-        }
+        // Outbox 저장 (동일 트랜잭션!)
+        PaymentOutbox outbox = PaymentOutbox.builder()
+            .aggregateType("PAYMENT")
+            .aggregateId(payment.getId().toString())
+            .eventType("PAYMENT_CREATED")
+            .payload(toJson(payment))
+            .status(OutboxStatus.PENDING)
+            .idemKey(command.idemKey())  // 멱등성 키
+            .build();
 
-        log.info("Outbox polling: found {} PENDING entries", entries.size());
+        outboxRepository.save(outbox);
 
-        // 2. 각 엔트리 처리
-        for (BoundedContextOutboxEntry entry : entries) {
-            processOutboxEntry(entry);
-        }
+        // ✅ 둘 다 성공 or 둘 다 실패 (원자성 보장)
+        return payment.getId();
+    }
+}
+
+/**
+ * ✅ 2. 트랜잭션 커밋 후 이벤트 발행 (Wake-up 신호)
+ */
+@Component
+public class OutboxWakeupPublisher {
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onOutboxCreated(OutboxCreatedEvent event) {
+        // ✅ Relay에게 "픽업 해!" 신호만 전송
+        applicationEventPublisher.publishEvent(
+            new OutboxWakeupSignal(event.outboxId())
+        );
+    }
+}
+
+/**
+ * ✅ 3. Relay가 Outbox 조회 후 외부 API 호출
+ */
+@Component
+public class OutboxRelay {
+
+    @EventListener
+    @Async
+    public void onWakeupSignal(OutboxWakeupSignal signal) {
+        // ✅ Outbox 조회 (FOR UPDATE SKIP LOCKED)
+        List<PaymentOutbox> pending = outboxRepository
+            .findPendingWithLock(OutboxStatus.PENDING, 10);
+
+        pending.forEach(this::processOutbox);
     }
 
     /**
-     * 크래시 복구 스케줄러 (Reaper)
-     *
-     * <p>5분마다 실행하여 5분 이상 PROCESSING 상태인 엔트리를 PENDING으로 복구</p>
-     *
-     * <h4>크래시 시나리오</h4>
-     * <pre>
-     * T1: PENDING → PROCESSING 전이
-     * T2: ⚠️ ECS Task 크래시 (OOM, 재배포 등)
-     * T3: Reaper가 5분 후 PROCESSING → PENDING 복구
-     * T4: ✅ 정상 재처리
-     * </pre>
+     * ✅ 폴백: 주기적 폴링 (이벤트 유실 대비)
      */
-    @Scheduled(fixedRate = 300000)  // 5분마다
-    @Transactional
-    public void recoverStuckEntries() {
-        Instant cutoff = Instant.now().minus(5, ChronoUnit.MINUTES);
+    @Scheduled(fixedDelay = 5000)  // 5초마다 (느린 주기)
+    public void pollOutbox() {
+        List<PaymentOutbox> stuck = outboxRepository
+            .findPendingWithLock(OutboxStatus.PENDING, 10);
 
-        List<BoundedContextOutboxEntry> stuckEntries = outboxRepository
-            .findByStatusAndCreatedAtBefore(OutboxStatus.PROCESSING, cutoff);
-
-        if (stuckEntries.isEmpty()) {
-            return;
-        }
-
-        log.warn("Reaper: recovering {} stuck PROCESSING entries", stuckEntries.size());
-
-        for (BoundedContextOutboxEntry entry : stuckEntries) {
-            entry.retry("Recovered by Reaper: stuck in PROCESSING for 5 minutes");
-            outboxRepository.save(entry);
-            log.warn("Reaper: recovered entry {}", entry.getId());
-        }
+        stuck.forEach(this::processOutbox);
     }
 
-    /**
-     * FAILED 엔트리 정리 스케줄러
-     *
-     * <p>매일 자정에 실행하여 7일 이상 된 FAILED 엔트리 삭제</p>
-     *
-     * <h4>정리 정책</h4>
-     * <ul>
-     *   <li>FAILED 엔트리는 DLQ(Dead Letter Queue) 역할</li>
-     *   <li>7일 보관 후 자동 삭제</li>
-     *   <li>필요 시 별도 아카이빙 테이블로 이동 가능</li>
-     * </ul>
-     */
-    @Scheduled(cron = "0 0 0 * * *")  // 매일 자정
-    @Transactional
-    public void cleanupFailedEntries() {
-        Instant cutoff = Instant.now().minus(7, ChronoUnit.DAYS);
-
-        List<BoundedContextOutboxEntry> failedEntries = outboxRepository
-            .findByStatusAndCreatedAtBefore(OutboxStatus.FAILED, cutoff);
-
-        if (failedEntries.isEmpty()) {
-            return;
-        }
-
-        log.warn("Cleanup: deleting {} FAILED entries older than 7 days", failedEntries.size());
-
-        // 옵션 1: 삭제
-        outboxRepository.deleteAll(failedEntries);
-
-        // 옵션 2: 아카이빙 (별도 테이블로 이동)
-        // archiveFailedEntries(failedEntries);
-    }
-
-    // ========================================
-    // Private Methods
-    // ========================================
-
-    private void processOutboxEntry(BoundedContextOutboxEntry entry) {
+    private void processOutbox(PaymentOutbox outbox) {
         try {
-            // 1. PROCESSING 상태로 전이
-            entry.markProcessing();
-            outboxRepository.save(entry);
+            // ✅ 외부 API 호출 (트랜잭션 밖!)
+            paymentGateway.charge(outbox);
 
-            // 2. 실제 처리 (외부 API 호출 등)
-            outboxProcessor.process(entry);
+            // 성공 처리
+            outbox.markCompleted();
+            outboxRepository.save(outbox);
 
-            // 3. COMPLETED 상태로 전이
-            entry.markCompleted(Instant.now());
-            outboxRepository.save(entry);
-
-            log.info("Outbox entry processed successfully: id={}, eventType={}",
-                entry.getId(), entry.getEventType());
+        } catch (RetryableException e) {
+            // 재시도 가능한 오류
+            outbox.scheduleRetry();
+            outboxRepository.save(outbox);
 
         } catch (Exception e) {
-            handleProcessingFailure(entry, e);
-        }
-    }
-
-    private void handleProcessingFailure(BoundedContextOutboxEntry entry, Exception e) {
-        boolean canRetry = entry.retry(e.getMessage());
-
-        if (canRetry) {
-            // 재시도 가능 → PENDING 복구
-            outboxRepository.save(entry);
-            log.warn("Outbox entry failed, will retry ({}/{}): id={}, eventType={}",
-                entry.getRetryCount(), entry.getMaxRetries(), entry.getId(), entry.getEventType(), e);
-        } else {
-            // Max retries 초과 → FAILED
-            outboxRepository.save(entry);
-            log.error("Outbox entry failed after {} retries: id={}, eventType={}",
-                entry.getMaxRetries(), entry.getId(), entry.getEventType(), e);
+            // 영구적 실패
+            outbox.markFailed(e.getMessage());
+            outboxRepository.save(outbox);
         }
     }
 }
 ```
 
+| 항목 | 평가 |
+|------|------|
+| **레이턴시** | ⚡ 빠름 (이벤트로 즉시 깨움) |
+| **구현 복잡도** | 🟡 중간 |
+| **크래시 안전성** | ✅ **Outbox가 DB에 저장됨** |
+| **재시도/DLQ** | ✅ **Outbox Status로 관리** |
+| **백프레셔** | 🟡 제한적 (SKIP LOCKED로 일부 가능) |
+| **적합 케이스** | ✅ **대부분의 프로덕션 환경** |
+| **결제 도메인** | ✅ **권장** |
+
+**핵심 장점**:
+- ✅ **즉시성**: 이벤트가 Relay를 깨워서 즉시 처리 (패턴 A 수준)
+- ✅ **안전성**: Outbox가 DB에 저장되어 크래시 복구 가능
+- ✅ **폴백 보장**: 주기적 폴링으로 이벤트 유실 대비
+- ✅ **멱등성**: `idemKey`로 중복 요청 방지
+- ✅ **재시도**: Outbox Status로 재시도 관리
+- ✅ **추가 인프라 불필요**: MQ 없이 MySQL만으로 구현
+
+**언제 사용?**:
+- ✅ **결제, 주문, 재고 등 critical 도메인**
+- ✅ MQ 도입 전 초기 단계
+- ✅ 중간 규모 처리량 (<10,000 msg/min)
+
 ---
 
-## 🎯 Processor 설계
+### 패턴 C: MQ 통합 (Event → MQ → Worker) - 🚀 **MQ 도입 시 권장**
 
-### OutboxProcessor.java
+**흐름**: Payment + Outbox 저장 → 커밋 → `@Async` 리스너가 **SQS/Kafka 발행** → 워커가 MQ 소비 → 외부 API 호출
 
 ```java
-package com.company.template.application.outbox.processor;
-
-import com.company.template.application.outbox.entity.BoundedContextOutboxEntry;
-import com.company.template.application.outbox.handler.OutboxHandler;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-/**
- * Outbox Processor: Event Type별 Handler 라우팅
- *
- * <h3>책임</h3>
- * <ul>
- *   <li>Event Type에 따라 적절한 Handler로 라우팅</li>
- *   <li>Handler 등록 및 관리</li>
- * </ul>
- *
- * @author Your Name
- * @since 2024-01-01
- */
-@Component
-public class OutboxProcessor {
-
-    private final Map<String, OutboxHandler> handlers;
-
-    public OutboxProcessor(List<OutboxHandler> handlerList) {
-        this.handlers = handlerList.stream()
-            .collect(Collectors.toMap(
-                OutboxHandler::getEventType,
-                Function.identity()
-            ));
-    }
+// 🚀 Pattern C - MQ 고도화 패턴
+@Service
+public class PaymentService {
 
     /**
-     * Outbox 엔트리 처리
-     *
-     * @param entry Outbox 엔트리
-     * @throws IllegalStateException Handler가 등록되지 않은 Event Type
+     * ✅ 1. 동일 트랜잭션으로 Payment + Outbox 저장 (패턴 B와 동일)
      */
-    public void process(BoundedContextOutboxEntry entry) {
-        OutboxHandler handler = handlers.get(entry.getEventType());
-
-        if (handler == null) {
-            throw new IllegalStateException(
-                "No handler found for event type: " + entry.getEventType()
-            );
-        }
-
-        handler.handle(entry);
-    }
-}
-```
-
-### OutboxHandler.java (Interface)
-
-```java
-package com.company.template.application.outbox.handler;
-
-import com.company.template.application.outbox.entity.BoundedContextOutboxEntry;
-
-/**
- * Outbox Handler Interface
- *
- * <p>Event Type별로 구현하여 실제 처리 로직을 작성합니다.</p>
- *
- * @author Your Name
- * @since 2024-01-01
- */
-public interface OutboxHandler {
-
-    /**
-     * 처리할 Event Type 반환
-     *
-     * @return Event Type (예: "ORDER_CREATED")
-     */
-    String getEventType();
-
-    /**
-     * Outbox 엔트리 처리
-     *
-     * @param entry Outbox 엔트리
-     * @throws Exception 처리 실패 시
-     */
-    void handle(BoundedContextOutboxEntry entry) throws Exception;
-}
-```
-
-### OrderCreatedOutboxHandler.java (Example)
-
-```java
-package com.company.template.application.outbox.handler.order;
-
-import com.company.template.application.outbox.entity.BoundedContextOutboxEntry;
-import com.company.template.application.outbox.handler.OutboxHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-/**
- * ORDER_CREATED Event Handler
- *
- * <h3>책임</h3>
- * <ul>
- *   <li>주문 생성 이벤트 처리</li>
- *   <li>재고 감소 (Inventory API)</li>
- *   <li>주문 확인 이메일 발송</li>
- * </ul>
- *
- * @author Your Name
- * @since 2024-01-01
- */
-@Component
-public class OrderCreatedOutboxHandler implements OutboxHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(OrderCreatedOutboxHandler.class);
-
-    private final ObjectMapper objectMapper;
-    private final InventoryClient inventoryClient;
-    private final EmailService emailService;
-
-    public OrderCreatedOutboxHandler(
-            ObjectMapper objectMapper,
-            InventoryClient inventoryClient,
-            EmailService emailService) {
-        this.objectMapper = objectMapper;
-        this.inventoryClient = inventoryClient;
-        this.emailService = emailService;
-    }
-
-    @Override
-    public String getEventType() {
-        return "ORDER_CREATED";
-    }
-
-    @Override
-    public void handle(BoundedContextOutboxEntry entry) throws Exception {
-        // 1. Payload 파싱
-        OrderCreatedPayload payload = objectMapper.readValue(
-            entry.getPayload(),
-            OrderCreatedPayload.class
-        );
-
-        log.info("Processing ORDER_CREATED: orderId={}, customerId={}",
-            payload.getOrderId(), payload.getCustomerId());
-
-        // 2. 재고 감소 (외부 API)
-        inventoryClient.decreaseStock(payload.getItems());
-
-        // 3. 이메일 발송
-        emailService.sendOrderConfirmation(
-            payload.getOrderId(),
-            payload.getCustomerId()
-        );
-
-        log.info("ORDER_CREATED processed successfully: orderId={}", payload.getOrderId());
-    }
-
-    // ========================================
-    // Payload DTO
-    // ========================================
-
-    public static class OrderCreatedPayload {
-        private String orderId;
-        private String customerId;
-        private List<OrderLineItemDto> items;
-
-        // Getters/Setters
-        public String getOrderId() {
-            return orderId;
-        }
-
-        public void setOrderId(String orderId) {
-            this.orderId = orderId;
-        }
-
-        public String getCustomerId() {
-            return customerId;
-        }
-
-        public void setCustomerId(String customerId) {
-            this.customerId = customerId;
-        }
-
-        public List<OrderLineItemDto> getItems() {
-            return items;
-        }
-
-        public void setItems(List<OrderLineItemDto> items) {
-            this.items = items;
-        }
-    }
-
-    public static class OrderLineItemDto {
-        private String productId;
-        private int quantity;
-
-        // Getters/Setters
-        public String getProductId() {
-            return productId;
-        }
-
-        public void setProductId(String productId) {
-            this.productId = productId;
-        }
-
-        public int getQuantity() {
-            return quantity;
-        }
-
-        public void setQuantity(int quantity) {
-            this.quantity = quantity;
-        }
-    }
-}
-```
-
----
-
-## 🚀 ECS 배포 전략
-
-### 아키텍처: Main Application + Outbox Worker
-
-```
-┌─────────────────────────────────────────┐
-│ ECS Service: main-app                   │
-├─────────────────────────────────────────┤
-│ - spring.profiles.active=production     │
-│ - SCHEDULER_ENABLED=false               │
-│ - Replicas: 3 (Auto Scaling)            │
-│ - 역할: REST API 처리                   │
-└─────────────────────────────────────────┘
-
-┌─────────────────────────────────────────┐
-│ ECS Service: outbox-worker              │
-├─────────────────────────────────────────┤
-│ - spring.profiles.active=production,    │
-│   scheduler                             │
-│ - SCHEDULER_ENABLED=true                │
-│ - Replicas: 1 (고정, 중복 처리 방지)    │
-│ - 역할: Outbox 폴링 및 처리             │
-└─────────────────────────────────────────┘
-```
-
-### docker-compose.yml (로컬 개발 환경)
-
-```yaml
-version: '3.8'
-
-services:
-  # Main Application
-  app:
-    image: my-spring-app:latest
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-      SCHEDULER_ENABLED: "false"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mydb
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: password
-    depends_on:
-      - mysql
-
-  # Outbox Scheduler Worker (별도 Task)
-  outbox-worker:
-    image: my-spring-app:latest
-    environment:
-      SPRING_PROFILES_ACTIVE: local,scheduler
-      SCHEDULER_ENABLED: "true"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mydb
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: password
-    depends_on:
-      - mysql
-
-  # MySQL
-  mysql:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: mydb
-    volumes:
-      - mysql-data:/var/lib/mysql
-
-volumes:
-  mysql-data:
-```
-
-### application-scheduler.yml
-
-```yaml
-# Scheduler Worker 전용 프로파일
-
-spring:
-  # ========================================
-  # Web Application 비활성화
-  # ========================================
-  main:
-    web-application-type: none  # REST API 비활성화 (Scheduler만 실행)
-
-  # ========================================
-  # Scheduler 설정
-  # ========================================
-  task:
-    scheduling:
-      pool:
-        size: 10  # Scheduler 스레드 풀 크기
-      thread-name-prefix: outbox-scheduler-
-
-  # ========================================
-  # Logging (Scheduler 전용)
-  # ========================================
-logging:
-  level:
-    com.company.template.application.outbox.scheduler: INFO
-    com.company.template.application.outbox.processor: DEBUG
-    com.company.template.application.outbox.handler: DEBUG
-```
-
-### ECS Task Definition (Terraform 예시)
-
-```hcl
-# Main Application Task
-resource "aws_ecs_task_definition" "main_app" {
-  family                   = "main-app"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "1024"
-  memory                   = "2048"
-
-  container_definitions = jsonencode([{
-    name  = "main-app"
-    image = "my-ecr-repo/my-spring-app:latest"
-
-    environment = [
-      {
-        name  = "SPRING_PROFILES_ACTIVE"
-        value = "production"
-      },
-      {
-        name  = "SCHEDULER_ENABLED"
-        value = "false"
-      }
-    ]
-
-    portMappings = [{
-      containerPort = 8080
-      protocol      = "tcp"
-    }]
-  }])
-}
-
-# Outbox Worker Task
-resource "aws_ecs_task_definition" "outbox_worker" {
-  family                   = "outbox-worker"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "512"
-  memory                   = "1024"
-
-  container_definitions = jsonencode([{
-    name  = "outbox-worker"
-    image = "my-ecr-repo/my-spring-app:latest"
-
-    environment = [
-      {
-        name  = "SPRING_PROFILES_ACTIVE"
-        value = "production,scheduler"
-      },
-      {
-        name  = "SCHEDULER_ENABLED"
-        value = "true"
-      }
-    ]
-  }])
-}
-
-# Main Application Service (Auto Scaling)
-resource "aws_ecs_service" "main_app" {
-  name            = "main-app"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.main_app.arn
-  desired_count   = 3  # Auto Scaling 가능
-
-  # ... (생략)
-}
-
-# Outbox Worker Service (단일 인스턴스)
-resource "aws_ecs_service" "outbox_worker" {
-  name            = "outbox-worker"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.outbox_worker.arn
-  desired_count   = 1  # 반드시 1개 (중복 처리 방지)
-
-  # ... (생략)
-}
-```
-
----
-
-## 📊 모니터링 및 운영
-
-### 핵심 메트릭
-
-```sql
--- 1. Outbox 큐 길이 (PENDING 엔트리 개수)
-SELECT COUNT(*) AS pending_count
-FROM bounded_context_outbox
-WHERE status = 'PENDING';
-
--- 2. 평균 처리 시간
-SELECT
-    AVG(TIMESTAMPDIFF(SECOND, created_at, processed_at)) AS avg_processing_time_sec
-FROM bounded_context_outbox
-WHERE status = 'COMPLETED'
-  AND processed_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR);
-
--- 3. 실패율 (최근 1시간)
-SELECT
-    event_type,
-    COUNT(*) AS total_count,
-    SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) AS failed_count,
-    ROUND(SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS failure_rate
-FROM bounded_context_outbox
-WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
-GROUP BY event_type;
-
--- 4. Stuck 엔트리 (5분 이상 PROCESSING)
-SELECT
-    id,
-    event_type,
-    aggregate_id,
-    created_at,
-    TIMESTAMPDIFF(MINUTE, created_at, NOW()) AS stuck_minutes
-FROM bounded_context_outbox
-WHERE status = 'PROCESSING'
-  AND created_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE);
-```
-
-### CloudWatch Alarms (예시)
-
-```hcl
-# 1. Outbox 큐 길이 알람 (PENDING > 1000)
-resource "aws_cloudwatch_metric_alarm" "outbox_queue_length" {
-  alarm_name          = "outbox-queue-length-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "OutboxPendingCount"
-  namespace           = "MyApp/Outbox"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "1000"
-  alarm_description   = "Outbox PENDING 엔트리가 1000개 초과"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-}
-
-# 2. 처리 실패율 알람 (Failure Rate > 10%)
-resource "aws_cloudwatch_metric_alarm" "outbox_failure_rate" {
-  alarm_name          = "outbox-failure-rate-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "OutboxFailureRate"
-  namespace           = "MyApp/Outbox"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = "10"
-  alarm_description   = "Outbox 실패율이 10% 초과"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-}
-```
-
-### 로그 기반 모니터링 (Elasticsearch/Kibana)
-
-```json
-{
-  "query": {
-    "bool": {
-      "must": [
-        { "match": { "logger_name": "OutboxScheduler" } },
-        { "match": { "level": "ERROR" } },
-        { "range": { "@timestamp": { "gte": "now-1h" } } }
-      ]
-    }
-  }
-}
-```
-
----
-
-## ⚠️ 주의사항 및 Best Practices
-
-### 1. 단일 Scheduler 인스턴스 유지
-
-**중복 처리 방지**:
-```yaml
-# ECS Service
-desired_count: 1  # 반드시 1개
-```
-
-**이유**: 여러 인스턴스가 동시에 폴링하면 동일한 엔트리를 중복 처리할 수 있습니다.
-
-### 2. 멱등성 보장
-
-**Handler는 반드시 멱등성을 보장해야 합니다**:
-```java
-@Override
-public void handle(BoundedContextOutboxEntry entry) throws Exception {
-    // ✅ 멱등성 보장: 동일한 orderId로 여러 번 호출해도 안전
-    inventoryClient.decreaseStockIdempotent(payload.getOrderId(), payload.getItems());
-
-    // ❌ 멱등성 미보장: 중복 호출 시 재고가 2배로 감소
-    inventoryClient.decreaseStock(payload.getItems());
-}
-```
-
-### 3. Payload 크기 제한
-
-**MySQL JSON 타입 제한**:
-- MySQL 8.0: 최대 1GB (실제로는 max_allowed_packet 설정에 의존)
-- 권장: Payload는 10KB 이하로 유지
-
-**대용량 Payload 처리**:
-```java
-// ❌ 나쁜 예: 전체 Order 데이터를 Payload에 저장
-String payload = objectMapper.writeValueAsString(order);
-
-// ✅ 좋은 예: Order ID만 저장, Handler에서 조회
-String payload = objectMapper.writeValueAsString(Map.of(
-    "orderId", order.getId().toString()
-));
-```
-
-### 4. 트랜잭션 경계 주의
-
-**Scheduler의 @Transactional 범위**:
-```java
-@Transactional
-public void pollOutbox() {
-    // ✅ DB 조회는 트랜잭션 내부
-    List<BoundedContextOutboxEntry> entries = outboxRepository.findPendingEntries(...);
-
-    for (BoundedContextOutboxEntry entry : entries) {
-        // ✅ 각 엔트리 처리는 별도 try-catch
-        processOutboxEntry(entry);
-    }
-}
-
-private void processOutboxEntry(BoundedContextOutboxEntry entry) {
-    try {
-        // ⚠️ 외부 API 호출은 트랜잭션 밖에서 (상위 메서드가 @Transactional이지만, 여기서는 DB 업데이트만)
-        outboxProcessor.process(entry);
-
-        // ✅ DB 업데이트는 트랜잭션 내부
-        entry.markCompleted(Instant.now());
-        outboxRepository.save(entry);
-    } catch (Exception e) {
-        // ✅ 실패 시 재시도 또는 FAILED 처리
-        handleProcessingFailure(entry, e);
-    }
-}
-```
-
-### 5. MySQL Replication Lag 고려
-
-**5초 버퍼의 이유**:
-```java
-Instant cutoff = Instant.now().minus(5, ChronoUnit.SECONDS);
-```
-
-- **Primary-Replica 구조**: Write는 Primary, Read는 Replica
-- **Replication Lag**: Primary → Replica 동기화 지연 (보통 1-3초)
-- **5초 버퍼**: 트랜잭션 커밋 후 즉시 폴링하지 않고 5초 대기하여 Replica 동기화 보장
-
----
-
-## 🧪 테스트 전략
-
-### 1. Unit Test (Handler)
-
-```java
-@ExtendWith(MockitoExtension.class)
-class OrderCreatedOutboxHandlerTest {
-
-    @Mock
-    private InventoryClient inventoryClient;
-
-    @Mock
-    private EmailService emailService;
-
-    @Mock
-    private ObjectMapper objectMapper;
-
-    @InjectMocks
-    private OrderCreatedOutboxHandler handler;
-
-    @Test
-    void handle_ShouldDecreaseStockAndSendEmail() throws Exception {
-        // Given
-        BoundedContextOutboxEntry entry = BoundedContextOutboxEntry.builder()
-            .aggregateType("ORDER")
-            .aggregateId("order-123")
-            .eventType("ORDER_CREATED")
-            .payload("{\"orderId\":\"order-123\",\"customerId\":\"customer-456\"}")
+    @Transactional
+    public PaymentId createPayment(CreatePaymentCommand command) {
+        Payment payment = paymentRepository.save(Payment.create(command));
+
+        PaymentOutbox outbox = PaymentOutbox.builder()
+            .aggregateType("PAYMENT")
+            .aggregateId(payment.getId().toString())
+            .eventType("PAYMENT_CREATED")
+            .payload(toJson(payment))
             .status(OutboxStatus.PENDING)
+            .idemKey(command.idemKey())
             .build();
 
-        OrderCreatedPayload payload = new OrderCreatedPayload();
-        payload.setOrderId("order-123");
-        payload.setCustomerId("customer-456");
+        outboxRepository.save(outbox);
 
-        when(objectMapper.readValue(anyString(), eq(OrderCreatedPayload.class)))
-            .thenReturn(payload);
+        return payment.getId();
+    }
+}
 
-        // When
-        handler.handle(entry);
+/**
+ * 🚀 2. 트랜잭션 커밋 후 MQ 발행
+ */
+@Component
+public class OutboxMqPublisher {
 
-        // Then
-        verify(inventoryClient).decreaseStock(anyList());
-        verify(emailService).sendOrderConfirmation("order-123", "customer-456");
+    private final SqsTemplate sqsTemplate;  // or KafkaTemplate
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onOutboxCreated(OutboxCreatedEvent event) {
+        // ✅ SQS/Kafka에 메시지 발행
+        PaymentOutbox outbox = outboxRepository.findById(event.outboxId())
+            .orElseThrow();
+
+        sqsTemplate.send("payment-queue", OutboxMessage.of(outbox));
+
+        // ✅ Outbox 상태 업데이트 (PENDING → PUBLISHED)
+        outbox.markPublished();
+        outboxRepository.save(outbox);
+    }
+}
+
+/**
+ * 🚀 3. 별도 워커가 MQ 소비 후 외부 API 호출
+ */
+@Component
+public class PaymentMqWorker {
+
+    @SqsListener(value = "payment-queue", deletionPolicy = ON_SUCCESS)
+    public void processPayment(OutboxMessage message) {
+        try {
+            // ✅ 외부 API 호출
+            paymentGateway.charge(message.paymentId(), message.amount());
+
+            // ✅ Outbox 완료 처리
+            PaymentOutbox outbox = outboxRepository.findById(message.outboxId())
+                .orElseThrow();
+
+            outbox.markCompleted();
+            outboxRepository.save(outbox);
+
+        } catch (RetryableException e) {
+            // ⚠️ SQS가 자동 재시도 (Visibility Timeout)
+            throw e;
+
+        } catch (Exception e) {
+            // ❌ DLQ로 이동 (SQS Dead Letter Queue)
+            PaymentOutbox outbox = outboxRepository.findById(message.outboxId())
+                .orElseThrow();
+
+            outbox.markFailed(e.getMessage());
+            outboxRepository.save(outbox);
+        }
+    }
+}
+
+/**
+ * 🚀 폴백: 스케줄러가 PENDING 상태를 MQ 재발행
+ */
+@Component
+public class OutboxRecoveryScheduler {
+
+    @Scheduled(fixedDelay = 60000)  // 1분마다
+    public void recoverPendingOutbox() {
+        // ✅ 5분 이상 PENDING 상태인 항목 재발행
+        List<PaymentOutbox> stuck = outboxRepository
+            .findStuckPending(Duration.ofMinutes(5));
+
+        stuck.forEach(outbox -> {
+            sqsTemplate.send("payment-queue", OutboxMessage.of(outbox));
+            outbox.markPublished();
+            outboxRepository.save(outbox);
+        });
     }
 }
 ```
 
-### 2. Integration Test (Scheduler + Repository)
+| 항목 | 평가 |
+|------|------|
+| **레이턴시** | ⚡ 매우 빠름 (MQ 버퍼링) |
+| **구현 복잡도** | 🔴 높음 (MQ 인프라 필요) |
+| **크래시 안전성** | ✅ **MQ + Outbox 이중 보장** |
+| **재시도/DLQ** | ✅ **MQ 네이티브 지원** |
+| **백프레셔** | ✅ **MQ가 자동 조절** |
+| **순서 보장** | ✅ Kafka Partition / SQS FIFO |
+| **중복 제거** | ✅ MQ Deduplication + IdemKey |
+| **적합 케이스** | ✅ **대규모 처리량** (>10,000 msg/min) |
+| **결제 도메인** | ✅ **최고 수준 안정성** |
 
-```java
-@SpringBootTest
-@Testcontainers
-class OutboxSchedulerIntegrationTest {
+**핵심 장점**:
+- ✅ **MQ 이점 총집합**: 백프레셔, 재시도, DLQ, 순서/중복 제어
+- ✅ **이벤트 유실 없음**: MQ 내구성 보장
+- ✅ **확장성**: 워커 수평 확장 (Consumer Group)
+- ✅ **모니터링**: CloudWatch Metrics, Kafka Dashboard
 
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-        .withDatabaseName("testdb")
-        .withUsername("test")
-        .withPassword("test");
+**언제 사용?**:
+- ✅ **MQ 인프라가 이미 있는 경우**
+- ✅ 대규모 처리량 (>10,000 msg/min)
+- ✅ 여러 Consumer가 필요한 경우 (Fan-out)
+- ✅ 지리적 분산 처리 필요
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-    }
+---
 
-    @Autowired
-    private BoundedContextOutboxRepository outboxRepository;
+## 📊 패턴 선택 가이드
 
-    @Autowired
-    private OutboxScheduler outboxScheduler;
+### Decision Tree
 
-    @Test
-    void pollOutbox_ShouldProcessPendingEntries() {
-        // Given
-        BoundedContextOutboxEntry entry = BoundedContextOutboxEntry.builder()
-            .aggregateType("ORDER")
-            .aggregateId("order-123")
-            .eventType("ORDER_CREATED")
-            .payload("{\"orderId\":\"order-123\"}")
-            .status(OutboxStatus.PENDING)
-            .createdAt(Instant.now().minus(10, ChronoUnit.SECONDS))  // 10초 전 생성
-            .build();
-
-        outboxRepository.save(entry);
-
-        // When
-        outboxScheduler.pollOutbox();
-
-        // Then
-        BoundedContextOutboxEntry processed = outboxRepository.findById(entry.getId()).orElseThrow();
-        assertThat(processed.getStatus()).isEqualTo(OutboxStatus.COMPLETED);
-        assertThat(processed.getProcessedAt()).isNotNull();
-    }
-}
+```
+외부 API 호출이 필요한가?
+├─ Yes → Outbox Pattern 적용
+│   │
+│   ├─ MQ 인프라 있음? → ✅ **패턴 C (MQ 통합)**
+│   │   - SQS, Kafka 등 활용
+│   │   - 최고 수준 안정성
+│   │
+│   ├─ MQ 없음 + Critical 도메인? → ✅ **패턴 B (Hybrid)** ⭐ **권장**
+│   │   - 결제, 주문, 재고
+│   │   - 크래시 안전 + 재시도
+│   │
+│   └─ 저위험 + 단순함 우선? → ⚠️ 패턴 A (Direct)
+│       - Push 알림, 로그
+│       - ⚠️ 결제엔 부적합
+│
+└─ No → 일반 트랜잭션 패턴
+    - @Transactional만으로 충분
 ```
 
+### 처리량별 권장사항
+
+| 처리량 | 권장 패턴 | 이유 |
+|--------|----------|------|
+| **< 100 msg/min** | 패턴 B | Outbox + 이벤트로 충분 |
+| **100 - 1,000 msg/min** | 패턴 B | MySQL 성능 범위 내 |
+| **1,000 - 10,000 msg/min** | 패턴 B or C | B로 시작, 병목 시 C로 |
+| **> 10,000 msg/min** | **패턴 C** | MQ 필수 |
+
+### 도메인별 권장사항
+
+| 도메인 | 권장 패턴 | 이유 |
+|--------|----------|------|
+| **결제 (Payment)** | B 또는 C | 중복 방지 + 재시도 필수 |
+| **주문 (Order)** | B 또는 C | 상태 일관성 중요 |
+| **재고 (Inventory)** | B 또는 C | 동시성 제어 필요 |
+| **알림 (Notification)** | A 또는 B | 유실 허용 가능하면 A |
+| **로그 (Logging)** | A | 단순 + 빠름 |
+
 ---
 
-## 📖 참고 자료
+## 🗄️ Outbox Schema 설계
 
-- [Outbox Pattern (Martin Fowler)](https://microservices.io/patterns/data/transactional-outbox.html)
-- [MySQL JSON Type](https://dev.mysql.com/doc/refman/8.0/en/json.html)
-- [Spring @Scheduled](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/annotation/Scheduled.html)
-- [AWS ECS Task Definition](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html)
-
----
-
-## 🎯 마이그레이션 가이드: SQS → Outbox
-
-### Step 1: Schema 생성
+### Outbox 테이블
 
 ```sql
--- MySQL 8.0+
-CREATE TABLE bounded_context_outbox (
+-- Outbox: 외부 API 호출 대기열
+CREATE TABLE payment_outbox (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    aggregate_type VARCHAR(50) NOT NULL,
-    aggregate_id VARCHAR(255) NOT NULL,
-    event_type VARCHAR(50) NOT NULL,
-    payload JSON NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    retry_count INT NOT NULL DEFAULT 0,
-    max_retries INT NOT NULL DEFAULT 3,
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    processed_at DATETIME(6) NULL,
-    error_message TEXT NULL,
 
+    -- Aggregate 정보
+    aggregate_type VARCHAR(50) NOT NULL COMMENT '집합 타입 (PAYMENT, ORDER 등)',
+    aggregate_id VARCHAR(255) NOT NULL COMMENT '집합 ID',
+    event_type VARCHAR(50) NOT NULL COMMENT '이벤트 타입 (CREATED, COMPLETED 등)',
+
+    -- Payload
+    payload JSON NOT NULL COMMENT '이벤트 페이로드 (JSON)',
+
+    -- 멱등성
+    idem_key VARCHAR(255) NOT NULL COMMENT '멱등성 키 (중복 방지)',
+
+    -- 상태 관리
+    status VARCHAR(20) NOT NULL COMMENT '처리 상태 (PENDING, PUBLISHED, COMPLETED, FAILED)',
+    retry_count INT NOT NULL DEFAULT 0 COMMENT '재시도 횟수',
+    max_retries INT NOT NULL DEFAULT 3 COMMENT '최대 재시도 횟수',
+
+    -- 시각 정보
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 시각',
+    published_at DATETIME(6) NULL COMMENT 'MQ 발행 시각 (패턴 C)',
+    processed_at DATETIME(6) NULL COMMENT '처리 완료 시각',
+
+    -- 에러 정보
+    error_message TEXT NULL COMMENT '에러 메시지 (실패 시)',
+
+    -- 인덱스
+    UNIQUE INDEX idx_outbox_idem_key (idem_key),
     INDEX idx_outbox_status_created (status, created_at),
     INDEX idx_outbox_aggregate (aggregate_type, aggregate_id)
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### Step 2: Entity 및 Repository 추가
+### Outbox Status 전이
 
-위의 `BoundedContextOutboxEntry.java` 및 `BoundedContextOutboxRepository.java` 추가
-
-### Step 3: Scheduler 및 Processor 추가
-
-위의 `OutboxScheduler.java` 및 `OutboxProcessor.java` 추가
-
-### Step 4: Handler 구현
-
-기존 SQS Consumer를 Outbox Handler로 변경:
-
-```java
-// ❌ 기존 (SQS Consumer)
-@KafkaListener(topics = "order-created-topic")
-public void handleOrderCreated(OrderCreatedMessage message) {
-    inventoryClient.decreaseStock(message.getItems());
-    emailService.sendOrderConfirmation(message.getOrderId(), message.getCustomerId());
-}
-
-// ✅ 신규 (Outbox Handler)
-@Component
-public class OrderCreatedOutboxHandler implements OutboxHandler {
-    @Override
-    public String getEventType() {
-        return "ORDER_CREATED";
-    }
-
-    @Override
-    public void handle(BoundedContextOutboxEntry entry) throws Exception {
-        OrderCreatedPayload payload = parsePayload(entry.getPayload());
-        inventoryClient.decreaseStock(payload.getItems());
-        emailService.sendOrderConfirmation(payload.getOrderId(), payload.getCustomerId());
-    }
-}
 ```
+PENDING      초기 생성 (트랜잭션 커밋 완료)
+  ↓
+PUBLISHED    MQ 발행 완료 (패턴 C 전용)
+  ↓
+COMPLETED    외부 API 호출 성공
+  ↓
+(종료)
 
-### Step 5: 비즈니스 로직 수정
+또는
 
-```java
-// ❌ 기존 (SQS 발행)
-@Transactional
-public void createOrder(CreateOrderCommand cmd) {
-    Order order = orderRepository.save(cmd.toEntity());
-
-    // SQS 발행 (트랜잭션 밖)
-    sqsClient.sendMessage(OrderCreatedMessage.of(order));
-}
-
-// ✅ 신규 (Outbox 저장)
-@Transactional
-public void createOrder(CreateOrderCommand cmd) {
-    Order order = orderRepository.save(cmd.toEntity());
-
-    // Outbox 저장 (동일 트랜잭션)
-    BoundedContextOutboxEntry outbox = BoundedContextOutboxEntry.builder()
-        .aggregateType("ORDER")
-        .aggregateId(order.getId().toString())
-        .eventType("ORDER_CREATED")
-        .payload(toJson(order))
-        .status(OutboxStatus.PENDING)
-        .build();
-
-    outboxRepository.save(outbox);
-}
+PENDING → FAILED   (max_retries 초과 or 영구적 실패)
 ```
-
-### Step 6: ECS Task Definition 수정
-
-Main App과 Outbox Worker를 별도 Task로 분리 (위의 ECS 배포 전략 참고)
-
-### Step 7: 모니터링 설정
-
-CloudWatch Alarms 및 Dashboard 설정 (위의 모니터링 섹션 참고)
 
 ---
 
-**✅ Outbox Pattern 문서 작성 완료!**
+## 🔧 스케줄러 락 전략: FOR UPDATE SKIP LOCKED
 
-이제 다음 단계인 **커맨드 및 스킬 세팅**으로 넘어갈 준비가 되었습니다.
+### 문제: 중복 처리 방지
+
+**시나리오**:
+- 스케줄러가 1초마다 Outbox 조회
+- 여러 인스턴스가 동시에 실행 중
+- **동일한 Outbox를 중복 처리하면 안 됨!**
+
+### ✅ 해결책: FOR UPDATE SKIP LOCKED
+
+```java
+/**
+ * ✅ 중복 처리 방지: FOR UPDATE SKIP LOCKED
+ */
+@Repository
+public interface PaymentOutboxRepository extends JpaRepository<PaymentOutbox, Long> {
+
+    /**
+     * PENDING 엔트리 조회 with Lock
+     *
+     * <p>FOR UPDATE SKIP LOCKED 전략:</p>
+     * <ul>
+     *   <li>다른 인스턴스가 Lock 보유 중이면 <strong>스킵</strong></li>
+     *   <li>중복 처리 원천 차단</li>
+     *   <li>동시성 높은 환경에 최적</li>
+     * </ul>
+     */
+    @Query(value = """
+        SELECT * FROM payment_outbox
+        WHERE status = 'PENDING'
+          AND created_at < :cutoff
+        ORDER BY created_at ASC
+        LIMIT :limit
+        FOR UPDATE SKIP LOCKED
+        """, nativeQuery = true)
+    List<PaymentOutbox> findPendingWithLock(
+        @Param("cutoff") Instant cutoff,
+        @Param("limit") int limit
+    );
+}
+```
+
+### FOR UPDATE SKIP LOCKED vs FOR UPDATE
+
+| 전략 | 동작 | 장점 | 단점 |
+|------|------|------|------|
+| **FOR UPDATE** | Lock 대기 | 순서 보장 | 대기 시간 발생 (성능 저하) |
+| **FOR UPDATE SKIP LOCKED** | Lock 스킵 | ⚡ 빠름, 중복 없음 | 순서 보장 안 됨 |
+
+**권장**: Outbox는 **순서보다 처리량이 중요**하므로 `SKIP LOCKED` 사용
+
+---
+
+## 🎯 실전 예제: 결제 시스템
+
+### 패턴 B: Outbox + Event Wake-up
+
+```java
+/**
+ * Payment Service - Transactional Outbox Pattern
+ *
+ * @author development-team
+ * @since 1.0.0
+ */
+@Service
+public class PaymentService {
+
+    private final PaymentRepository paymentRepository;
+    private final PaymentOutboxRepository outboxRepository;
+
+    /**
+     * ✅ 결제 생성: Payment + Outbox 동일 트랜잭션
+     */
+    @Transactional
+    public PaymentId createPayment(CreatePaymentCommand command) {
+        // 1. 멱등성 검사
+        if (outboxRepository.existsByIdemKey(command.idemKey())) {
+            PaymentOutbox existing = outboxRepository.findByIdemKey(command.idemKey())
+                .orElseThrow();
+            return PaymentId.of(existing.getAggregateId());
+        }
+
+        // 2. Payment 생성
+        Payment payment = Payment.create(
+            command.customerId(),
+            command.amount(),
+            command.cardInfo()
+        );
+        paymentRepository.save(payment);
+
+        // 3. Outbox 기록 (동일 트랜잭션!)
+        PaymentOutbox outbox = PaymentOutbox.builder()
+            .aggregateType("PAYMENT")
+            .aggregateId(payment.getId().toString())
+            .eventType("PAYMENT_CREATED")
+            .payload(toJson(payment))
+            .status(OutboxStatus.PENDING)
+            .idemKey(command.idemKey())
+            .build();
+
+        outboxRepository.save(outbox);
+
+        // ✅ 둘 다 성공 or 둘 다 실패 (원자성)
+        return payment.getId();
+    }
+}
+
+/**
+ * Outbox Relay - Event Wake-up + Fallback Polling
+ */
+@Component
+public class PaymentOutboxRelay {
+
+    private final PaymentOutboxRepository outboxRepository;
+    private final PaymentGateway paymentGateway;
+
+    /**
+     * ✅ 1차: 이벤트로 즉시 처리 (Wake-up)
+     */
+    @EventListener
+    @Async
+    public void onWakeupSignal(OutboxWakeupSignal signal) {
+        processOutbox();
+    }
+
+    /**
+     * ✅ 2차: 주기적 폴링 (Fallback, 이벤트 유실 대비)
+     */
+    @Scheduled(fixedDelay = 5000)  // 5초마다
+    public void pollOutbox() {
+        processOutbox();
+    }
+
+    private void processOutbox() {
+        Instant cutoff = Instant.now().minus(3, ChronoUnit.SECONDS);
+
+        // ✅ FOR UPDATE SKIP LOCKED (중복 처리 방지)
+        List<PaymentOutbox> pending = outboxRepository
+            .findPendingWithLock(cutoff, 10);
+
+        if (pending.isEmpty()) {
+            return;  // 조용히 종료
+        }
+
+        log.info("Processing {} pending outbox entries", pending.size());
+
+        pending.forEach(this::processEntry);
+    }
+
+    private void processEntry(PaymentOutbox outbox) {
+        try {
+            // 1. 상태 전이: PENDING → IN_PROGRESS
+            outbox.markInProgress();
+            outboxRepository.save(outbox);
+
+            // 2. 외부 PG API 호출 (트랜잭션 밖!)
+            PaymentResponse response = paymentGateway.charge(
+                PaymentId.of(outbox.getAggregateId()),
+                parsePayload(outbox.getPayload())
+            );
+
+            // 3. 성공 처리: IN_PROGRESS → COMPLETED
+            outbox.markCompleted(response.transactionId());
+            outboxRepository.save(outbox);
+
+            log.info("Payment processed successfully: outboxId={}, paymentId={}",
+                outbox.getId(), outbox.getAggregateId());
+
+        } catch (RetryableException e) {
+            // 재시도 가능한 오류 (네트워크 타임아웃 등)
+            handleRetry(outbox, e);
+
+        } catch (Exception e) {
+            // 영구적 실패 (카드 한도 초과 등)
+            handleFailure(outbox, e);
+        }
+    }
+
+    private void handleRetry(PaymentOutbox outbox, Exception e) {
+        boolean canRetry = outbox.retry(e.getMessage());
+
+        if (canRetry) {
+            // PENDING으로 되돌림 (재시도 대기)
+            outboxRepository.save(outbox);
+            log.warn("Payment will retry ({}/{}): outboxId={}, error={}",
+                outbox.getRetryCount(), outbox.getMaxRetries(),
+                outbox.getId(), e.getMessage());
+        } else {
+            // Max retries 초과 → FAILED
+            outboxRepository.save(outbox);
+            log.error("Payment failed after {} retries: outboxId={}",
+                outbox.getMaxRetries(), outbox.getId(), e);
+        }
+    }
+
+    private void handleFailure(PaymentOutbox outbox, Exception e) {
+        outbox.markFailed(e.getMessage());
+        outboxRepository.save(outbox);
+
+        log.error("Payment permanently failed: outboxId={}, error={}",
+            outbox.getId(), e.getMessage(), e);
+    }
+}
+```
+
+---
+
+## 📋 Transactional Outbox 체크리스트
+
+### 설계
+- [ ] Outbox 테이블 생성 (`idem_key` UNIQUE 제약)
+- [ ] `FOR UPDATE SKIP LOCKED` 쿼리 작성
+- [ ] OutboxStatus Enum 정의 (PENDING/PUBLISHED/COMPLETED/FAILED)
+
+### 구현
+- [ ] Service: Payment + Outbox 동일 트랜잭션 (`@Transactional`)
+- [ ] Publisher: `@TransactionalEventListener(AFTER_COMMIT)`
+- [ ] Relay: `@EventListener` (Wake-up) + `@Scheduled` (Fallback)
+- [ ] 외부 API 호출은 트랜잭션 밖 (`@Async` or 별도 워커)
+
+### 안전성
+- [ ] 멱등성 검사 (`idemKey` 중복 체크)
+- [ ] 재시도 로직 (RetryableException vs PermanentException)
+- [ ] Max retries 설정 (기본 3회)
+- [ ] DLQ 처리 (FAILED 상태 모니터링)
+
+### 모니터링
+- [ ] PENDING 큐 길이 (< 1000)
+- [ ] 평균 처리 시간 (< 3초)
+- [ ] 실패율 (< 1%)
+- [ ] Stuck 엔트리 (5분 이상 IN_PROGRESS)
+
+---
+
+## 🚀 패턴 B → C 마이그레이션 가이드
+
+### Step 1: Outbox에 `published_at` 컬럼 추가
+
+```sql
+ALTER TABLE payment_outbox
+ADD COLUMN published_at DATETIME(6) NULL COMMENT 'MQ 발행 시각';
+```
+
+### Step 2: MQ Publisher 추가
+
+```java
+@Component
+public class OutboxMqPublisher {
+
+    private final SqsTemplate sqsTemplate;
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onOutboxCreated(OutboxCreatedEvent event) {
+        PaymentOutbox outbox = outboxRepository.findById(event.outboxId())
+            .orElseThrow();
+
+        // SQS 발행
+        sqsTemplate.send("payment-queue", OutboxMessage.of(outbox));
+
+        // PENDING → PUBLISHED
+        outbox.markPublished();
+        outboxRepository.save(outbox);
+    }
+}
+```
+
+### Step 3: MQ Worker 추가
+
+```java
+@Component
+public class PaymentMqWorker {
+
+    @SqsListener(value = "payment-queue", deletionPolicy = ON_SUCCESS)
+    public void processPayment(OutboxMessage message) {
+        // 외부 API 호출
+        paymentGateway.charge(message);
+
+        // PUBLISHED → COMPLETED
+        PaymentOutbox outbox = outboxRepository.findById(message.outboxId())
+            .orElseThrow();
+        outbox.markCompleted();
+        outboxRepository.save(outbox);
+    }
+}
+```
+
+### Step 4: 기존 Relay 제거 (점진적)
+
+- MQ Worker 안정화 후 기존 `OutboxRelay` 제거
+- Fallback Scheduler는 유지 (MQ 장애 대비)
+
+---
+
+## 📚 참고 자료
+
+**패턴**:
+- [Outbox Pattern (Martin Fowler)](https://microservices.io/patterns/data/transactional-outbox.html)
+- [Orchestration Pattern Overview](./00_orchestration-pattern-overview.md)
+- [Domain Events](../07-enterprise-patterns/event-driven/01_domain-events.md)
+
+**구현**:
+- [Spring TransactionalEventListener](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/event/TransactionalEventListener.html)
+- [MySQL JSON Type](https://dev.mysql.com/doc/refman/8.0/en/json.html)
+- [Spring @Scheduled](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/annotation/Scheduled.html)
+
+---
+
+**작성자**: Development Team
+**최종 수정일**: 2025-11-05
+**버전**: 2.0.0
+**주요 변경사항**:
+- Operation → Outbox (업계 표준 용어)
+- 3가지 패턴 비교 추가 (A/B/C)
+- 패턴 B를 기본 권장 패턴으로 설정
+- MQ 고도화 (패턴 C) 가이드 추가
+- FOR UPDATE SKIP LOCKED 락 전략 추가
+- senario.txt 패턴과 100% 일치

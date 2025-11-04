@@ -1,0 +1,49 @@
+1) 권장 전체 플로우 (Transactional Outbox + Orchestrator)
+
+A. 동기 API 요청 시점 (단일 로컬 트랜잭션)
+
+POST /payments 수신
+
+한 번의 로컬 트랜잭션으로:
+
+Payment 행 생성: status = PENDING
+
+Outbox 행 생성: type = PaymentRequested, payload, status = PENDING
+
+커밋 후 즉시 202 Accepted + paymentId 반환
+↳ 여기까지가 “사용자 동기 구간”. 외부 PG 호출은 절대 이 트랜잭션에 묶지 않음.
+
+B. Outbox Relay/Orchestrator (비동기 워커)
+
+SELECT … FOR UPDATE SKIP LOCKED(또는 lease 컬럼)으로 Outbox(status=PENDING)를 소량 배치로 집어옴
+
+각 행에 대해 짧은 트랜잭션으로 status=SENDING, leased_until=now+T 업데이트 후 커밋(락 해제)
+
+트랜잭션 밖에서 외부 PG 호출:
+
+Idempotency-Key = paymentId(또는 별도 멱등키)로 호출
+
+타임아웃/재시도(지수 백오프) + 서킷브레이커
+
+호출 결과에 따라 새로운 짧은 트랜잭션으로 내부 상태 변경:
+
+Payment.status 를 PROCESSING/REQUIRES_ACTION/FAILED 등으로 전이
+
+Outbox.status = DISPATCHED 또는 RETRY(+ next_attempt_at, attempt_count)
+
+낙관적 락(버전 컬럼) 추천
+
+포인트: 외부 호출은 항상 DB 트랜잭션 밖에서. 내부 업데이트는 짧고 자주 커밋되는 소규모 트랜잭션들로.
+
+2) 너가 물은 두 가지 쟁점
+(1) “아웃박스 조회 → 결제정보 조회”는 내부 트랜잭션 문제 없나?
+
+조회 자체는 OK. 다만 패턴상 이렇게 해:
+
+(잠금 포함된) ‘픽업 트랜잭션’: PENDING 아웃박스를 SENDING으로 바꾸며 **임대(lease)하거나 SKIP LOCKED**로 집어온다 → 커밋
+
+→ 트랜잭션 밖에서 외부 호출
+
+→ (결과 반영 트랜잭션): Payment/Outbox 상태 업데이트 후 커밋
+
+이렇게 하면 동시처리·중복처리·좀비 락을 피하면서도 at-least-once 처리 + 멱등키로 안전하게 간다.
