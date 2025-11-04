@@ -19,11 +19,25 @@
 - ❌ `@ManyToOne`, `@OneToMany`, `@OneToOne`, `@ManyToMany`
 - ✅ **`private Long userId;` (Long FK 사용)**
 
-### 4. Transaction 경계
+### 4. Transaction 경계 & Outbox Pattern
 - ❌ `@Transactional` 내 외부 API 호출
 - ✅ **트랜잭션은 짧게 유지, 외부 호출은 밖에서**
+- ✅ **외부 API 호출 시 Transactional Outbox Pattern 사용 (Pattern B 권장)**
+  - Pattern A (Direct Event): 지양 - 결제/금융엔 부적합
+  - **Pattern B (Outbox + Event Wake-up)**: 권장 - 프로덕션 표준
+  - Pattern C (MQ Integration): MQ 도입 시 권장
 
-### 5. Javadoc 필수
+### 5. Orchestration Pattern
+- ❌ `executeInternal()`에 `@Transactional` 사용
+- ✅ `executeInternal()`에 `@Async` 필수, 트랜잭션 밖에서 외부 API 호출
+- ❌ Command에 Lombok (`@Data`, `@Builder` 등)
+- ✅ Command는 Record 패턴 사용 (`public record XxxCommand`)
+- ❌ Operation Entity에 IdemKey Unique 제약 없음
+- ✅ `@UniqueConstraint(columnNames = {"idem_key"})` 필수
+- ❌ Orchestrator가 `boolean`/`void` 반환 또는 Exception throw
+- ✅ Orchestrator는 `Outcome` (Ok/Retry/Fail) 반환
+
+### 6. Javadoc 필수
 - ❌ `@author`, `@since` 없는 public 클래스/메서드
 - ✅ **모든 public 클래스/메서드에 Javadoc**
 
