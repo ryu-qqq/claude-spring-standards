@@ -47,6 +47,18 @@ Spring Standards 프로젝트의 **최신 코딩 컨벤션**을 Serena 메모리
 - ✅ **OutboxStateManager**: Outbox 엔트리 상태 관리
 - ✅ **실제 예시 코드** (Order, Payment, Outbox)
 
+### 3. Transactional Outbox Pattern (2025-11-05) ⭐ NEW
+**메모리**: `transactional-outbox-pattern-2025`
+
+**포함 내용**:
+- ✅ **Pattern A (Direct Event)**: 지양 - 결제/금융엔 부적합
+- ✅ **Pattern B (Outbox + Event Wake-up)**: 권장 기본 패턴
+- ✅ **Pattern C (MQ Integration)**: MQ 고도화
+- ✅ **FOR UPDATE SKIP LOCKED**: 동시성 제어
+- ✅ **Decision Tree**: 패턴 선택 가이드
+- ✅ **senario.txt 패턴**: 동기 API 요청 + Outbox Relay
+- ✅ **OutboxStatus State Machine**: PENDING → PUBLISHED → COMPLETED/FAILED
+
 ---
 
 ## 🔧 실행 내용
@@ -59,7 +71,7 @@ mcp__serena__activate_project("/Users/sangwon-ryu/claude-spring-standards")
 
 # 2. 사용 가능한 메모리 목록 확인
 memories = mcp__serena__list_memories()
-# Result: ['application-layer-conventions-2025', 'manager-statemanager-facade-pattern']
+# Result: ['application-layer-conventions-2025', 'manager-statemanager-facade-pattern', 'transactional-outbox-pattern-2025']
 
 # 3. 최신 Application Layer 컨벤션 로드
 app_conventions = mcp__serena__read_memory("application-layer-conventions-2025")
@@ -67,7 +79,10 @@ app_conventions = mcp__serena__read_memory("application-layer-conventions-2025")
 # 4. Manager 패턴 상세 가이드 로드
 manager_patterns = mcp__serena__read_memory("manager-statemanager-facade-pattern")
 
-# 5. 세션 컨텍스트 확인 및 복원
+# 5. Transactional Outbox Pattern 로드 ⭐ NEW
+outbox_pattern = mcp__serena__read_memory("transactional-outbox-pattern-2025")
+
+# 6. 세션 컨텍스트 확인 및 복원
 onboarding_status = mcp__serena__check_onboarding_performed()
 ```
 
@@ -77,7 +92,7 @@ onboarding_status = mcp__serena__check_onboarding_performed()
 
 ```
 🚀 프로젝트 활성화: claude-spring-standards
-✅ 사용 가능한 메모리: 2개
+✅ 사용 가능한 메모리: 3개
 
 📚 최신 코딩 컨벤션 로드 완료:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -93,6 +108,12 @@ onboarding_status = mcp__serena__check_onboarding_performed()
    ✅ Manager: 2-3개 StateManager 조율
    ✅ Facade: 여러 Manager 통합
    ✅ OutboxStateManager: Outbox 엔트리 상태 관리
+
+3️⃣ Transactional Outbox Pattern (2025-11-05) ⭐ NEW
+   ✅ Pattern A (Direct Event): 지양
+   ✅ Pattern B (Outbox + Event Wake-up): 권장 기본
+   ✅ Pattern C (MQ Integration): MQ 고도화
+   ✅ FOR UPDATE SKIP LOCKED, Decision Tree
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -118,6 +139,7 @@ onboarding_status = mcp__serena__check_onboarding_performed()
 📖 상세 메모리 확인:
 - mcp__serena__read_memory("application-layer-conventions-2025")
 - mcp__serena__read_memory("manager-statemanager-facade-pattern")
+- mcp__serena__read_memory("transactional-outbox-pattern-2025")
 ```
 
 ---
@@ -281,12 +303,39 @@ export LANGFUSE_HOST="https://us.cloud.langfuse.com"
 
 1. **이 명령어는 세션 시작 시 한 번만 실행**하면 됩니다
 2. **Serena 메모리는 세션 간 지속**되므로 재로드 불필요
-3. **토큰 사용 없이** 최신 컨벤션 로드 가능
+3. **토큰 사용 없이** 최신 컨벤션 로드 가능 (Serena Memory 읽기만)
 4. **Dynamic Hooks**가 자동으로 규칙을 주입하므로 수동 적용 불필요
 5. **실시간 검증**이 자동으로 실행되어 위반 시 즉시 경고
 
+### ⚡ 성능 최적화
+
+**로딩 시간**:
+- Serena Memory 로드: **3-5초** (3개 메모리 순차 로드)
+- `.claude/cache/rules/` 읽기: **불필요** (Hook이 자동 주입)
+- 총 예상 시간: **5초 이내**
+
+**느리게 느껴지는 경우**:
+- ❌ Hook이 APPLICATION + ENTERPRISE 레이어 규칙 주입 (자동)
+- ❌ Claude가 모든 규칙을 한 번에 처리 (대용량 텍스트)
+- ✅ **해결**: `/cc:load` 실행 후 **간단한 명령어로 시작** (예: "안녕")
+
+**권장 워크플로우**:
+```bash
+# 1. 세션 시작 시 한 번만 실행
+/cc:load
+
+# 2. 로딩 완료 대기 (3-5초)
+# ...
+
+# 3. 간단한 인사로 Hook 트리거 초기화
+"안녕"
+
+# 4. 본격적인 작업 시작
+/code-gen-domain Order
+```
+
 ---
 
-**✅ 이 명령어는 2025-11-04 기준 최신 컨벤션을 로드합니다.**
+**✅ 이 명령어는 2025-11-05 기준 최신 컨벤션을 로드합니다.**
 
-**🔥 Manager/StateManager/Facade 패턴, Outbox Pattern, Zero-Tolerance 규칙 강화가 모두 포함되어 있습니다!**
+**🔥 Manager/StateManager/Facade 패턴, Transactional Outbox Pattern (Pattern A/B/C), Zero-Tolerance 규칙 강화가 모두 포함되어 있습니다!**
