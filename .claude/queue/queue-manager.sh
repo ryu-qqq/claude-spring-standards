@@ -163,9 +163,13 @@ case "${1:-status}" in
         ;;
 
     history)
-        local count="${2:-10}"
+        count="${2:-10}"
         echo "📜 Recent Completions (last $count):"
-        tail -n "$count" "$COMPLETED_FILE" | jq -r '"\(.completed_at | strftime("%Y-%m-%d %H:%M:%S")) - \(.description) (Duration: \(.duration | round)s)"'
+        if [[ -f "$COMPLETED_FILE" && -s "$COMPLETED_FILE" ]]; then
+            tail -n "$count" "$COMPLETED_FILE" 2>/dev/null | jq -r '"\(.completed_at | strftime("%Y-%m-%d %H:%M:%S")) - \(.description) (Duration: \(.duration | round)s)"' 2>/dev/null || echo "   (No completions yet)"
+        else
+            echo "   (No completions yet)"
+        fi
         ;;
 
     *)
