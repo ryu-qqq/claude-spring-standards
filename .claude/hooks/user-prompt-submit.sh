@@ -226,8 +226,19 @@ QUEUE_MANAGER=".claude/queue/queue-manager.sh"
 
 # Context Score >= 25이면 Queue에 자동 추가
 if [[ $CONTEXT_SCORE -ge 25 && -f "$QUEUE_MANAGER" ]]; then
-    # Queue에 작업 추가
-    TASK_DESCRIPTION=$(echo "$USER_INPUT" | head -n 1 | sed 's/^[ \t]*//;s/[ \t]*$//')
+    # Queue에 작업 추가 (첫 줄, 최대 100자)
+    TASK_DESCRIPTION=$(echo "$USER_INPUT" | head -n 1 | cut -c 1-100 | sed 's/^[ \t]*//;s/[ \t]*$//')
+
+    # Hook JSON이 섞인 경우 필터링
+    if echo "$TASK_DESCRIPTION" | grep -q "session_id"; then
+        # JSON에서 prompt 필드 추출 시도
+        TASK_DESCRIPTION=$(echo "$USER_INPUT" | grep -o '"prompt":"[^"]*"' | head -n 1 | cut -d'"' -f4 | cut -c 1-100)
+    fi
+
+    # 여전히 비어있으면 스킵
+    if [[ -z "$TASK_DESCRIPTION" || "$TASK_DESCRIPTION" == "null" ]]; then
+        TASK_DESCRIPTION="(작업 설명 없음)"
+    fi
 
     TASK_ID=$(bash "$QUEUE_MANAGER" add "$TASK_DESCRIPTION" "$CONTEXT_SCORE" "$LAYERS_JSON" 2>/dev/null)
 
