@@ -74,9 +74,16 @@ def main():
 
         # Model 이름 (간략화)
         model = data.get("model", "claude-sonnet-4-5-20250929")
-        if "sonnet" in model.lower():
+
+        # model이 문자열인지 확인
+        if isinstance(model, dict):
+            model_name = str(model.get("name", "claude"))
+        else:
+            model_name = str(model)
+
+        if "sonnet" in model_name.lower():
             model_display = "Claude Sonnet 4.5"
-        elif "opus" in model.lower():
+        elif "opus" in model_name.lower():
             model_display = "Claude Opus"
         else:
             model_display = "Claude"
