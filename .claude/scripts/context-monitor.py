@@ -99,22 +99,28 @@ def main():
         # Queue 상태
         queue_status = get_queue_status()
 
-        # 세션 정보
-        duration_sec = data.get("session_duration", 0)
-        duration_min = int(duration_sec / 60)
+        # 세션 정보 (cost 객체에서 읽기)
+        cost_data = data.get("cost", {})
 
-        lines_changed = data.get("lines_changed", 0)
+        # 비용 (실제 비용 사용)
+        cost_usd = cost_data.get("total_cost_usd", 0)
+        cost_cents = int(cost_usd * 100)
 
-        # 비용 추정 (간단한 계산)
-        # Sonnet 4.5: $3/MTok input, $15/MTok output
-        input_cost = (used / 1_000_000) * 3
-        cost_cents = int(input_cost * 100)
+        # Duration (밀리초 → 분)
+        duration_ms = cost_data.get("total_duration_ms", 0)
+        duration_min = int(duration_ms / 60000)
 
-        # 최종 Statusline
+        # Lines changed (추가 - 삭제)
+        lines_added = cost_data.get("total_lines_added", 0)
+        lines_removed = cost_data.get("total_lines_removed", 0)
+        net_lines = lines_added - lines_removed
+
+        # 최종 Statusline (net_lines에 부호 추가)
+        lines_sign = "+" if net_lines >= 0 else ""
         print(
             f"[{model_display}] {queue_status} | "
             f"🧠 {color}{bar} {usage_pct:.0f}% | "
-            f"💰 {cost_cents}¢ ⏱ {duration_min}m 📝 +{lines_changed}"
+            f"💰 {cost_cents}¢ ⏱ {duration_min}m 📝 {lines_sign}{net_lines}"
         )
 
     except json.JSONDecodeError:
