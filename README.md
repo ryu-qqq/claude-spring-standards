@@ -152,6 +152,14 @@ Claude: 규칙 100% 준수 코드 생성 (Hook ON)
 /jira-link-pr                 # GitHub PR과 Jira 이슈 연동
 ```
 
+### LangFuse 통합 (⭐ NEW Phase 2)
+```bash
+/langfuse-register-prompt <layer> <version>  # Layer별 프롬프트 등록 (v1.0, v1.1 등)
+# 예시:
+# /langfuse-register-prompt domain v1.0     # Domain Layer 프롬프트 등록
+# /langfuse-register-prompt all v1.0        # 모든 Layer 등록 (domain, application, persistence, adapter-rest)
+```
+
 ### Queue 시스템 (Cursor AI 통합)
 ```bash
 /queue-add                    # 작업 큐에 추가
@@ -318,7 +326,15 @@ python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
 
 ## 📝 최근 업데이트
 
-### 2025-11-04 ⭐
+### 2025-11-10 ⭐ (Phase 2 시작)
+- ✅ **LangFuse 프롬프트 등록 시스템 완료** (`/langfuse-register-prompt`)
+  - 4개 Layer별 프롬프트 템플릿 생성 (domain, application, persistence, adapter-rest)
+  - LangFuse API 통합 (v2/prompts endpoint)
+  - 버전 관리 시스템 (v1.0, v1.1 등)
+  - 프롬프트 메타데이터 자동 추출 (Zero-Tolerance 규칙, 템플릿, 체크리스트)
+- 🚧 **A/B/C/D 테스트 준비**: `/abcd-test` 명령어 개발 예정
+
+### 2025-11-04
 - ✅ **Claude Skills v2.3 출시**: 5개 전문가 에이전트 추가
   - convention-reviewer: 컨벤션 위반 스캔 + TODO 생성
   - domain-expert, application-expert, rest-api-expert, test-expert
@@ -340,8 +356,9 @@ python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
 | Serena Memory | ✅ 완료 | 세션 컨텍스트 유지 |
 | Zero-Tolerance 검증 | ✅ 완료 | Lombok, Law of Demeter, Transaction |
 | **Claude Skills** | ✅ 완료 | 5개 전문가 에이전트 (v2.3) ⭐ |
-| LangFuse 통합 | 🚧 진행중 | Hook 로그 → LangFuse 업로드 |
-| A/B 테스트 | 📊 준비중 | 효율 측정 시스템 |
+| **LangFuse 프롬프트 등록** | ✅ 완료 | Layer별 프롬프트 버전 관리 (Phase 2) ⭐ |
+| LangFuse A/B 테스트 | 🚧 진행중 | /abcd-test 명령어 개발 (Phase 2) |
+| LangFuse 분석 | 📋 계획중 | /langfuse-analyze 명령어 (Phase 2) |
 | Auto-Fix | 🚧 개발중 | 컨벤션 위반 자동 수정 |
 | CloudWatch 연동 | 📋 계획중 | 로그 집계 및 모니터링 |
 
@@ -355,4 +372,4 @@ python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
 
 ---
 
-*최종 업데이트: 2025-11-04 (Claude Skills v2.3)*
+*최종 업데이트: 2025-11-10 (LangFuse Phase 2 시작)*

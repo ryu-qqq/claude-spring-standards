@@ -43,7 +43,8 @@ bin/
 
 # LangFuse telemetry (contains credentials)
 .langfuse.telemetry
-langfuse/data/langfuse-data.json
+langfuse/__pycache__/
+langfuse/tests/__pycache__/
 
 # Windsurf IDE settings (personal configuration)
 .windsurfrules
