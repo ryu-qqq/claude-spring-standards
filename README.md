@@ -160,19 +160,23 @@ Claude: 규칙 100% 준수 코드 생성 (Hook ON)
 # /langfuse-register-prompt all v1.0        # 모든 Layer 등록 (domain, application, persistence, adapter-rest)
 ```
 
-### Queue 시스템 (Cursor AI 통합)
+### Kent Beck TDD Workflow (⭐ NEW v2.6)
 ```bash
-/queue-add                    # 작업 큐에 추가
-/queue-list                   # 큐 목록 조회
-/queue-start                  # 작업 시작
-/queue-status                 # 작업 상태 확인
-/queue-complete               # 작업 완료 처리
+/red                          # 실패하는 테스트 작성
+/green                        # 최소한의 코드로 테스트 통과
+/refactor                     # 리팩토링
+/go                           # Red → Green → Refactor 자동 실행
+/tidy                         # 코드 정리
+/check-tests                  # 테스트 커버리지 확인
+/next-test                    # 다음 테스트 제안
+/commit-tdd                   # TDD 사이클 커밋
 ```
 
 ### 기타
 ```bash
-/generate-fixtures            # Test Fixture 생성
 /cc/load                      # Serena 메모리 로드
+/create-prd                   # PRD 문서 생성
+/jira-from-prd                # PRD에서 Jira 이슈 생성
 ```
 
 ### Claude Skills (⭐ NEW v2.3)
@@ -213,18 +217,21 @@ claude code
 
 **2. Cursor AI 통합 워크플로우**:
 ```bash
-# Step 1: Claude Code - 프로젝트 스캔
-"convention-reviewer로 fileflow 프로젝트를 스캔하고 TODO를 생성해줘"
-→ .claude/work-orders/fileflow-refactoring.md 생성
+# Step 1: Claude Code - PRD 작성
+/create-prd
+→ docs/prd/feature-name.md 생성
 
-# Step 2: Claude Code - 큐 시스템 등록
-/queue-add Source:.claude/work-orders/fileflow-refactoring.md Project:fileflow
+# Step 2: Claude Code - Jira 연동
+/jira-from-prd
+→ Jira 이슈 자동 생성
 
-# Step 3: Cursor IDE - 자동 리팩토링
-"work-queue.json에서 fileflow 작업을 읽고 리팩토링해줘"
+# Step 3: Cursor IDE - Boilerplate 생성
+"Order Aggregate를 생성해줘"
+→ .cursorrules 자동 로드 → 컨벤션 준수 코드 생성
 
-# Step 4: Claude Code - 진행 상황 확인
-/queue-status fileflow
+# Step 4: Claude Code - 비즈니스 로직 구현
+"Order에 placeOrder, cancelOrder 메서드 구현해줘"
+→ Hook이 자동으로 Law of Demeter, Tell Don't Ask 규칙 주입
 ```
 
 **상세 가이드**: [Skills 디렉토리](.claude/skills/)
@@ -279,13 +286,15 @@ bash /tmp/claude-spring-standards/.claude/install-template.sh
 rm -rf /tmp/claude-spring-standards
 ```
 
-**설치되는 컴포넌트** (v2.3):
+**설치되는 컴포넌트** (v2.6):
 - ✅ `.claude/` (Hooks + Cache + Commands + Skills)
-- ✅ **Claude Skills** (5개 전문가 에이전트) - ⭐ NEW
+- ✅ **Claude Skills** (5개 전문가 에이전트)
+- ✅ **Kent Beck TDD Workflow** (8개 명령어) - ⭐ NEW v2.6
 - ✅ `docs/coding_convention/` (98개 규칙)
+- ✅ `docs/prd/` (TDD Plan 위치) - ⭐ NEW v2.6
 - ✅ `.cursorrules` (Cursor AI 통합)
 - ✅ `.env.example` (LangFuse 템플릿)
-- ✅ `langfuse/` 스크립트 (선택)
+- ✅ `scripts/langfuse/` (자동 로그 삭제) - ⭐ NEW v2.6
 - ✅ ArchUnit 테스트 (선택)
 - ✅ Git Hooks (선택)
 
@@ -334,17 +343,23 @@ python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
   - 프롬프트 메타데이터 자동 추출 (Zero-Tolerance 규칙, 템플릿, 체크리스트)
 - 🚧 **A/B/C/D 테스트 준비**: `/abcd-test` 명령어 개발 예정
 
-### 2025-11-04
-- ✅ **Claude Skills v2.3 출시**: 5개 전문가 에이전트 추가
+### 2025-11-11 v2.6 ⭐
+- ✅ **Queue 시스템 제거**: 워크플로우 단순화 (16 단계 → 15 단계)
+- ✅ **LangFuse v2.6**: 자동 로그 삭제 기능 추가 (`scripts/langfuse/upload-hook-logs.py`)
+- ✅ **Kent Beck TDD Workflow**: 8개 TDD 명령어 추가 (/red, /green, /refactor 등)
+- ✅ **TDD Plan 위치 변경**: `kentback/` → `docs/prd/`
+- ✅ **User Authentication Domain**: Email, Password, UserDomain 구현 (98% 커버리지)
+- ✅ **Schedule Orchestration**: Facade, Outbox, State Manager 패턴 구현
+
+### 2025-11-04 v2.3
+- ✅ **Claude Skills 출시**: 5개 전문가 에이전트 추가
   - convention-reviewer: 컨벤션 위반 스캔 + TODO 생성
   - domain-expert, application-expert, rest-api-expert, test-expert
 - ✅ **install-template.sh v2.3**: Skills 자동 설치 기능 추가
-- ✅ **Cursor AI 통합 워크플로우**: Skills → Queue → Cursor 자동 리팩토링
 
 ### 이전 버전
 - ✅ **Windsurf 제거**: Cursor AI로 완전 통합 (.cursorrules 자동 로드)
 - ✅ **Jira 명령어 확장**: 6개 명령어 추가 (analyze, comment, create, link-pr, transition, update)
-- ✅ **Queue 시스템**: Cursor AI 통합 워크플로우 (5개 명령어)
 
 ---
 
@@ -372,4 +387,4 @@ python3 .claude/hooks/scripts/validation-helper.py <file> <layer>
 
 ---
 
-*최종 업데이트: 2025-11-10 (LangFuse Phase 2 시작)*
+*최종 업데이트: 2025-11-11 (v2.6 - Queue 시스템 제거, TDD Workflow 추가)*
