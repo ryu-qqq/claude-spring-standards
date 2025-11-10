@@ -2,7 +2,7 @@ package com.ryuqq.adapter.out.persistence.example.adapter;
 
 import com.ryuqq.adapter.out.persistence.example.entity.ExampleJpaEntity;
 import com.ryuqq.adapter.out.persistence.example.mapper.ExampleEntityMapper;
-import com.ryuqq.adapter.out.persistence.example.querydsl.ExampleQueryDslRepository;
+import com.ryuqq.adapter.out.persistence.example.repository.ExampleQueryDslRepository;
 import com.ryuqq.adapter.out.persistence.example.repository.ExampleRepository;
 import com.ryuqq.application.example.dto.query.SearchExampleQuery;
 import com.ryuqq.application.example.port.out.ExampleQueryOutPort;
