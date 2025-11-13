@@ -4,6 +4,8 @@
 **Layer**: Domain Layer
 **브랜치**: feature/MEMBER-001-domain
 **Jira URL**: (sync-to-jira 후 추가)
+**상태**: In Progress
+**시작일**: 2025-11-14
 
 ---
 
