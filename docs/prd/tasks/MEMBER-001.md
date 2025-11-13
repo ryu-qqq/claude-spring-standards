@@ -3,7 +3,7 @@
 **Epic**: 간단한 회원 가입
 **Layer**: Domain Layer
 **브랜치**: feature/MEMBER-001-domain
-**Jira URL**: (sync-to-jira 후 추가)
+**Jira URL**: https://ryuqqq.atlassian.net/browse/AESA-71
 **상태**: In Progress
 **시작일**: 2025-11-14
 

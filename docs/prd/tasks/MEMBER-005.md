@@ -3,7 +3,7 @@
 **Epic**: 간단한 회원 가입
 **Layer**: Integration Test
 **브랜치**: feature/MEMBER-005-integration
-**Jira URL**: (sync-to-jira 후 추가)
+**Jira URL**: https://ryuqqq.atlassian.net/browse/AESA-75
 
 ---
 

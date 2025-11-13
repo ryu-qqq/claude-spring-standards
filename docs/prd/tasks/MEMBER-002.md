@@ -3,7 +3,7 @@
 **Epic**: 간단한 회원 가입
 **Layer**: Application Layer
 **브랜치**: feature/MEMBER-002-application
-**Jira URL**: (sync-to-jira 후 추가)
+**Jira URL**: https://ryuqqq.atlassian.net/browse/AESA-72
 
 ---
 

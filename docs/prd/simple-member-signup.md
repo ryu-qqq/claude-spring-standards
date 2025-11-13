@@ -3,7 +3,7 @@
 **작성일**: 2025-11-14
 **작성자**: System
 **버전**: 1.0
-**Jira Epic Key**: (sync-to-jira 후 추가)
+**Jira Epic Key**: AESA-70 (https://ryuqqq.atlassian.net/browse/AESA-70)
 
 ---
 
