@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 혁신: Kent Beck TDD + LangFuse 메트릭 추적
+##  Kent Beck TDD + LangFuse 메트릭 추적
 
 이 프로젝트의 핵심 철학은 **테스트 주도 개발 (TDD)**과 **작은 커밋**입니다:
 
@@ -95,68 +95,89 @@ export LANGFUSE_HOST="https://us.cloud.langfuse.com"
 
 ```
 docs/coding_convention/
-├── 01-adapter-rest-api-layer/  (18개 규칙)
-│   ├── controller-design/
-│   ├── dto-patterns/
-│   ├── exception-handling/
-│   ├── mapper-patterns/
-│   ├── package-guide/
-│   └── testing/
+├── 00-project-setup/  (2개 규칙)
+│   ├── multi-module-structure.md
+│   └── version-management.md
 │
-├── 02-domain-layer/  (15개 규칙)
-│   ├── aggregate-design/
-│   ├── law-of-demeter/  ⭐ Law of Demeter 엄격 적용
-│   ├── package-guide/
-│   └── testing/
+├── 01-adapter-in-layer/rest-api/  (22개 규칙)
+│   ├── controller/  (4개)
+│   │   ├── controller-guide.md
+│   │   ├── controller-test-guide.md
+│   │   ├── controller-test-restdocs-guide.md
+│   │   └── controller-archunit.md
+│   ├── dto/
+│   │   ├── command/  (3개: guide, test-guide, archunit)
+│   │   ├── query/    (3개: guide, test-guide, archunit)
+│   │   └── response/ (3개: guide, test-guide, archunit)
+│   ├── error/  (2개)
+│   │   ├── error-handling-strategy.md
+│   │   └── error-mapper-implementation-guide.md
+│   ├── mapper/  (3개: guide, test-guide, archunit)
+│   ├── config/  (1개: endpoint-properties-guide)
+│   └── rest-api-guide.md
 │
-├── 03-application-layer/  (18개 규칙)
-│   ├── assembler-pattern/
-│   ├── dto-patterns/
-│   ├── package-guide/
-│   ├── testing/
-│   ├── transaction-management/  ⭐ Transaction 경계 엄격 관리
-│   └── usecase-design/
+├── 02-domain-layer/  (12개 규칙)
+│   ├── aggregate/  (3개: guide, test-guide, archunit)
+│   ├── exception/  (3개: guide, test-guide, archunit-guide)
+│   ├── vo/  (3개: guide, test-guide, archunit)
+│   ├── event/  (디렉토리만 존재, 파일 없음)
+│   └── domain-guide.md
 │
-├── 04-persistence-layer/  (10개 규칙)
-│   ├── jpa-entity-design/  ⭐ Long FK 전략 (관계 어노테이션 금지)
-│   ├── package-guide/
-│   ├── querydsl-optimization/
-│   ├── repository-patterns/
-│   └── testing/
+├── 03-application-layer/  (26개 규칙)
+│   ├── assembler/  (3개: guide, test-guide, archunit)
+│   ├── dto/
+│   │   ├── command/  (1개: command-dto-guide)
+│   │   ├── query/    (1개: query-dto-guide)
+│   │   ├── response/ (1개: response-dto-guide)
+│   │   ├── dto-record-archunit.md
+│   │   └── 06_archunit-dto-record-rules.md
+│   ├── facade/  (2개: guide, test-guide)
+│   ├── manager/  (2개: transaction-manager-guide, test-guide)
+│   ├── port/
+│   │   ├── in/
+│   │   │   ├── command/  (2개: guide, archunit)
+│   │   │   └── query/    (2개: guide, archunit)
+│   │   └── out/
+│   │       ├── command/  (2개: guide, archunit)
+│   │       └── query/    (2개: guide, archunit)
+│   ├── listener/  (디렉토리만 존재)
+│   ├── scheduler/  (디렉토리만 존재)
+│   ├── service/  (디렉토리만 존재)
+│   └── application-guide.md
 │
-├── 05-testing/  (12개 규칙)
-│   ├── archunit-rules/
-│   └── integration-testing/
+├── 04-persistence-layer/  (23개 규칙)
+│   ├── mysql/  (18개)
+│   │   ├── adapter/
+│   │   │   ├── command/  (3개: guide, test-guide, archunit)
+│   │   │   └── query/    (7개)
+│   │   │       ├── query-adapter-guide.md
+│   │   │       ├── query-adapter-test-guide.md
+│   │   │       ├── query-adapter-integration-testing.md
+│   │   │       ├── query-adapter-archunit.md
+│   │   │       ├── lock-query-adapter-guide.md
+│   │   │       ├── lock-query-adapter-test-guide.md
+│   │   │       └── lock-query-adapter-archunit.md
+│   │   ├── config/  (2개: flyway-testing, hikaricp-configuration)
+│   │   ├── entity/  (3개: guide, test-guide, archunit)
+│   │   ├── mapper/  (3개: guide, test-guide, archunit)
+│   │   ├── repository/  (5개)
+│   │   │   ├── jpa-repository-guide.md
+│   │   │   ├── jpa-repository-archunit.md
+│   │   │   ├── querydsl-repository-guide.md
+│   │   │   ├── querydsl-repository-test-guide.md
+│   │   │   └── querydsl-repository-archunit.md
+│   │   └── persistence-mysql-guide.md
+│   └── redis/  (5개)
+│       ├── adapter/  (3개: guide, test-guide, archunit)
+│       ├── config/  (1개: cache-configuration)
+│       └── persistence-redis-guide.md
 │
-├── 06-java21-patterns/  (8개 규칙)
-│   ├── record-patterns/
-│   ├── sealed-classes/
-│   └── virtual-threads/
-│
-├── 07-enterprise-patterns/  (5개 규칙)
-│   ├── caching/
-│   ├── event-driven/
-│   └── resilience/
-│
-├── 08-error-handling/  (5개 규칙)
-│   ├── error-handling-strategy/
-│   ├── domain-exception-design/
-│   ├── global-exception-handler/
-│   ├── error-response-format/
-│   └── errorcode-management/
-│
-└── 09-orchestration-patterns/  (8개 규칙) ⭐ NEW
-    ├── overview/  (3-Phase Lifecycle, Idempotency, WAL)
-    ├── command-pattern/  (Record 패턴, Compact Constructor)
-    ├── idempotency-handling/  (IdemKey, Race Condition 방지)
-    ├── write-ahead-log/  (크래시 복구, Finalizer/Reaper)
-    ├── outcome-modeling/  (Sealed interface, Pattern matching)
-    ├── quick-start-guide/  (10분 실습)
-    ├── security-guide/  (Rate Limiting, DoS 방지)
-    └── automation-analysis/  (80-85% 자동화)
+└── 05-testing/  (3개 규칙)
+    ├── integration-testing/  (1개: 01_integration-testing-overview)
+    └── test-fixtures/  (2개: guide, archunit)
 ```
 
-**총 98개 규칙** (기존 90개 + Orchestration 8개)
+**총 88개 규칙** (README.md 포함)
 
 ---
 
