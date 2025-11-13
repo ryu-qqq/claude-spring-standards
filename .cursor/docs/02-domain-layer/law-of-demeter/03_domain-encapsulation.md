@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/02-domain-layer/law-of-demeter/03_domain-encapsulation.md

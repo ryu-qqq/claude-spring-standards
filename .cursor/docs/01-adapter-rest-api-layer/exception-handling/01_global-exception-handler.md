@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/01-adapter-rest-api-layer/exception-handling/01_global-exception-handler.md

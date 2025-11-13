@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/query-adapter-patterns/01_load-port-pattern.md

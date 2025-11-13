@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/01-adapter-rest-api-layer/testing/03_rest-docs.md
