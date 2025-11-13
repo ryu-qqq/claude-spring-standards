@@ -4,87 +4,88 @@
 
 ---
 
-## 🚀 혁신: Dynamic Hooks + Cache 시스템 (100% Zero-Tolerance 달성)
+## 🚀 혁신: Kent Beck TDD + LangFuse 메트릭 추적
 
-이 프로젝트의 핵심 차별점은 **검증된 자동화 시스템**입니다:
+이 프로젝트의 핵심 철학은 **테스트 주도 개발 (TDD)**과 **작은 커밋**입니다:
 
-**A/B 테스트 검증 완료** (2025-11-04):
-- **Hook ON**: 0 violations (100% Zero-Tolerance) ✅
-- **Hook OFF**: 40 violations (0% Zero-Tolerance) ❌
-- **효과**: 컨벤션 자동 준수율 100% 달성
+### Kent Beck의 TDD 사이클
+
+```
+Red (테스트 작성) → Green (최소 구현) → Refactor (리팩토링) → Commit
+         ↓                ↓                  ↓              ↓
+    실패하는 테스트     테스트 통과         코드 개선      작은 변경 커밋
+         ↓                ↓                  ↓              ↓
+    .claude/hooks/track-tdd-cycle.sh (자동 추적)
+         ↓
+    LangFuse (메트릭 수집)
+         ├─ TDD 사이클 시간 측정
+         ├─ 커밋 크기 추적 (작을수록 좋음)
+         ├─ 테스트 커버리지 변화
+         └─ 리팩토링 빈도 분석
+```
 
 ### 시스템 아키텍처
 
 ```
-docs/coding_convention/ (98개 마크다운 규칙)
+개발자: TDD 사이클 (Red → Green → Refactor → Commit)
          ↓
-build-rule-cache.py (Cache 빌드)
+Claude Code: 비즈니스 로직 구현
          ↓
-.claude/cache/rules/ (98개 JSON + index.json)
+./gradlew test (테스트 실행)
          ↓
-user-prompt-submit.sh (Hook 실행)
-         ├─ 키워드 감지: "domain", "entity", "usecase" 등
-         ├─ Layer 매핑: domain, application, persistence, adapter-rest
-         └─ inject-rules.py: Layer별 규칙 자동 주입
+track-tdd-cycle.sh (Hook 트리거)
+         ├─ 테스트 결과 파싱
+         ├─ 커밋 정보 추출
+         └─ log-to-langfuse.py 호출
          ↓
-Claude Code (규칙 준수 코드 생성)
-         - Cache 규칙 기반 코드 생성 (100% 준수)
-         ↓
-after-tool-use.sh (생성 직후 검증)
-         ├─ Write/Edit 도구 감지
-         └─ validation-helper.py 자동 호출
-         ↓
-validation-helper.py (실시간 검증)
-         ├─ Cache 기반 고속 검증 (148ms)
-         ├─ Zero-Tolerance 규칙 체크
-         └─ 위반 시 구체적 수정 방법 제시
-         ↓
-LangFuse (효율 측정)
-         ├─ Hook 실행 로그
-         ├─ 토큰 사용량 추적
-         └─ 위반 건수 모니터링
+LangFuse API (메트릭 업로드)
+         ├─ TDD Phase 추적 (Red/Green/Refactor)
+         ├─ 커밋 크기 측정
+         ├─ 테스트 성공률
+         └─ ArchUnit 검증 결과
 ```
 
-### 성능 메트릭 (A/B 테스트 검증 완료)
+### 핵심 메트릭
 
-| 메트릭 | 기존 방식 | Hook OFF | Hook ON | 최종 개선율 |
-|--------|----------|----------|---------|-------------|
-| **컨벤션 위반** | - | 40회 | **0회** | **100% 제거** |
-| 토큰 사용량 | 50,000 | - | 500-1,000 | **90% 절감** |
-| 검증 속도 | 561ms | - | 148ms | **73.6% 향상** |
-| 문서 로딩 | 2-3초 | - | <100ms | **95% 향상** |
-| Zero-Tolerance 준수율 | - | 0% | **100%** | **완벽 달성** |
+| 메트릭 | 측정 항목 | 목표 |
+|--------|----------|------|
+| **TDD 사이클 시간** | Red → Commit 평균 시간 | < 15분 |
+| **커밋 크기** | 파일 변경 수, 라인 수 | 작을수록 좋음 |
+| **테스트 성공률** | 테스트 통과율 | > 95% |
+| **리팩토링 빈도** | Green 후 Refactor 비율 | > 50% |
+| **ArchUnit 준수율** | 아키텍처 규칙 위반 | 0회 |
 
-**핵심 성과**: Hook 시스템이 활성화되면 컨벤션 위반이 **40회 → 0회**로 감소하여 **100% Zero-Tolerance** 달성
+**핵심 성과**: 테스트가 컨벤션을 강제하고, 작은 커밋이 빠른 피드백을 보장
 
-### LangFuse 통합 (메트릭 추적)
+### LangFuse 통합 (자동 메트릭 수집)
 
-**목적**: Claude Code 로그를 LangFuse로 전송하여 개발 효율 측정
+**목적**: TDD 사이클과 개발 메트릭을 자동으로 수집하여 개발 효율 분석
 
-**파이프라인**:
-1. `scripts/langfuse/aggregate-logs.py` - 로그 집계 및 변환
-2. `scripts/langfuse/upload-to-langfuse.py` - LangFuse Ingestion API 업로드
+**자동 추적 이벤트**:
+1. **tdd_commit**: Git 커밋 시
+   - 커밋 메시지, 해시, 변경 파일 수, 라인 수
+   - TDD Phase 자동 감지 (Red/Green/Refactor)
+2. **tdd_test**: 테스트 실행 시 (`./gradlew test`)
+   - 테스트 성공/실패 수, 실행 시간
+3. **archunit_check**: ArchUnit 실행 시
+   - 아키텍처 규칙 위반 수
 
-**추적 메트릭**:
-- Traces: Claude Code 세션별 추적
-- Observations: Hook 실행, IDE 통합 작업
-- 토큰 사용량, 실행 시간, 위반 건수
-
-**사용법**:
+**설정**:
 ```bash
-# 환경 변수 설정
+# 환경 변수 설정 (선택적)
 export LANGFUSE_PUBLIC_KEY="pk-lf-..."
 export LANGFUSE_SECRET_KEY="sk-lf-..."
 export LANGFUSE_HOST="https://us.cloud.langfuse.com"
 
-# Claude Code 워크플로우 사용
-/upload-langfuse
-
-# 또는 직접 실행
-bash tools/pipeline/upload_langfuse.sh
+# 환경 변수 없어도 작동 (로컬 JSONL 로그에만 저장)
 ```
 
-**참고**: LangFuse Python SDK는 필요 없음. `requests` 라이브러리만 사용.
+**로그 파일 위치**:
+- `~/.claude/logs/tdd-cycle.jsonl` (로컬 JSONL 로그)
+
+**참고**:
+- LangFuse 환경 변수 없어도 로컬 JSONL 로그는 항상 저장
+- `requests` 라이브러리 없어도 작동 (로컬 로그만)
 
 ---
 
@@ -155,7 +156,7 @@ docs/coding_convention/
     └── automation-analysis/  (80-85% 자동화)
 ```
 
-**총 98개 규칙 (기존 90개 + Orchestration 8개) → JSON Cache로 변환 → O(1) 검색 및 주입**
+**총 98개 규칙** (기존 90개 + Orchestration 8개)
 
 ---
 
@@ -182,162 +183,139 @@ docs/coding_convention/
 
 ## 🔧 자동화 시스템
 
-### 1. Dynamic Hooks + Cache 
+### 1. TDD Workflow Tracking
 
-**위치**: `.claude/hooks/`, `.claude/cache/`, `.claude/commands/lib/`
+**위치**: `.claude/hooks/track-tdd-cycle.sh`, `.claude/scripts/log-to-langfuse.py`
 
-#### Cache 빌드
-```bash
-# 90개 마크다운 → 90개 JSON + index.json (약 5초)
-python3 .claude/hooks/scripts/build-rule-cache.py
-```
-
-#### 자동 규칙 주입 (user-prompt-submit.sh)
-- **키워드 감지**: "domain", "usecase", "controller", "entity" 등
-- **Layer 매핑**: domain, application, adapter-rest, adapter-persistence
-- **inject-rules.py 호출**: Layer별 JSON 규칙 자동 주입
-
-#### 실시간 검증 (after-tool-use.sh)
-- **코드 생성 직후 검증**: Write/Edit 도구 사용 후 즉시 실행
-- **validation-helper.py 호출**: Cache 기반 고속 검증
-- **위반 시 경고**: 구체적인 수정 방법 제시
-
-### 2. Hook 로깅 시스템
-
-**위치**: `.claude/hooks/logs/hook-execution.jsonl`
-
-**목적**: Hook 실행 이력 추적 및 A/B 테스트 데이터 수집
+**목적**: Kent Beck TDD 사이클 자동 추적 및 메트릭 수집
 
 #### 작동 원리
 
 ```
-사용자: "domain aggregate 작업"
+개발자: TDD 사이클 수행
     ↓
-user-prompt-submit.sh (Hook 실행)
-    ├─ 키워드 분석: "aggregate" (30점)
-    ├─ Layer 매핑: domain
-    ├─ 로그 기록: hook-execution.jsonl
-    └─ inject-rules.py: Cache 기반 규칙 주입
+Red: 테스트 작성 (실패하는 테스트)
+    ↓
+Green: 최소 구현 (테스트 통과)
+    ↓
+Refactor: 코드 개선
+    ↓
+Commit: 작은 변경 커밋
+    ↓
+track-tdd-cycle.sh (자동 감지)
+    ├─ git commit 감지 → TDD Phase 분석
+    ├─ ./gradlew test 감지 → 테스트 결과 파싱
+    └─ ArchUnit 감지 → 아키텍처 규칙 검증
          ↓
-Claude Code (규칙 준수 코드 생성)
-    └─ Cache 규칙 100% 준수
+log-to-langfuse.py (메트릭 저장)
+    ├─ JSONL 로그 (항상 작동)
+    └─ LangFuse 업로드 (선택적)
          ↓
-after-tool-use.sh (실시간 검증)
-    ├─ validation-helper.py 호출
-    ├─ 검증 결과 로그 기록
-    └─ 위반 시 경고 표시
-         ↓
-LangFuse (효율 측정)
-    ├─ Hook 로그 집계
-    ├─ 토큰 사용량 추적
-    └─ 위반 건수 모니터링
+LangFuse Dashboard (분석)
+    ├─ TDD 사이클 시간 분석
+    ├─ 커밋 크기 추적
+    ├─ 테스트 성공률 모니터링
+    └─ 리팩토링 빈도 분석
 ```
 
-#### A/B 테스트 검증 방법
+#### 메트릭 수집
 
+**자동 수집되는 메트릭**:
+- **TDD Phase**: 커밋 메시지로 Red/Green/Refactor 자동 분류
+- **Commit Size**: 변경된 파일 수, 라인 수
+- **Test Results**: 통과/실패 테스트 수, 실행 시간
+- **ArchUnit**: 아키텍처 규칙 위반 수
+
+**로그 위치**:
+- `~/.claude/logs/tdd-cycle.jsonl` (항상 저장)
+- LangFuse Cloud (환경 변수 설정 시)
+
+### 2. Kent Beck TDD 커맨드 (/kb)
+
+**목적**: Plan 파일 기반으로 짧은 TDD 사이클(5-15분)을 실행하는 Layer별 커맨드
+
+**핵심 개념**:
+- **Plan 파일 기반**: `docs/prd/plans/{ISSUE-KEY}-{layer}-plan.md` 파일에서 다음 테스트 읽기
+- **TDD 4단계**: Red (테스트 작성) → Green (최소 구현) → Refactor (리팩토링) → Tidy (정리)
+- **TestFixture 필수**: 모든 레이어에서 Object Mother 패턴 사용
+- **짧은 커밋 주기**: 테스트 하나당 커밋 (Red, Green, Refactor 각각 커밋)
+- **Zero-Tolerance 자동 준수**: 각 레이어별 규칙 자동 검증
+
+**Layer별 TDD 커맨드**:
 ```bash
-# 1. Hook 로그 요약
-python3 .claude/hooks/scripts/summarize-hook-logs.py
+# Domain Layer TDD
+/kb/domain/go          # Plan 파일에서 다음 테스트 실행
+/kb/domain/red         # Red: 테스트 작성 → 실패 확인
+/kb/domain/green       # Green: 최소 구현 → 테스트 통과
+/kb/domain/refactor    # Refactor: 코드 개선
+/kb/domain/tidy        # Tidy: TestFixture 정리
+
+# Application Layer TDD
+/kb/application/go     # UseCase TDD 실행
+/kb/application/red    # Transaction 경계 주의
+/kb/application/green  # 최소 구현
+/kb/application/refactor
+/kb/application/tidy
+
+# Persistence Layer TDD
+/kb/persistence/go     # Repository/Adapter TDD 실행
+/kb/persistence/red    # Long FK 전략 준수
+/kb/persistence/green  # QueryDSL DTO Projection
+/kb/persistence/refactor
+/kb/persistence/tidy
+
+# REST API Layer TDD
+/kb/rest-api/go        # Controller TDD 실행
+/kb/rest-api/red       # MockMvc 테스트 작성
+/kb/rest-api/green     # RESTful 설계 준수
+/kb/rest-api/refactor
+/kb/rest-api/tidy
+
+# Integration Tests
+/kb/integration/go     # E2E 테스트 실행
+```
+
+**워크플로우 예시**:
+```bash
+# 1. Plan 파일 생성 (PRD → Plan)
+docs/prd/plans/MEMBER-001-domain-plan.md
+
+# 2. TDD 사이클 실행
+/kb/domain/go
+→ Plan 파일 읽기 → 다음 테스트 찾기
+→ Red: 테스트 작성 → 실패 확인 → 커밋
+→ Green: 최소 구현 → 통과 확인 → 커밋
+→ Refactor: 코드 개선 → 통과 확인 → 커밋
+→ Plan 파일에 완료 표시
+
+# 3. 다음 테스트로 이동
+/kb/domain/go (반복)
+```
+
+**Layer별 Zero-Tolerance 규칙**:
+- **Domain**: Lombok 금지, Law of Demeter, Tell Don't Ask
+- **Application**: Transaction 경계, CQRS 분리, Assembler 사용
+- **Persistence**: Long FK 전략, QueryDSL DTO Projection, Lombok 금지
+- **REST API**: RESTful 설계, DTO 패턴, Validation 필수
+
+### 3. 실시간 메트릭 모니터링
+
+**JSONL 로그 확인**:
+```bash
+# TDD 사이클 로그 실시간 모니터링
+tail -f ~/.claude/logs/tdd-cycle.jsonl
 
 # 출력 예시:
-# 🔍 Hook 로그 요약
-# ============================================================
-#
-# ## A/B 테스트 결과
-# ------------------------------------------------------------
-# Hook ON:  0 violations (100% Zero-Tolerance)
-# Hook OFF: 40 violations (0% Zero-Tolerance)
-#
-# ## Cache 규칙 주입 통계
-# ------------------------------------------------------------
-# 총 주입된 규칙 수: 546개
-# 레이어별 주입 횟수:
-#   - application: 15회
-#   - domain: 12회
-#   - persistence: 8회
-#   - adapter-rest: 7회
+# {"timestamp":"2025-11-13T12:34:56Z","event_type":"tdd_commit","data":{"project":"claude-spring-standards","commit_hash":"a1b2c3d","commit_msg":"test: Order 생성 테스트 추가","tdd_phase":"red","files_changed":"2 files changed","lines_changed":"45 insertions","timestamp":"2025-11-13T12:34:56Z"}}
+# {"timestamp":"2025-11-13T12:38:12Z","event_type":"tdd_test","data":{"project":"claude-spring-standards","test_status":"failed","tests_passed":"0","tests_failed":"1","duration_seconds":"3","timestamp":"2025-11-13T12:38:12Z"}}
+# {"timestamp":"2025-11-13T12:45:23Z","event_type":"tdd_commit","data":{"project":"claude-spring-standards","commit_hash":"d4e5f6g","commit_msg":"impl: Order 생성 로직 구현","tdd_phase":"green","files_changed":"1 file changed","lines_changed":"28 insertions","timestamp":"2025-11-13T12:45:23Z"}}
 ```
 
-### 3. Slash Commands
-
-**코드 생성**:
-- `/code-gen-domain <name>` - Domain Aggregate 생성 (규칙 자동 주입 + 검증)
-- `/code-gen-usecase <name>` - Application UseCase 생성
-- `/code-gen-controller <name>` - REST Controller 생성
-
-**검증**:
-- `/validate-domain <file>` - Domain layer 파일 검증
-- `/validate-architecture [dir]` - 전체 또는 특정 모듈 아키텍처 검증
-
-**AI 리뷰**:
-- `/ai-review [pr-number]` - 통합 AI 리뷰 (Gemini + CodeRabbit + Codex, 병렬 실행)
-- `/gemini-review [pr-number]` - Gemini 전용 (Deprecated, `/ai-review --bots gemini` 사용 권장)
-
-**기타**:
-- `/jira-task` - Jira 태스크 분석 및 브랜치 생성
-
-### 4. 시스템 검증 도구
-
-**목적**: Hook 시스템, Cache 통합 검증 및 A/B 테스트 모니터링
-
-#### 4.1 Hook 로그 요약 도구
-
-**위치**: `.claude/hooks/scripts/summarize-hook-logs.py`
-
-**기능**:
-- ✅ `hook-execution.jsonl` 로그 파싱
-- ✅ 세션별 통계 (컨텍스트 점수, 감지된 레이어)
-- ✅ Cache 규칙 주입 통계
-- ✅ A/B 테스트 결과 분석
-- ✅ 권장 사항 및 문제 해결
-
-**사용법**:
-```bash
-# 기본 (최근 5개 세션)
-python3 .claude/hooks/scripts/summarize-hook-logs.py
-
-# 최근 10개 세션, 상세 정보
-python3 .claude/hooks/scripts/summarize-hook-logs.py --sessions 10 --verbose
-
-# 출력:
-# 🔍 Hook 로그 요약
-# ============================================================
-#
-# ## 1. 전체 통계
-# ------------------------------------------------------------
-# 총 로그 수: 236
-# 이벤트 분포:
-#   - session_start: 21
-#   - keyword_analysis: 21
-#   - cache_injection: 42
-#   - validation_result: 38
-#
-# ## 2. A/B 테스트 결과
-# ------------------------------------------------------------
-# Hook ON:  0 violations (100% Zero-Tolerance)
-# Hook OFF: 40 violations (0% Zero-Tolerance)
-#
-# ## 3. Cache 규칙 주입 통계
-# ------------------------------------------------------------
-# ✅ Cache 규칙 주입 이벤트: 42회
-#    총 주입된 규칙 수: 546개
-#
-# 레이어별 주입 횟수:
-#   - application: 15회
-#   - domain: 12회
-#   - persistence: 8회
-#   - adapter-rest: 7회
-```
-
-#### 4.2 실시간 로그 모니터링
-
-```bash
-# 터미널 1: 로그 실시간 모니터링
-tail -f .claude/hooks/logs/hook-execution.jsonl
-
-# 터미널 2: Claude Code 실행
-claude code
-```
+**LangFuse 대시보드** (환경 변수 설정 시):
+- TDD 사이클 시간 차트
+- 커밋 크기 분포
+- 테스트 성공률 트렌드
+- Phase별 시간 소요 분석
 
 ### 5. Git Pre-commit Hooks (별도 시스템)
 
@@ -356,26 +334,40 @@ claude code
 
 ---
 
-## 🎯 개발 워크플로우 (Cache 시스템 활용)
+## 🎯 개발 워크플로우 (Kent Beck TDD)
 
-### 1. 코드 생성 워크플로우
+### 1. TDD 사이클 워크플로우
 
 ```bash
-# 1. Slash Command로 코드 생성 (자동 규칙 주입)
-/code-gen-domain Order
+# Red Phase: 실패하는 테스트 작성
+vim domain/src/test/java/.../OrderTest.java
+# → 테스트 작성 후 커밋
+git add .
+git commit -m "test: Order 생성 테스트 추가"
+# → track-tdd-cycle.sh 자동 실행 (Phase: red)
 
-# 2. 자동 실행 흐름:
-#    - inject-rules.py: Domain layer 규칙 주입
-#    - Claude: 규칙 준수 코드 생성
-#    - after-tool-use.sh: 즉시 검증
-#    - validation-helper.py: Cache 기반 검증
+# Green Phase: 최소 구현
+vim domain/src/main/java/.../Order.java
+# → 테스트 통과할 만큼만 구현
+./gradlew test
+# → track-tdd-cycle.sh 자동 실행 (test_status: success)
+git add .
+git commit -m "impl: Order 생성 로직 구현"
+# → track-tdd-cycle.sh 자동 실행 (Phase: green)
 
-# 3. 검증 결과 확인
-# ✅ Validation Passed: 모든 규칙 준수
-# ❌ Validation Failed: 위반 규칙 상세 표시
+# Refactor Phase: 코드 개선
+vim domain/src/main/java/.../Order.java
+# → 리팩토링 수행
+./gradlew test
+# → 테스트 여전히 통과 확인
+git add .
+git commit -m "refactor: Order 생성 로직 개선"
+# → track-tdd-cycle.sh 자동 실행 (Phase: refactor)
+
+# 결과: LangFuse에 3개 커밋 메트릭 자동 수집
 ```
 
-### 2. 수동 검증 워크플로우
+### 2. 검증 워크플로우
 
 ```bash
 # 특정 파일 검증
@@ -384,21 +376,20 @@ claude code
 # 전체 프로젝트 검증
 /validate-architecture
 
-# 특정 모듈만 검증
-/validate-architecture domain
+# ArchUnit 실행 (빌드 시 자동)
+./gradlew test
+# → track-tdd-cycle.sh가 ArchUnit 결과 자동 수집
 ```
 
-### 3. Cache 업데이트 워크플로우
+### 3. 메트릭 분석 워크플로우
 
 ```bash
-# 1. 규칙 문서 수정
-vim docs/coding_convention/02-domain-layer/law-of-demeter/01_getter-chaining-prohibition.md
+# JSONL 로그 확인
+cat ~/.claude/logs/tdd-cycle.jsonl | jq .
 
-# 2. Cache 재빌드
-python3 .claude/hooks/scripts/build-rule-cache.py
-
-# 3. 확인
-cat .claude/cache/rules/domain-layer-law-of-demeter-01_getter-chaining-prohibition.json
+# LangFuse 대시보드 확인 (환경 변수 설정 시)
+# → https://us.cloud.langfuse.com
+# → TDD 사이클 시간, 커밋 크기, 테스트 성공률 확인
 ```
 
 ---
@@ -410,17 +401,17 @@ cat .claude/cache/rules/domain-layer-law-of-demeter-01_getter-chaining-prohibiti
 ### 1. Lombok 금지
 - ❌ `@Data`, `@Builder`, `@Getter`, `@Setter` 등 모두 금지
 - ✅ Pure Java getter/setter 직접 작성
-- **검증**: validation-helper.py가 자동 감지
+- **검증**: ArchUnit (빌드 시)
 
 ### 2. Law of Demeter (Getter 체이닝 금지)
 - ❌ `order.getCustomer().getAddress().getZip()`
 - ✅ `order.getCustomerZipCode()` (Tell, Don't Ask)
-- **검증**: Anti-pattern 정규식 매칭
+- **검증**: 테스트 + 코드 리뷰
 
 ### 3. Long FK 전략 (JPA 관계 금지)
 - ❌ `@ManyToOne`, `@OneToMany`, `@OneToOne`, `@ManyToMany`
 - ✅ `private Long userId;` (Long FK 사용)
-- **검증**: JPA 관계 어노테이션 감지
+- **검증**: ArchUnit (빌드 시)
 
 ### 4. Transaction 경계
 - ❌ `@Transactional` 내 외부 API 호출 (RestTemplate, WebClient 등)
@@ -430,12 +421,12 @@ cat .claude/cache/rules/domain-layer-law-of-demeter-01_getter-chaining-prohibiti
 ### 5. Javadoc 필수
 - ❌ `@author`, `@since` 없는 public 클래스/메서드
 - ✅ 모든 public 클래스/메서드에 Javadoc 포함
-- **검증**: Checkstyle
+- **검증**: Checkstyle (빌드 시)
 
 ### 6. Scope 준수
 - ❌ 요청하지 않은 추가 기능 구현
 - ✅ 요청된 코드만 정확히 작성
-- **검증**: 수동 코드 리뷰
+- **검증**: 코드 리뷰
 
 ### 7. Orchestration Pattern (NEW) ⭐
 - ❌ `executeInternal()`에 `@Transactional` 사용
@@ -446,7 +437,7 @@ cat .claude/cache/rules/domain-layer-law-of-demeter-01_getter-chaining-prohibiti
 - ✅ `@UniqueConstraint(columnNames = {"idem_key"})` 필수
 - ❌ Orchestrator가 `boolean`/`void` 반환 또는 Exception throw
 - ✅ Orchestrator는 `Outcome` (Ok/Retry/Fail) 반환
-- **검증**: validation-helper.py, ArchUnit, Git pre-commit hook
+- **검증**: ArchUnit (빌드 시) + Git pre-commit hook
 
 ---
 
@@ -671,13 +662,9 @@ Cursor IDE:
 ### 튜토리얼
 - [Getting Started](../docs/tutorials/01-getting-started.md) - 시작 가이드 (5분)
 
-### Dynamic Hooks 시스템
-- [DYNAMIC_HOOKS_GUIDE.md](../docs/DYNAMIC_HOOKS_GUIDE.md) - 전체 시스템 가이드
-- [Cache README](./.claude/cache/rules/README.md) - Cache 시스템 상세
-- [Validation Helper](./hooks/scripts/validation-helper.py) - 검증 엔진
-
-### Hook 로깅 + LangFuse
-- [Hook 로그 요약](./hooks/scripts/summarize-hook-logs.py) - A/B 테스트 분석
+### TDD Workflow 시스템
+- [track-tdd-cycle.sh](./.claude/hooks/track-tdd-cycle.sh) - TDD 사이클 자동 추적
+- [log-to-langfuse.py](./.claude/scripts/log-to-langfuse.py) - LangFuse 메트릭 업로드
 - [LangFuse 통합 가이드](../docs/LANGFUSE_USAGE_GUIDE.md) - 효율 측정 및 모니터링
 
 ### Slash Commands
@@ -696,22 +683,24 @@ Cursor IDE:
 ### Day 1: 시스템 이해
 1. README.md 읽기 (프로젝트 개요)
 2. docs/tutorials/01-getting-started.md (실습)
-3. Cache 빌드 및 첫 코드 생성 테스트
+3. TDD 사이클 첫 실습 (Red → Green → Refactor)
 
-### Week 1: 핵심 규칙 숙지
-1. Domain Layer 규칙 (Law of Demeter, Lombok 금지)
-2. Application Layer 규칙 (Transaction 경계)
-3. Persistence Layer 규칙 (Long FK 전략)
-4. Orchestration Pattern 기초 (3-Phase Lifecycle, Idempotency) ⭐ NEW
+### Week 1: TDD + 핵심 규칙
+1. Kent Beck TDD 철학 이해
+2. Domain Layer 규칙 (Law of Demeter, Lombok 금지)
+3. Application Layer 규칙 (Transaction 경계)
+4. Persistence Layer 규칙 (Long FK 전략)
+5. Orchestration Pattern 기초 (3-Phase Lifecycle, Idempotency) ⭐ NEW
 
-### Month 1: 고급 패턴
+### Month 1: 고급 패턴 + 메트릭 분석
 1. DDD Aggregate 설계
 2. CQRS 패턴 적용
 3. Event-Driven Architecture
 4. Orchestration Pattern 실전 (WAL, Outcome Modeling, Crash Recovery) ⭐ NEW
+5. LangFuse 메트릭 분석 및 TDD 사이클 개선
 
 ---
 
 **✅ 이 프로젝트의 모든 코드는 위 표준을 따라야 합니다.**
 
-**💡 핵심**: Dynamic Hooks + Cache 시스템이 자동으로 규칙을 주입하고 검증하므로, 개발자는 비즈니스 로직에 집중할 수 있습니다!
+**💡 핵심**: TDD 테스트가 컨벤션을 강제하고, 작은 커밋이 빠른 피드백을 보장하며, LangFuse 메트릭으로 지속적 개선!
