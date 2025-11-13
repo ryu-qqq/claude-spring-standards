@@ -391,7 +391,7 @@ public String extractNestedValue() {
 ### 프로젝트 문서
 - [CODING_STANDARDS.md](../../docs/CODING_STANDARDS.md) - 전체 코딩 표준
 - [CODING_STANDARDS_SUMMARY.md](../../docs/CODING_STANDARDS_SUMMARY.md) - 핵심 원칙 요약
-- [Law of Demeter 가이드](../../docs/coding_convention/02-domain-layer/law-of-demeter/)
+- [Law of Demeter 가이드](../../docs/coding_convention/02-domain-layer/legacy/law-of-demeter/)
 
 ### 외부 자료
 - [Checkstyle 공식 문서](https://checkstyle.org/)

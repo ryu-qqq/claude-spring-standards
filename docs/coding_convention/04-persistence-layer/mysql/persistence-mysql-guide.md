@@ -56,11 +56,9 @@ persistence-mysql/
 ## 3) 디렉터리별 상세 가이드 링크
 * **config/**
 
-
 * **adapter/**
-
-	* `CommandAdapter/`: 
-	* `QueryAdapter/`: 
+	* `CommandAdapter/`: [Command Adapter 가이드](./adapter/command-adapter-guide.md) | [테스트](./adapter/command-adapter-test-guide.md) | [ArchUnit](./adapter/command-adapter-archunit.md)
+	* `QueryAdapter/`: [Query Adapter 가이드](adapter/query/query-adapter-guide.md) 
 
 * **entity/**
 
@@ -69,9 +67,6 @@ persistence-mysql/
 
 
 * **repository/**
-
-
-* **testing**
 
 
 ---

@@ -1,6 +1,7 @@
-package com.ryuqq.fileflow.adapter.rest.common.dto;
+package com.ryuqq.adapter.in.rest.common.dto;
 
-import com.ryuqq.fileflow.application.common.dto.SliceResponse;
+
+import com.ryuqq.application.common.dto.response.SliceResponse;
 
 import java.util.List;
 import java.util.function.Function;
@@ -63,7 +64,7 @@ public record SliceApiResponse<T>(
      * @since 1.0.0
      */
     public static <T> SliceApiResponse<T> from(
-            com.ryuqq.fileflow.application.common.dto.SliceResponse<T> appSliceResponse) {
+            SliceResponse<T> appSliceResponse) {
 
         return new SliceApiResponse<>(
             appSliceResponse.content(),

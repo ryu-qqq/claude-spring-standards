@@ -121,10 +121,10 @@ Claude: 규칙 100% 준수 코드 생성 (Hook ON)
 
 다음 규칙은 **예외 없이** 반드시 준수해야 합니다:
 
-- **Lombok 금지** - Plain Java 사용 → [상세](docs/coding_convention/02-domain-layer/law-of-demeter/)
-- **Law of Demeter** - Getter 체이닝 금지 (`order.getCustomer().getAddress()` ❌) → [상세](docs/coding_convention/02-domain-layer/law-of-demeter/)
-- **Long FK 전략** - JPA 관계 어노테이션 금지, Long FK 사용 → [상세](docs/coding_convention/04-persistence-layer/jpa-entity-design/)
-- **Transaction 경계** - `@Transactional` 내 외부 API 호출 절대 금지 → [상세](docs/coding_convention/03-application-layer/transaction-management/)
+- **Lombok 금지** - Plain Java 사용 → [상세](docs/coding_convention/02-domain-layer/legacy/law-of-demeter/)
+- **Law of Demeter** - Getter 체이닝 금지 (`order.getCustomer().getAddress()` ❌) → [상세](docs/coding_convention/02-domain-layer/legacy/law-of-demeter/)
+- **Long FK 전략** - JPA 관계 어노테이션 금지, Long FK 사용 → [상세](docs/coding_convention/04-persistence-layer/legacy/jpa-entity-design/)
+- **Transaction 경계** - `@Transactional` 내 외부 API 호출 절대 금지 → [상세](docs/coding_convention/03-application-layer/legacy/transaction-management/)
 - **Transactional Outbox Pattern** - 외부 API 호출 시 Outbox 패턴 사용 (Pattern B 권장) → [상세](docs/coding_convention/09-orchestration-patterns/04_outbox-pattern.md)
 
 **전체 규칙**: [코딩 컨벤션 문서](docs/coding_convention/) (98개 규칙)
@@ -234,7 +234,7 @@ claude code
 → Hook이 자동으로 Law of Demeter, Tell Don't Ask 규칙 주입
 ```
 
-**상세 가이드**: [Skills 디렉토리](.claude/skills/)
+**상세 가이드**: [Skills 디렉토리](.claude/backup/20251113-121610/skills/)
 
 ---
 
@@ -258,9 +258,9 @@ tail -f .claude/hooks/logs/hook-execution.jsonl
 
 ### 핵심 문서
 - **[Commands README](.claude/commands/README.md)** - 모든 Slash Commands 설명
-- **[Claude Skills](.claude/skills/)** - 5개 전문가 에이전트 가이드
+- **[Claude Skills](.claude/backup/20251113-121610/skills/)** - 5개 전문가 에이전트 가이드
 - **[코딩 컨벤션](docs/coding_convention/)** - 98개 규칙 (Layer별)
-- **[ArchUnit 템플릿](.claude/templates/archunit/)** - 5개 테스트 템플릿
+- **[ArchUnit 템플릿](.claude/backup/20251113-121610/templates/archunit/)** - 5개 테스트 템플릿
 
 ### 시스템 분석
 - [Hook 로그 요약 도구](.claude/hooks/scripts/summarize-hook-logs.py) - A/B 테스트 분석

@@ -99,47 +99,63 @@ class QueryPortArchTest {
 
     /**
      * 규칙 5: findById() 메서드 필수
-     *
-     * Note: 메서드 존재 여부는 컴파일러가 검증하므로 ArchUnit 검증 불필요
      */
-    // @Test
-    // @DisplayName("[필수] QueryPort는 findById() 메서드를 가져야 한다")
-    // void queryPort_MustHaveFindByIdMethod() {
-    //     // 메서드 존재 여부는 인터페이스 계약으로 컴파일 타임에 검증됨
-    // }
+    @Test
+    @DisplayName("[필수] QueryPort는 findById() 메서드를 가져야 한다")
+    void queryPort_MustHaveFindByIdMethod() {
+        ArchRule rule = methods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
+            .and().haveNameMatching("findById")
+            .should().beDeclared()
+            .because("QueryPort는 findById() 메서드를 무조건 제공해야 합니다");
+
+        rule.check(classes);
+    }
 
     /**
      * 규칙 6: existsById() 메서드 필수
-     *
-     * Note: 메서드 존재 여부는 컴파일러가 검증하므로 ArchUnit 검증 불필요
      */
-    // @Test
-    // @DisplayName("[필수] QueryPort는 existsById() 메서드를 가져야 한다")
-    // void queryPort_MustHaveExistsByIdMethod() {
-    //     // 메서드 존재 여부는 인터페이스 계약으로 컴파일 타임에 검증됨
-    // }
+    @Test
+    @DisplayName("[필수] QueryPort는 existsById() 메서드를 가져야 한다")
+    void queryPort_MustHaveExistsByIdMethod() {
+        ArchRule rule = methods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
+            .and().haveNameMatching("existsById")
+            .should().beDeclared()
+            .because("QueryPort는 existsById() 메서드를 무조건 제공해야 합니다");
+
+        rule.check(classes);
+    }
 
     /**
      * 규칙 7: findByCriteria() 메서드 필수
-     *
-     * Note: 메서드 존재 여부는 컴파일러가 검증하므로 ArchUnit 검증 불필요
      */
-    // @Test
-    // @DisplayName("[필수] QueryPort는 findByCriteria() 메서드를 가져야 한다")
-    // void queryPort_MustHaveFindByCriteriaMethod() {
-    //     // 메서드 존재 여부는 인터페이스 계약으로 컴파일 타임에 검증됨
-    // }
+    @Test
+    @DisplayName("[필수] QueryPort는 findByCriteria() 메서드를 가져야 한다")
+    void queryPort_MustHaveFindByCriteriaMethod() {
+        ArchRule rule = methods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
+            .and().haveNameMatching("findByCriteria")
+            .should().beDeclared()
+            .because("QueryPort는 findByCriteria() 메서드를 무조건 제공해야 합니다");
+
+        rule.check(classes);
+    }
 
     /**
      * 규칙 8: countByCriteria() 메서드 필수
-     *
-     * Note: 메서드 존재 여부는 컴파일러가 검증하므로 ArchUnit 검증 불필요
      */
-    // @Test
-    // @DisplayName("[필수] QueryPort는 countByCriteria() 메서드를 가져야 한다")
-    // void queryPort_MustHaveCountByCriteriaMethod() {
-    //     // 메서드 존재 여부는 인터페이스 계약으로 컴파일 타임에 검증됨
-    // }
+    @Test
+    @DisplayName("[필수] QueryPort는 countByCriteria() 메서드를 가져야 한다")
+    void queryPort_MustHaveCountByCriteriaMethod() {
+        ArchRule rule = methods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
+            .and().haveNameMatching("countByCriteria")
+            .should().beDeclared()
+            .because("QueryPort는 countByCriteria() 메서드를 무조건 제공해야 합니다");
+
+        rule.check(classes);
+    }
 
     /**
      * 규칙 9: 저장/수정/삭제 메서드 금지
@@ -149,7 +165,8 @@ class QueryPortArchTest {
     void queryPort_MustNotHaveCommandMethods() {
         ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
-            .should().haveNameMatching("save|update|delete|remove|persist")
+            .and().haveNameMatching("save|update|delete|remove|persist")
+            .should().beDeclared()
             .because("저장/수정/삭제 메서드는 PersistencePort에서 처리해야 합니다 (CQRS 분리)");
 
         rule.check(classes);

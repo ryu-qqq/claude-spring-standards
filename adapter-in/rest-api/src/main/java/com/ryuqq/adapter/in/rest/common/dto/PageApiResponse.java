@@ -1,6 +1,7 @@
-package com.ryuqq.fileflow.adapter.rest.common.dto;
+package com.ryuqq.adapter.in.rest.common.dto;
 
-import com.ryuqq.fileflow.application.common.dto.PageResponse;
+
+import com.ryuqq.application.common.dto.response.PageResponse;
 
 import java.util.List;
 import java.util.function.Function;
@@ -71,7 +72,7 @@ public record PageApiResponse<T>(
      * @since 1.0.0
      */
     public static <T> PageApiResponse<T> from(
-            com.ryuqq.fileflow.application.common.dto.PageResponse<T> appPageResponse) {
+            PageResponse<T> appPageResponse) {
 
         return new PageApiResponse<>(
             appPageResponse.content(),

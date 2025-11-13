@@ -2,53 +2,19 @@
 
 You are executing the Kent Beck TDD workflow for **Application Layer**.
 
-## MUST DO BEFORE STARTING
-
-### 1. Git Branch Check ⚠️
-**CRITICAL**: Never work on main/master branch!
-
-**Steps**:
-1. Check current branch: `git branch`
-2. If on main/master:
-   - Extract Issue Key from plan file (e.g., MEMBER-001)
-   - Create branch: `git checkout -b feature/{ISSUE-KEY}-application`
-   - Example: `feature/MEMBER-001-application`
-3. If branch doesn't exist: create it
-4. If branch exists: checkout to it
-
-### 2. Plan File Checklist Update 📝
-**After completing each TDD phase**, update the plan file checklist items to `[x]`.
-
-**When to Update**:
-- **RED Phase**: After writing tests → Mark Red checklist as `[x]` → Commit
-- **GREEN Phase**: After implementation → Mark Green checklist as `[x]` → Commit
-- **REFACTOR Phase**: After refactoring → Mark Refactor checklist as `[x]` → Commit
-
 ## Instructions
 
-1. **Check Git Branch** (see MUST DO section above):
-   - Ensure NOT on main/master branch
-   - Extract Issue Key from plan file (e.g., MEMBER-001)
-   - If feature/{ISSUE-KEY}-application branch doesn't exist, create it
-   - Checkout to feature branch before starting TDD
-
-2. **Read plan file** from `docs/prd/plans/{ISSUE-KEY}-application-plan.md`
-
-3. **Find the next unmarked test** in the Application Layer section
-
-4. **Mark the test as in-progress** by adding "🔄 IN PROGRESS" marker
-
-5. **Execute the TDD Cycle**:
-   - **RED**: Write the simplest failing test first → **Update Red checklist items to [x]** → Commit
-   - **GREEN**: Implement minimum code to make the test pass → **Update Green checklist items to [x]** → Commit
-   - **REFACTOR**: Improve structure only after tests pass → **Update Refactor checklist items to [x]** → Commit
+1. **Read plan file** from `docs/prd/plans/{ISSUE-KEY}-application-plan.md`
+2. **Find the next unmarked test** in the Application Layer section
+3. **Mark the test as in-progress** by adding a checkbox or marker
+4. **Execute the TDD Cycle**:
+   - **RED**: Write the simplest failing test first
+   - **GREEN**: Implement minimum code to make the test pass
+   - **REFACTOR**: Improve structure only after tests pass
    - **TIDY**: Clean up tests using TestFixture pattern
-
-6. **Run all tests** (excluding long-running tests)
-
-7. **Verify** all tests pass before proceeding
-
-8. **Mark test complete** in plan file (change "🔄 IN PROGRESS" to "✅ COMPLETED")
+5. **Run all tests** (excluding long-running tests)
+6. **Verify** all tests pass before proceeding
+7. **Mark test complete** in plan file
 
 ## Application Layer Specific Rules
 
