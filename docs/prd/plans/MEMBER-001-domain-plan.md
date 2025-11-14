@@ -9,7 +9,7 @@
 
 ## 📝 TDD 사이클 체크리스트
 
-### 1️⃣ Email Value Object 설계 (Cycle 1) 🔄 IN PROGRESS
+### 1️⃣ Email Value Object 설계 (Cycle 1) ✅ COMPLETED
 
 #### 🔴 Red: 테스트 작성
 - [x] `domain/src/test/java/com/ryuqq/domain/member/Email/EmailTest.java` 파일 생성
@@ -36,14 +36,14 @@
 - [x] 커밋: `impl: Email VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
-- [ ] 정규식 패턴 상수로 추출: `private static final Pattern EMAIL_PATTERN`
-- [ ] 검증 로직 메서드로 분리: `private static void validate(String value)`
-- [ ] `equals()`, `hashCode()` 자동 생성 확인 (Record)
-- [ ] VO ArchUnit 테스트 작성 및 통과
+- [x] 정규식 패턴 상수로 추출: `private static final Pattern EMAIL_PATTERN`
+- [x] 검증 로직 메서드로 분리: `private static void validate(String value)`
+- [x] `equals()`, `hashCode()` 자동 생성 확인 (Record)
+- [x] VO ArchUnit 테스트 작성 및 통과
   - VO는 `equals()`, `hashCode()` 구현 필수
   - VO는 Immutable 필수
-- [ ] 테스트 여전히 통과 확인
-- [ ] 커밋: `refactor: Email VO 개선 (Refactor)`
+- [x] 테스트 여전히 통과 확인
+- [x] 커밋: `refactor: Email VO 개선 (Refactor)` → 이미 완료됨
 
 #### 🧹 Tidy: TestFixture 정리
 - [ ] `domain/src/test/java/com/ryuqq/domain/member/Email/EmailFixture.java` 생성
