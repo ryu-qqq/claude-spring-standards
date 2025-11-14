@@ -38,83 +38,59 @@ def append_to_jsonl(event_type: str, data: dict):
 
 def upload_to_langfuse(event_type: str, data: dict):
     """
-    LangFuse Ingestion API로 업로드
+    LangFuse SDK로 업로드
     환경 변수 필요:
     - LANGFUSE_PUBLIC_KEY
     - LANGFUSE_SECRET_KEY
     - LANGFUSE_HOST (optional, default: https://us.cloud.langfuse.com)
     """
     try:
-        import requests
+        from langfuse import Langfuse
+        from langfuse.types import TraceContext
+        import uuid
     except ImportError:
-        # requests 없으면 JSONL만 저장
+        # langfuse SDK 없으면 JSONL만 저장
         return
 
     public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
     secret_key = os.getenv("LANGFUSE_SECRET_KEY")
-    host = os.getenv("LANGFUSE_HOST", "https://us.cloud.langfuse.com")
 
     if not public_key or not secret_key:
         # 환경 변수 없으면 JSONL만 저장
         return
 
-    # LangFuse Ingestion API 엔드포인트
-    url = f"{host}/api/public/ingestion"
-
-    # 이벤트 타입별 매핑
-    if event_type == "tdd_commit":
-        payload = {
-            "batch": [{
-                "id": f"commit-{data.get('commit_hash', 'unknown')}",
-                "type": "event",
-                "body": {
-                    "name": "TDD Commit",
-                    "metadata": data
-                }
-            }]
-        }
-    elif event_type == "tdd_test":
-        payload = {
-            "batch": [{
-                "id": f"test-{datetime.utcnow().timestamp()}",
-                "type": "span",
-                "body": {
-                    "name": "Test Execution",
-                    "metadata": data
-                }
-            }]
-        }
-    elif event_type == "archunit_check":
-        payload = {
-            "batch": [{
-                "id": f"archunit-{datetime.utcnow().timestamp()}",
-                "type": "event",
-                "body": {
-                    "name": "ArchUnit Validation",
-                    "metadata": data
-                }
-            }]
-        }
-    else:
-        payload = {
-            "batch": [{
-                "id": f"{event_type}-{datetime.utcnow().timestamp()}",
-                "type": "event",
-                "body": {
-                    "name": event_type,
-                    "metadata": data
-                }
-            }]
-        }
-
     try:
-        response = requests.post(
-            url,
-            json=payload,
-            auth=(public_key, secret_key),
-            timeout=5
+        # LangFuse 클라이언트 생성
+        langfuse = Langfuse()
+
+        # Trace ID 생성 (32 lowercase hex chars)
+        trace_id = uuid.uuid4().hex
+        project = data.get("project", "unknown")
+
+        # Trace context 생성
+        trace_context = TraceContext(
+            trace_id=trace_id,
+            trace_name=f"TDD Cycle - {project}"
         )
-        response.raise_for_status()
+
+        # 이벤트 타입별 이름 매핑
+        event_name_map = {
+            "tdd_commit": f"TDD Commit - {data.get('tdd_phase', 'unknown')}",
+            "tdd_test": "Test Execution",
+            "archunit_check": "ArchUnit Validation"
+        }
+        event_name = event_name_map.get(event_type, event_type)
+
+        # Event 생성
+        langfuse.create_event(
+            trace_context=trace_context,
+            name=event_name,
+            metadata=data
+        )
+
+        # Flush to ensure upload
+        langfuse.flush()
+
     except Exception as e:
         # 실패해도 조용히 넘어감 (개발 흐름 방해 안 함)
         pass
