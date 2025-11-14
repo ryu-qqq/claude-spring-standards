@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/03-application-layer/dto-patterns/04_dto-naming-convention.md

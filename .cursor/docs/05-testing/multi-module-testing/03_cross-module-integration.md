@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/05-testing/multi-module-testing/03_cross-module-integration.md

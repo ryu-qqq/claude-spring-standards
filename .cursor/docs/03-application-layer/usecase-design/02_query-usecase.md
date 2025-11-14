@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/03-application-layer/usecase-design/02_query-usecase.md

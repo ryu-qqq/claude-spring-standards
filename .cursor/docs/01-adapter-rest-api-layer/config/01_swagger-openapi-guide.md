@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/01-adapter-rest-api-layer/config/01_swagger-openapi-guide.md

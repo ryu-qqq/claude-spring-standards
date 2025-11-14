@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/09-orchestration-patterns/README.md

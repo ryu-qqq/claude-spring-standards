@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/testing/03_test-tags-strategy.md

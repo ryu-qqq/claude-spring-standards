@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/02-domain-layer/package-guide/01_domain_package_guide.md

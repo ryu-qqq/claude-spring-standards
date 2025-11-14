@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/06-java21-patterns/sealed-classes/01_domain-modeling.md

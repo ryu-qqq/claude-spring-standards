@@ -52,7 +52,7 @@ public abstract class BaseAuditEntity {
      * 수정 일시
      *
      * <p>엔티티 최종 수정 시각을 기록합니다.</p>
-     * <p>markAsUpdated() 메서드로만 변경 가능합니다.</p>
+     * <p>Mapper에서 of() 메서드로 새 Entity 생성 시 updatedAt을 직접 설정합니다.</p>
      */
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
@@ -79,17 +79,6 @@ public abstract class BaseAuditEntity {
     }
 
     /**
-     * 현재 시각으로 감사 정보 초기화
-     *
-     * <p>신규 엔티티 생성 시 현재 시각으로 생성/수정 일시를 설정합니다.</p>
-     */
-    protected void initializeAuditFields() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    /**
      * 생성 일시 조회
      *
      * @return 생성 일시
@@ -105,29 +94,5 @@ public abstract class BaseAuditEntity {
      */
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    /**
-     * 엔티티 수정 시각 갱신
-     *
-     * <p>엔티티의 상태가 변경될 때 호출하여 수정 일시를 업데이트합니다.</p>
-     * <p>도메인 의미를 가진 메서드로 setter를 대체합니다.</p>
-     *
-     * <p><strong>사용 시점:</strong></p>
-     * <ul>
-     *   <li>엔티티 필드 값 변경 후</li>
-     *   <li>비즈니스 메서드 실행 후</li>
-     *   <li>Repository save() 호출 전</li>
-     * </ul>
-     *
-     * <p><strong>예시:</strong></p>
-     * <pre>{@code
-     * entity.updateMessage("new message");
-     * entity.markAsUpdated();  // 수정 일시 갱신
-     * repository.save(entity);
-     * }</pre>
-     */
-    public void markAsUpdated() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

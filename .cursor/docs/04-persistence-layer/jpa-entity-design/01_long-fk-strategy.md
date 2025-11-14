@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/jpa-entity-design/01_long-fk-strategy.md

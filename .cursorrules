@@ -1,7 +1,67 @@
 # Spring DDD Standards - Cursor AI Rules
 
-> **컨벤션 원본**: `docs/coding_convention/` (98개 규칙)
+> **컨벤션 원본**: `docs/coding_convention/` (88개 규칙)
 > **Cache**: `.claude/cache/rules/` (JSON 검색용)
+> **Global Framework**: `~/.claude/` (SuperClaude)
+
+---
+
+## 🎯 Kent Beck TDD + Tidy First 철학
+
+이 프로젝트는 **테스트 주도 개발 (TDD)**과 **Tidy First (구조 먼저, 기능 나중)**를 따릅니다.
+
+### Kent Beck의 TDD 3단계
+
+```
+Red (테스트 작성) → Green (최소 구현) → Refactor (구조 개선)
+         ↓                ↓                  ↓
+    실패하는 테스트     테스트 통과         코드 개선
+         ↓                ↓                  ↓
+     test: 커밋        feat: 커밋        struct: 커밋
+```
+
+### Tidy First 핵심 개념
+
+**구조적 변경(Structural)**과 **동작 변경(Behavioral)**을 절대 섞지 말 것!
+
+#### 1️⃣ Structural Changes (구조적 변경)
+- **정의**: 동작을 변경하지 않고 코드 구조만 개선
+- **예시**: 변수/메서드 이름 변경, 메서드 추출, 코드 이동, 중복 제거
+- **검증**: 테스트 결과가 변경 전후 동일해야 함
+- **커밋**: `struct:` prefix 사용
+
+#### 2️⃣ Behavioral Changes (동작 변경)
+- **정의**: 실제 기능 추가 또는 변경
+- **예시**: 새 메서드/클래스 추가, 비즈니스 로직 변경, 알고리즘 개선
+- **커밋**: `test:` (Red) 또는 `feat:` (Green) prefix 사용
+
+#### 3️⃣ 철칙: 절대 섞지 말 것!
+
+```
+❌ 잘못된 예 (섞음):
+- 메서드 이름 변경 + 새 기능 추가 (동시에)
+
+✅ 올바른 예 (분리):
+1. struct: 메서드 이름 변경 → 커밋
+2. test: 새 기능 테스트 추가 → 커밋
+3. feat: 새 기능 구현 → 커밋
+```
+
+### 커밋 메시지 규칙
+
+| Prefix | 용도 | Phase | 예시 |
+|--------|------|-------|------|
+| `test:` | 실패하는 테스트 추가 | Red | `test: Email VO 검증 테스트 추가` |
+| `feat:` | 테스트 통과 구현 | Green | `feat: Email VO 구현 (RFC 5322)` |
+| `struct:` | 구조 개선 (동작 동일) | Refactor | `struct: Email 검증 로직 메서드 추출` |
+| `fix:` | 버그 수정 | - | `fix: Email null 처리 누락 수정` |
+| `chore:` | 빌드/설정 변경 | - | `chore: Gradle 버전 업데이트` |
+
+**핵심 원칙**:
+- ✅ 한 커밋에는 하나의 타입만
+- ✅ Structural과 Behavioral 절대 섞지 않기
+- ✅ 작은 커밋 (1-3 파일)
+- ✅ 모든 테스트 통과 시에만 커밋
 
 ---
 
@@ -10,6 +70,7 @@
 ### 1. Lombok 금지
 - ❌ `@Data`, `@Builder`, `@Getter`, `@Setter`, `@AllArgsConstructor`, `@NoArgsConstructor`
 - ✅ **Pure Java getter/setter 직접 작성**
+- **예외**: Test Fixture 모듈에서만 허용
 
 ### 2. Law of Demeter (Getter 체이닝 금지)
 - ❌ `order.getCustomer().getAddress().getZipCode()`
@@ -41,21 +102,151 @@
 - ❌ `@author`, `@since` 없는 public 클래스/메서드
 - ✅ **모든 public 클래스/메서드에 Javadoc**
 
+### 7. Spring 프록시 제약사항
+⚠️ **다음 경우 `@Transactional`이 작동하지 않습니다:**
+- Private 메서드
+- Final 클래스/메서드
+- 같은 클래스 내부 호출 (`this.method()`)
+
 ---
 
-## 📋 필수 규칙
+## 📋 Layer별 필수 규칙
 
-### Domain Layer
-- ✅ Aggregate Root, Value Object, Domain Event, Factory Pattern
+### 🔷 Domain Layer (Pure Java - 가장 엄격)
 
-### Application Layer
-- ✅ UseCase Single Responsibility, Command/Query 분리, `@Transactional` 경계, Assembler
+**Zero-Tolerance**:
+- ✅ Lombok 절대 금지 (Plain Java만)
+- ✅ Law of Demeter 준수 (Getter 체이닝 금지)
+- ✅ Tell, Don't Ask 패턴 (상태 변경은 비즈니스 메서드로)
+- ✅ JPA/Spring 어노테이션 금지 (Pure Java)
+- ✅ Static Factory Methods 3종 (forNew, of, reconstitute)
+- ✅ Foreign Key as Value Object (Long → VO)
+- ✅ Clock 의존성 주입 (LocalDateTime.now() 금지)
 
-### Persistence Layer
-- ✅ CQRS, QueryDSL, N+1 방지
+**Architecture Patterns**:
+- ✅ Aggregate Root, Value Object, Domain Event
+- ✅ Immutability (final fields, unmodifiable collections)
+- ✅ Factory Pattern (static factory methods)
 
-### REST API Layer
-- ✅ Controller Thin, GlobalExceptionHandler, ApiResponse 표준화
+**상세 규칙**: `docs/coding_convention/02-domain-layer/`
+
+### 🔶 Application Layer (UseCase + Transaction)
+
+**Zero-Tolerance**:
+- ✅ Transaction Boundary 준수 (외부 API 호출 금지)
+- ✅ Spring Proxy 제약사항 준수 (private/final/this 금지)
+- ✅ CQRS 엄격 분리 (Command/Query 패키지 분리)
+- ✅ DTO Package 분리 (dto/command, dto/query, dto/response)
+- ✅ Single Responsibility (한 UseCase = 한 비즈니스 작업)
+- ✅ Assembler Pattern (DTO ↔ Domain 변환 집중)
+
+**Transaction Management**:
+- ✅ @Transactional은 UseCase(Service)에만
+- ✅ Facade는 트랜잭션 밖에서 조합
+- ✅ Transaction Manager: 단일 Port 트랜잭션 처리
+
+**상세 규칙**: `docs/coding_convention/03-application-layer/`
+
+### 🔷 Persistence Layer (Adapter-out)
+
+**Zero-Tolerance**:
+- ✅ Long FK Strategy 엄격 준수 (JPA 관계 금지)
+- ✅ Entity Construction Pattern (of() public, 생성자 private)
+- ✅ BaseAuditEntity / SoftDeletableEntity 활용
+- ✅ Entity Immutability (Setter 금지, Getter만)
+- ✅ CQRS Separation (Command: JpaRepository, Query: QueryDSL)
+- ✅ Transaction은 Application Layer 전용 (Adapter에 @Transactional 금지)
+
+**QueryDSL Optimization**:
+- ✅ fetchJoin() for collections
+- ✅ Query execution plan 확인
+- ✅ N+1 방지
+
+**상세 규칙**: `docs/coding_convention/04-persistence-layer/`
+
+### 🔶 REST API Layer (Adapter-in)
+
+**Zero-Tolerance**:
+- ✅ Thin Controller (비즈니스 로직 금지)
+- ✅ ResponseEntity<ApiResponse<T>> 래핑 필수
+- ✅ @Valid 검증 필수
+- ✅ DELETE 메서드 금지 (소프트 삭제는 PATCH)
+- ✅ Exception Handling (GlobalExceptionHandler 위임)
+- ✅ Mapper DI (@Component, static 금지)
+- ✅ DTO Pattern (Java 21 Record, Lombok 금지)
+
+**RESTful URI**:
+- ✅ 리소스 복수형 (/orders)
+- ❌ 동사 금지 (/createOrder)
+- ✅ 상태 변경은 PATCH (/orders/{id}/cancel)
+
+**상세 규칙**: `docs/coding_convention/01-adapter-in-layer/rest-api/`
+
+### 🧪 Testing
+
+**Test Coverage**:
+- ✅ Domain layer: 90%+ required
+- ✅ Application layer: 80%+ required
+
+**Test Patterns**:
+- ✅ Test Fixtures (Layer별 독립 모듈)
+- ✅ Given-When-Then 구조
+- ✅ @DisplayName (설명적인 테스트명)
+- ✅ ArchUnit (아키텍처 규칙 검증)
+- ✅ Integration Tests (Testcontainers)
+
+**상세 규칙**: `docs/coding_convention/05-testing/`
+
+---
+
+## 🛠️ 개발 워크플로우
+
+### TDD 사이클 (5-15분)
+
+```bash
+# 🔴 Red Phase: 실패하는 테스트 작성
+vim domain/src/test/java/.../EmailTest.java
+./gradlew test  # 실패 확인
+git commit -m "test: Email VO 검증 테스트 추가"
+
+# 🟢 Green Phase: 최소 구현
+vim domain/src/main/java/.../Email.java
+./gradlew test  # 통과 확인
+git commit -m "feat: Email VO 구현 (RFC 5322 검증)"
+
+# ♻️ Refactor Phase: 구조 개선 (필요 시)
+vim domain/src/main/java/.../Email.java
+./gradlew test  # 여전히 통과 확인
+git commit -m "struct: Email 검증 로직 메서드 추출"
+```
+
+### ArchUnit 검증
+
+```bash
+# 전체 아키텍처 검증
+./gradlew test --tests "*.architecture.*"
+
+# Layer별 검증
+./gradlew test --tests "*DomainLayerArchTest"
+./gradlew test --tests "*ApplicationLayerArchTest"
+./gradlew test --tests "*PersistenceLayerArchTest"
+./gradlew test --tests "*RestApiLayerArchTest"
+```
+
+### LangFuse 메트릭 (자동 수집)
+
+```bash
+# JSONL 로그 확인
+tail -f ~/.claude/logs/tdd-cycle.jsonl
+
+# LangFuse 대시보드
+open https://us.cloud.langfuse.com
+
+# 자동 추적:
+- TDD Phase (test:/feat:/struct:)
+- 커밋 크기 (파일/라인 수)
+- Tidy First 준수율
+```
 
 ---
 
@@ -63,15 +254,91 @@
 
 **Cursor AI는 아래 디렉토리의 마크다운 파일을 자동으로 읽을 수 있습니다:**
 
-- `docs/coding_convention/02-domain-layer/`
-- `docs/coding_convention/03-application-layer/`
-- `docs/coding_convention/04-persistence-layer/`
-- `docs/coding_convention/01-adapter-rest-api-layer/`
-- `docs/coding_convention/05-testing/`
-- `docs/coding_convention/06-java21-patterns/`
-- `docs/coding_convention/07-enterprise-patterns/`
-- `docs/coding_convention/09-orchestration-patterns/`
+### 핵심 문서
+- `.claude/CLAUDE.md` - 프로젝트 전체 설정
+- `docs/coding_convention/` - 88개 상세 규칙
+
+### Layer별 가이드
+- `docs/coding_convention/02-domain-layer/` - Domain 규칙 (12개)
+- `docs/coding_convention/03-application-layer/` - Application 규칙 (26개)
+- `docs/coding_convention/04-persistence-layer/` - Persistence 규칙 (23개)
+- `docs/coding_convention/01-adapter-in-layer/rest-api/` - REST API 규칙 (22개)
+- `docs/coding_convention/05-testing/` - Testing 규칙 (3개)
+
+### 패턴 가이드
+- `docs/coding_convention/06-java21-patterns/` - Java 21 패턴
+- `docs/coding_convention/07-enterprise-patterns/` - 엔터프라이즈 패턴
+- `docs/coding_convention/09-orchestration-patterns/` - Orchestration 패턴
 
 ---
 
-**✅ 이 규칙들을 준수하면 Claude Code 검증을 통과할 수 있습니다!**
+## 📊 ArchUnit 검증 항목
+
+### Layer Dependencies
+```java
+// Domain은 어떤 layer도 참조하지 않음
+noClasses().that().resideIn("..domain..").should().dependOnClassesThat().resideIn("..application..")
+noClasses().that().resideIn("..domain..").should().dependOnClassesThat().resideIn("..persistence..")
+noClasses().that().resideIn("..domain..").should().dependOnClassesThat().resideIn("..adapter..")
+
+// Application은 Domain만 참조
+classes().that().resideIn("..application..").should().onlyDependOnClassesThat().resideIn("..domain..", "..application..", "java..", "org.springframework..")
+
+// Persistence는 Domain과 Application Port만 참조
+classes().that().resideIn("..persistence..").should().onlyDependOnClassesThat().resideIn("..domain..", "..application.port.out..", "..persistence..", "java..", "org.springframework..", "jakarta.persistence..")
+```
+
+### Zero-Tolerance Rules
+```java
+// Lombok 금지 (Domain/Application/Persistence)
+noClasses().that().resideIn("..domain..").should().beAnnotatedWith(Data.class)
+noClasses().that().resideIn("..domain..").should().beAnnotatedWith(Builder.class)
+
+// JPA 관계 금지 (Persistence)
+noFields().that().areDeclaredIn("..persistence.entity..").should().beAnnotatedWith(ManyToOne.class)
+noFields().that().areDeclaredIn("..persistence.entity..").should().beAnnotatedWith(OneToMany.class)
+
+// Transaction은 Application Layer만
+noClasses().that().resideIn("..persistence..").should().beAnnotatedWith(Transactional.class)
+noClasses().that().resideIn("..domain..").should().beAnnotatedWith(Transactional.class)
+```
+
+### Naming Conventions
+```java
+// UseCase Interface 네이밍
+classes().that().resideIn("..application.port.in.command..").should().haveSimpleNameEndingWith("UseCase")
+classes().that().resideIn("..application.port.in.query..").should().haveSimpleNameEndingWith("Query")
+
+// Adapter 네이밍
+classes().that().resideIn("..persistence.adapter..").should().haveSimpleNameEndingWith("Adapter")
+classes().that().resideIn("..rest.controller..").should().haveSimpleNameEndingWith("Controller")
+```
+
+---
+
+## 🎓 Best Practices
+
+### 1. TDD 사이클은 짧게 (5-15분)
+- 작은 단위로 나누어 Red → Green → Refactor
+- 큰 기능은 여러 사이클로 분할
+
+### 2. 커밋은 더 작게 (1-3 파일)
+- Structural과 Behavioral 절대 섞지 않기
+- 한 커밋 = 한 변경 (Single Responsibility)
+
+### 3. 테스트 먼저, 구현은 나중
+- Red Phase 없이 Green Phase 시작 금지
+- 테스트가 없는 코드는 레거시
+
+### 4. ArchUnit으로 규칙 강제
+- CI/CD에 ArchUnit 테스트 포함
+- Zero-Tolerance 위반 시 빌드 실패
+
+### 5. LangFuse로 메트릭 추적
+- TDD 사이클 시간 최적화
+- Tidy First 준수율 모니터링
+- 커밋 크기 최적화
+
+---
+
+**✅ 이 규칙들을 준수하면 Claude Code와 CodeRabbit 검증을 모두 통과할 수 있습니다!**

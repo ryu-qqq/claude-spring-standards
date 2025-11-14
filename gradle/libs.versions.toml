@@ -35,6 +35,7 @@ assertj = "3.25.3"
 mockito = "5.11.0"
 testcontainers = "1.19.7"
 restAssured = "5.4.0"
+restdocs = "3.0.1"
 
 # ========================================
 # Architecture & Quality
@@ -121,6 +122,7 @@ testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.re
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-localstack = { module = "org.testcontainers:localstack", version.ref = "testcontainers" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
+spring-restdocs-mockmvc = { module = "org.springframework.restdocs:spring-restdocs-mockmvc", version.ref = "restdocs" }
 
 # ========================================
 # Architecture Testing

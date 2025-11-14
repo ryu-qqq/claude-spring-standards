@@ -1,1 +1,0 @@
-/Users/sangwon-ryu/claude-spring-standards/docs/coding_convention/04-persistence-layer/querydsl-optimization/01_dto-projection.md

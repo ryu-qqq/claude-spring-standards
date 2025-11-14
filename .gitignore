@@ -36,10 +36,17 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Cursor IDE ###
+.cursor/
+
 # Claude Code settings (local overrides)
 .claude/settings.local.json
 .claude/hooks/logs/
 .serena/
+
+# Claude Code documentation and specs (auto-generated)
+claudedocs/
+spec-stories/
 
 # LangFuse telemetry (contains credentials)
 .langfuse.telemetry
