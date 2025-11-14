@@ -152,15 +152,40 @@ def upload_to_langfuse(event_type: str, data: dict):
 def main():
     parser = argparse.ArgumentParser(description="Log TDD cycle events to LangFuse")
     parser.add_argument("--event-type", required=True, help="Event type (tdd_commit, tdd_test, etc)")
-    parser.add_argument("--data", required=True, help="Event data (JSON string)")
+
+    # Individual field arguments (for safe multi-line handling)
+    parser.add_argument("--project", help="Project name")
+    parser.add_argument("--commit-hash", help="Git commit hash")
+    parser.add_argument("--commit-msg", help="Git commit message")
+    parser.add_argument("--tdd-phase", help="TDD phase (red/green/structural)")
+    parser.add_argument("--files-changed", help="Number of files changed")
+    parser.add_argument("--lines-changed", help="Number of lines changed")
+    parser.add_argument("--timestamp", help="Event timestamp")
+
+    # Legacy JSON string support (optional)
+    parser.add_argument("--data", help="Event data (JSON string) - legacy support")
 
     args = parser.parse_args()
 
-    try:
-        data = json.loads(args.data)
-    except json.JSONDecodeError:
-        print(f"Error: Invalid JSON data: {args.data}", file=sys.stderr)
-        sys.exit(1)
+    # Build data dict from individual arguments or legacy JSON
+    if args.data:
+        # Legacy JSON string support
+        try:
+            data = json.loads(args.data)
+        except json.JSONDecodeError:
+            print(f"Error: Invalid JSON data: {args.data}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        # New individual argument support (safe for multi-line)
+        data = {
+            "project": args.project,
+            "commit_hash": args.commit_hash,
+            "commit_msg": args.commit_msg,
+            "tdd_phase": args.tdd_phase,
+            "files_changed": args.files_changed,
+            "lines_changed": args.lines_changed,
+            "timestamp": args.timestamp
+        }
 
     # 1. JSONL 로그에 저장 (항상)
     append_to_jsonl(args.event_type, data)
