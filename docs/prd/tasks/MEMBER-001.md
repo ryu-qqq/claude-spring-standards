@@ -4,8 +4,9 @@
 **Layer**: Domain Layer
 **브랜치**: feature/MEMBER-001-domain
 **Jira URL**: https://ryuqqq.atlassian.net/browse/AESA-71
-**상태**: In Progress
+**상태**: In Progress (진행 중)
 **시작일**: 2025-11-14
+**담당자**: 류상
 
 ---
 
