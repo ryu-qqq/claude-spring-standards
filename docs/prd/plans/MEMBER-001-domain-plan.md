@@ -24,16 +24,16 @@
 - [x] 커밋: `test: Email VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
-- [ ] `domain/src/main/java/com/ryuqq/domain/member/Email/Email.java` 파일 생성
-- [ ] Record 패턴으로 구현: `public record Email(String value)`
-- [ ] 생성자에 검증 로직 추가:
+- [x] `domain/src/main/java/com/ryuqq/domain/member/Email/Email.java` 파일 생성
+- [x] Record 패턴으로 구현: `public record Email(String value)`
+- [x] 생성자에 검증 로직 추가:
   - RFC 5322 이메일 형식 검증 (정규식)
   - 최대 길이 320자 검증
   - `@` 기호 포함 검증
   - 도메인 부분 검증
-- [ ] `InvalidEmailFormatException` 생성 및 throw
-- [ ] 테스트 실행 → 통과 확인
-- [ ] 커밋: `impl: Email VO 구현 (Green)`
+- [x] `InvalidEmailFormatException` 생성 및 throw
+- [x] 테스트 실행 → 통과 확인
+- [x] 커밋: `impl: Email VO 구현 (Green)`
 
 #### ♻️ Refactor: 리팩토링
 - [ ] 정규식 패턴 상수로 추출: `private static final Pattern EMAIL_PATTERN`
