@@ -9,19 +9,19 @@
 
 ## 📝 TDD 사이클 체크리스트
 
-### 1️⃣ Email Value Object 설계 (Cycle 1)
+### 1️⃣ Email Value Object 설계 (Cycle 1) 🔄 IN PROGRESS
 
 #### 🔴 Red: 테스트 작성
-- [ ] `domain/src/test/java/com/ryuqq/domain/member/Email/EmailTest.java` 파일 생성
-- [ ] `shouldCreateEmailWithValidFormat()` 테스트 작성
+- [x] `domain/src/test/java/com/ryuqq/domain/member/Email/EmailTest.java` 파일 생성
+- [x] `shouldCreateEmailWithValidFormat()` 테스트 작성
   - 유효한 이메일 형식으로 Email 생성
   - `user@example.com` 형식 검증
-- [ ] `shouldThrowExceptionWhenInvalidFormat()` 테스트 작성
+- [x] `shouldThrowExceptionWhenInvalidFormat()` 테스트 작성
   - `@` 없는 이메일
   - 도메인 없는 이메일
   - 320자 초과 이메일
-- [ ] 테스트 실행 → 컴파일 에러 확인
-- [ ] 커밋: `test: Email VO 테스트 추가 (Red)`
+- [x] 테스트 실행 → 컴파일 에러 확인
+- [x] 커밋: `test: Email VO 테스트 추가 (Red)`
 
 #### 🟢 Green: 최소 구현
 - [ ] `domain/src/main/java/com/ryuqq/domain/member/Email/Email.java` 파일 생성
