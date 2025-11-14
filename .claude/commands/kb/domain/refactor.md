@@ -1,6 +1,14 @@
 # Domain Layer TDD Refactor - Improve Structure
 
-You are in the REFACTOR phase of Kent Beck's TDD cycle for **Domain Layer**.
+You are in the **♻️ REFACTOR phase** of Kent Beck's TDD cycle for **Domain Layer**.
+
+## Tidy First Principle
+
+**CRITICAL**: Refactoring = **Structural Changes ONLY** (동작 변경 없음!)
+
+- ✅ **DO**: Rename, extract method, move code, remove duplication
+- ❌ **DON'T**: Add features, change logic, modify behavior
+- 🧪 **VERIFY**: Tests pass before AND after (same results)
 
 ## Instructions
 
@@ -9,7 +17,12 @@ You are in the REFACTOR phase of Kent Beck's TDD cycle for **Domain Layer**.
 3. **Apply design patterns** and best practices
 4. **Ensure Zero-Tolerance compliance** (Lombok 금지, Law of Demeter, Long FK 전략)
 5. **Run all tests** after each refactoring step
-6. **Commit incremental changes** for safety
+6. **Commit with struct: prefix**:
+   ```bash
+   git add .
+   git commit -m "struct: Email 검증 로직 메서드 추출"
+   ```
+7. **IMPORTANT**: Never mix Structural and Behavioral changes!
 
 ## Refactoring Goals
 
@@ -321,7 +334,7 @@ public class OrderDomain {
 
 # 4. If GREEN, commit
 git add .
-git commit -m "refactor: extract CustomerInfo Value Object"
+git commit -m "struct: extract CustomerInfo Value Object"
 
 # 5. Repeat for next refactoring
 ```

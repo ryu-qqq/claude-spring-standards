@@ -1,15 +1,21 @@
 # Application Layer TDD Red - Write Failing Test
 
-You are in the RED phase of Kent Beck's TDD cycle for **Application Layer**.
+You are in the 🔴 RED phase of Kent Beck's TDD cycle for **Application Layer**.
 
 ## Instructions
 
 1. **Read plan file** from `docs/prd/plans/{ISSUE-KEY}-application-plan.md`
 2. **Understand the requirement** for the current test
-3. **Create TestFixture classes FIRST** (if not exists)
-4. **Write the simplest failing test** using TestFixture
-5. **Run the test** and verify it FAILS for the right reason
-6. **Report the failure** clearly
+3. **Apply Tidy First**: If code needs cleanup, do Structural Changes FIRST → `struct:` 커밋
+4. **Create TestFixture classes FIRST** (if not exists)
+5. **Write the simplest failing test** using TestFixture
+6. **Run the test** and verify it FAILS for the right reason
+7. **Report the failure** clearly
+8. **Commit with test: prefix**:
+   ```bash
+   git add .
+   git commit -m "test: 주문 생성 UseCase 테스트 추가"
+   ```
 
 ## Application Layer TestFixture Pattern (MANDATORY)
 

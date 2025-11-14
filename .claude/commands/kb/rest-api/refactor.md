@@ -1,15 +1,30 @@
 # REST API Layer TDD Refactor - Improve Structure
 
-You are in the REFACTOR phase of Kent Beck's TDD cycle for **REST API Layer**.
+You are in the ♻️ REFACTOR phase of Kent Beck's TDD cycle for **REST API Layer**.
+
+## Tidy First Principle
+
+**CRITICAL**: Refactoring = **Structural Changes ONLY** (동작 변경 없음!)
+
+- ✅ **DO**: Extract validation logic, extract Mapper methods, improve Controller readability
+- ❌ **DON'T**: Add new endpoints, change HTTP status codes, modify DTO schema
+- 🧪 **VERIFY**: Tests pass before AND after (same results)
+
+**Kent Beck's Rule**: "Separate Structural Changes from Behavioral Changes!"
 
 ## Instructions
 
 1. **Test is already PASSING** (GREEN phase complete)
-2. **Improve code structure** without changing behavior
+2. **Improve code structure** without changing behavior (Structural Changes only!)
 3. **Apply design patterns** and best practices
 4. **Ensure Zero-Tolerance compliance** (RESTful 설계, DTO 패턴, Validation, Error Handling)
 5. **Run all tests** after each refactoring step
-6. **Commit incremental changes** for safety
+6. **Commit with struct: prefix**:
+   ```bash
+   git add .
+   git commit -m "struct: extract validation logic in OrderController"
+   ```
+7. **IMPORTANT**: Never mix Structural and Behavioral changes!
 
 ## Refactoring Goals
 

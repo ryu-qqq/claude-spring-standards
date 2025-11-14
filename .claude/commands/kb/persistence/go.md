@@ -1,20 +1,23 @@
 # Persistence Layer TDD Go - Execute Next Test from Plan
 
-You are executing the Kent Beck TDD workflow for **Persistence Layer**.
+You are executing the Kent Beck TDD + Tidy First workflow for **Persistence Layer**.
 
 ## Instructions
 
 1. **Read plan file** from `docs/prd/plans/{ISSUE-KEY}-persistence-plan.md`
 2. **Find the next unmarked test** in the Persistence Layer section
 3. **Mark the test as in-progress** by adding a checkbox or marker
-4. **Execute the TDD Cycle**:
-   - **RED**: Write the simplest failing test first
-   - **GREEN**: Implement minimum code to make the test pass
-   - **REFACTOR**: Improve structure only after tests pass
-   - **TIDY**: Clean up tests using TestFixture pattern
-5. **Run all tests** (excluding long-running tests)
-6. **Verify** all tests pass before proceeding
-7. **Mark test complete** in plan file
+4. **Execute the TDD Cycle (3 phases)**:
+   - **🔴 RED**: Write the simplest failing test first → `test:` 커밋
+   - **🟢 GREEN**: Implement minimum code to make the test pass → `feat:` 커밋
+   - **♻️ REFACTOR**: Improve structure only after tests pass → `struct:` 커밋
+5. **Apply Tidy First** principle:
+   - If Structural Changes needed, do them FIRST → `struct:` 커밋
+   - Then proceed with Behavioral Changes (Red → Green)
+   - Never mix Structural and Behavioral in same commit
+6. **Run all tests** (excluding long-running tests)
+7. **Verify** all tests pass before proceeding
+8. **Mark test complete** in plan file
 
 ## Persistence Layer Specific Rules
 
@@ -68,25 +71,29 @@ void shouldSaveOrder() {
   - Long FK 전략
   - Audit Entity 상속
 
-## Core Principles
+## Core Principles (Kent Beck + Tidy First)
 
+- **Tidy First**: Structural Changes BEFORE Behavioral Changes
+- **Never mix** Structural and Behavioral in same commit
+- **3 commit types**: `test:` (Red) → `feat:` (Green) → `struct:` (Refactor)
 - Write ONE test at a time
 - Make it run with minimum code
 - Improve structure ONLY after green
 - Run ALL tests after each change
 - Never skip the Red phase
-- Never mix structural and behavioral changes
 - **ALWAYS use TestFixture** (Persistence Layer 필수!)
 
 ## Success Criteria
 
 - ✅ Plan file updated (test marked as in-progress)
-- ✅ Test written and initially failing (RED)
-- ✅ Minimum code makes test pass (GREEN)
-- ✅ Code structure improved if needed (REFACTOR)
+- ✅ Structural Changes (if needed) → `struct:` 커밋
+- ✅ Test written and initially failing (RED) → `test:` 커밋
+- ✅ Minimum code makes test pass (GREEN) → `feat:` 커밋
+- ✅ Code structure improved if needed (REFACTOR) → `struct:` 커밋
 - ✅ TestFixture used (NOT inline object creation)
 - ✅ All tests passing
 - ✅ Zero-Tolerance rules followed (Long FK, Lombok 금지, QueryDSL DTO Projection)
+- ✅ Commit messages follow prefix rules (`test:`/`feat:`/`struct:`)
 - ✅ Test marked complete in plan file
 
 ## What NOT to Do
@@ -100,16 +107,27 @@ void shouldSaveOrder() {
 ## Example Workflow
 
 ```bash
-# 1. User: /kb-persistence /go
+# 1. User: /kb:persistence:go
 # 2. Claude: Reads docs/prd/plans/PROJ-123-persistence-plan.md
 # 3. Claude: Finds next test: "주문 저장 Adapter - 정상 케이스"
 # 4. Claude: Marks test as in-progress
-# 5. Claude: RED - Writes failing test (uses OrderJpaEntityFixture)
-# 6. Claude: GREEN - Implements SaveOrderAdapter
-# 7. Claude: REFACTOR - Extracts Mapper logic
-# 8. Claude: TIDY - Ensures TestFixture is used properly
-# 9. Claude: Runs all tests (./gradlew test)
-# 10. Claude: Marks test as complete
+
+# 5. 🔴 RED Phase
+#    - Writes SaveOrderAdapterTest.java (failing test)
+#    - Uses OrderJpaEntityFixture for test data
+#    - git commit -m "test: 주문 저장 Adapter 테스트 추가"
+
+# 6. 🟢 GREEN Phase
+#    - Implements SaveOrderAdapter (minimum code)
+#    - Follows Long FK strategy, no Lombok
+#    - git commit -m "feat: 주문 저장 Adapter 구현 (Long FK)"
+
+# 7. ♻️ REFACTOR Phase (if needed)
+#    - Extracts Mapper logic (NO behavior change)
+#    - git commit -m "struct: extract OrderEntityMapper logic"
+
+# 8. Claude: Runs all tests (./gradlew test)
+# 9. Claude: Marks test as complete
 ```
 
 ## Long FK 전략 Example

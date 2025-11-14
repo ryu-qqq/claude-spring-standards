@@ -1,6 +1,6 @@
 # Domain Layer TDD Green - Implement Minimum Code
 
-You are in the GREEN phase of Kent Beck's TDD cycle for **Domain Layer**.
+You are in the **🟢 GREEN phase** of Kent Beck's TDD cycle for **Domain Layer**.
 
 ## Instructions
 
@@ -8,7 +8,12 @@ You are in the GREEN phase of Kent Beck's TDD cycle for **Domain Layer**.
 2. **Write the SIMPLEST code** to make the test pass
 3. **No premature optimization** - just make it work
 4. **Run the test** and verify it PASSES
-5. **Report success** clearly
+5. **Commit with feat: prefix**:
+   ```bash
+   git add .
+   git commit -m "feat: Email VO 구현 (RFC 5322 검증)"
+   ```
+6. **Report success** clearly
 
 ## Domain Layer Implementation Guidelines
 

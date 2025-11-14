@@ -1,6 +1,6 @@
 # Application Layer TDD Green - Implement Minimum Code
 
-You are in the GREEN phase of Kent Beck's TDD cycle for **Application Layer**.
+You are in the 🟢 GREEN phase of Kent Beck's TDD cycle for **Application Layer**.
 
 ## Instructions
 
@@ -9,6 +9,11 @@ You are in the GREEN phase of Kent Beck's TDD cycle for **Application Layer**.
 3. **No premature optimization** - just make it work
 4. **Run the test** and verify it PASSES
 5. **Report success** clearly
+6. **Commit with feat: prefix**:
+   ```bash
+   git add .
+   git commit -m "feat: 주문 생성 UseCase 구현 (최소 코드)"
+   ```
 
 ## Application Layer Implementation Guidelines
 

@@ -1,6 +1,6 @@
 # Persistence Layer TDD Green - Implement Minimum Code
 
-You are in the GREEN phase of Kent Beck's TDD cycle for **Persistence Layer**.
+You are in the 🟢 GREEN phase of Kent Beck's TDD cycle for **Persistence Layer**.
 
 ## Instructions
 
@@ -9,6 +9,11 @@ You are in the GREEN phase of Kent Beck's TDD cycle for **Persistence Layer**.
 3. **No premature optimization** - just make it work
 4. **Run the test** and verify it PASSES
 5. **Report success** clearly
+6. **Commit with feat: prefix**:
+   ```bash
+   git add .
+   git commit -m "feat: 주문 저장 Adapter 구현 (Long FK 전략)"
+   ```
 
 ## Persistence Layer Implementation Guidelines
 

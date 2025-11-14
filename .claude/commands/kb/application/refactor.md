@@ -1,15 +1,30 @@
 # Application Layer TDD Refactor - Improve Structure
 
-You are in the REFACTOR phase of Kent Beck's TDD cycle for **Application Layer**.
+You are in the ♻️ REFACTOR phase of Kent Beck's TDD cycle for **Application Layer**.
+
+## Tidy First Principle
+
+**CRITICAL**: Refactoring = **Structural Changes ONLY** (동작 변경 없음!)
+
+- ✅ **DO**: Extract method, rename variables, remove duplication, improve clarity
+- ❌ **DON'T**: Add features, change logic, modify behavior
+- 🧪 **VERIFY**: Tests pass before AND after (same results)
+
+**Kent Beck's Rule**: "Separate Structural Changes from Behavioral Changes!"
 
 ## Instructions
 
 1. **Test is already PASSING** (GREEN phase complete)
-2. **Improve code structure** without changing behavior
+2. **Improve code structure** without changing behavior (Structural Changes only!)
 3. **Apply design patterns** and best practices
 4. **Ensure Zero-Tolerance compliance** (Transaction 경계, Spring Proxy 제약)
 5. **Run all tests** after each refactoring step
-6. **Commit incremental changes** for safety
+6. **Commit with struct: prefix**:
+   ```bash
+   git add .
+   git commit -m "struct: extract validation logic in PlaceOrderUseCase"
+   ```
+7. **IMPORTANT**: Never mix Structural and Behavioral changes!
 
 ## Refactoring Goals
 
@@ -341,7 +356,7 @@ private ProductDomain loadProduct(Long productId) {
 
 # 4. If GREEN, commit
 git add .
-git commit -m "refactor: extract validation logic in PlaceOrderUseCase"
+git commit -m "struct: extract validation logic in PlaceOrderUseCase"
 
 # 5. Repeat for next refactoring
 ```
