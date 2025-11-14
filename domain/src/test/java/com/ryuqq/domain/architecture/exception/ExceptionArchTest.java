@@ -1,7 +1,5 @@
 package com.ryuqq.domain.architecture.exception;
 
-import com.ryuqq.domain.common.exception.DomainException;
-import com.ryuqq.domain.common.exception.ErrorCode;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaModifier;
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
@@ -59,7 +56,7 @@ class ExceptionArchTest {
             .that().resideInAPackage("..domain..exception..")
             .and().haveSimpleNameEndingWith("ErrorCode")
             .and().areEnums()
-            .should().implement(ErrorCode.class)
+            .should(implementErrorCodeInterface())
             .because("ErrorCode Enum은 ErrorCode 인터페이스를 구현해야 합니다");
 
         rule.check(classes);
@@ -166,14 +163,14 @@ class ExceptionArchTest {
      * 규칙 8: ErrorCode Enum은 HttpStatus를 의존해야 한다
      */
     @Test
-    @DisplayName("[필수] ErrorCode Enum은 HttpStatus를 의존해야 한다")
-    void errorCodeEnums_ShouldDependOnHttpStatus() {
+    @DisplayName("[필수] ErrorCode Enum의 getHttpStatus() 메서드는 적절한 타입을 반환해야 한다")
+    void errorCodeEnums_GetHttpStatusMethodShouldHaveValidReturnType() {
         ArchRule rule = classes()
             .that().resideInAPackage("..domain..exception..")
             .and().haveSimpleNameEndingWith("ErrorCode")
             .and().areEnums()
-            .should().dependOnClassesThat().areAssignableTo(HttpStatus.class)
-            .because("ErrorCode Enum은 HTTP 상태 코드 매핑을 위해 HttpStatus를 사용해야 합니다");
+            .should(haveGetHttpStatusMethodWithValidReturnType())
+            .because("ErrorCode Enum의 getHttpStatus()는 int 또는 적절한 타입을 반환해야 합니다 (Spring HttpStatus 의존 금지)");
 
         rule.check(classes);
     }
@@ -192,7 +189,7 @@ class ExceptionArchTest {
             .and().haveSimpleNameNotContaining("Test")
             .and().areNotInterfaces()
             .and().doNotHaveSimpleName("DomainException")
-            .should().beAssignableTo(DomainException.class)
+            .should(extendDomainException())
             .because("Concrete Exception 클래스는 DomainException을 상속해야 합니다");
 
         rule.check(classes);
@@ -394,7 +391,7 @@ class ExceptionArchTest {
             .and().haveSimpleNameNotContaining("Test")
             .and().areNotInterfaces()
             .and().doNotHaveSimpleName("DomainException")
-            .should().haveSimpleNameMatching(".*(?:NotFound|Invalid|Already|Cannot|Failed|Exceeded|Unsupported).*Exception")
+            .should(haveMeaningfulExceptionName())
             .because("Concrete Exception 이름은 명확한 의미를 가져야 합니다 (예: OrderNotFoundException, InvalidOrderStatusException)");
 
         rule.check(classes);
@@ -416,6 +413,94 @@ class ExceptionArchTest {
                     String message = String.format(
                         "Class %s does not have a method named '%s'",
                         javaClass.getName(), methodName
+                    );
+                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                }
+            }
+        };
+    }
+
+    /**
+     * ErrorCode 인터페이스를 구현하는지 검증
+     */
+    private static ArchCondition<JavaClass> implementErrorCodeInterface() {
+        return new ArchCondition<JavaClass>("implement ErrorCode interface") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                boolean implementsErrorCode = javaClass.getAllRawInterfaces().stream()
+                    .anyMatch(iface -> iface.getSimpleName().equals("ErrorCode"));
+
+                if (!implementsErrorCode) {
+                    String message = String.format(
+                        "Class %s does not implement ErrorCode interface",
+                        javaClass.getName()
+                    );
+                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                }
+            }
+        };
+    }
+
+    /**
+     * getHttpStatus() 메서드가 적절한 타입을 반환하는지 검증
+     */
+    private static ArchCondition<JavaClass> haveGetHttpStatusMethodWithValidReturnType() {
+        return new ArchCondition<JavaClass>("have getHttpStatus() method with valid return type") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                boolean hasValidMethod = javaClass.getAllMethods().stream()
+                    .filter(method -> method.getName().equals("getHttpStatus"))
+                    .anyMatch(method -> {
+                        String returnType = method.getRawReturnType().getName();
+                        return !returnType.startsWith("org.springframework");
+                    });
+
+                if (!hasValidMethod) {
+                    String message = String.format(
+                        "Class %s's getHttpStatus() method should return int or non-Spring type (not org.springframework.http.HttpStatus)",
+                        javaClass.getName()
+                    );
+                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                }
+            }
+        };
+    }
+
+    /**
+     * DomainException을 상속하는지 검증
+     */
+    private static ArchCondition<JavaClass> extendDomainException() {
+        return new ArchCondition<JavaClass>("extend DomainException") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                boolean extendsDomainException = javaClass.getAllRawSuperclasses().stream()
+                    .anyMatch(superClass -> superClass.getSimpleName().equals("DomainException"));
+
+                if (!extendsDomainException) {
+                    String message = String.format(
+                        "Class %s does not extend DomainException",
+                        javaClass.getName()
+                    );
+                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                }
+            }
+        };
+    }
+
+    /**
+     * Exception 이름이 의미있는 패턴을 따르는지 검증
+     */
+    private static ArchCondition<JavaClass> haveMeaningfulExceptionName() {
+        return new ArchCondition<JavaClass>("have meaningful exception name") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                String simpleName = javaClass.getSimpleName();
+                boolean hasMeaningfulName = simpleName.matches(".*(?:NotFound|Invalid|Already|Cannot|Failed|Exceeded|Unsupported).*Exception");
+
+                if (!hasMeaningfulName) {
+                    String message = String.format(
+                        "Exception %s should have a meaningful name (e.g., OrderNotFoundException, InvalidOrderStatusException)",
+                        javaClass.getName()
                     );
                     events.add(SimpleConditionEvent.violated(javaClass, message));
                 }

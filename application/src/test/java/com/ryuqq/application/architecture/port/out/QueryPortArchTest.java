@@ -106,7 +106,7 @@ class QueryPortArchTest {
         ArchRule rule = methods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .and().haveNameMatching("findById")
-            .should().beDeclared()
+            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .because("QueryPort는 findById() 메서드를 무조건 제공해야 합니다");
 
         rule.check(classes);
@@ -121,7 +121,7 @@ class QueryPortArchTest {
         ArchRule rule = methods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .and().haveNameMatching("existsById")
-            .should().beDeclared()
+            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .because("QueryPort는 existsById() 메서드를 무조건 제공해야 합니다");
 
         rule.check(classes);
@@ -136,7 +136,7 @@ class QueryPortArchTest {
         ArchRule rule = methods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .and().haveNameMatching("findByCriteria")
-            .should().beDeclared()
+            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .because("QueryPort는 findByCriteria() 메서드를 무조건 제공해야 합니다");
 
         rule.check(classes);
@@ -151,7 +151,7 @@ class QueryPortArchTest {
         ArchRule rule = methods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .and().haveNameMatching("countByCriteria")
-            .should().beDeclared()
+            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
             .because("QueryPort는 countByCriteria() 메서드를 무조건 제공해야 합니다");
 
         rule.check(classes);
@@ -165,8 +165,7 @@ class QueryPortArchTest {
     void queryPort_MustNotHaveCommandMethods() {
         ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryPort")
-            .and().haveNameMatching("save|update|delete|remove|persist")
-            .should().beDeclared()
+            .should().haveNameMatching("save|update|delete|remove|persist")
             .because("저장/수정/삭제 메서드는 PersistencePort에서 처리해야 합니다 (CQRS 분리)");
 
         rule.check(classes);

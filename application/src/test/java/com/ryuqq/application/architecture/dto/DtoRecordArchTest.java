@@ -173,8 +173,7 @@ class DtoRecordArchTest {
         ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().resideInAPackage("..dto..")
             .and().arePublic()
-            .and().haveNameMatching("validate.*|place.*|confirm.*|cancel.*|approve.*|reject.*|modify.*|change.*|update.*|delete.*|save.*|persist.*")
-            .should().beDeclared()
+            .should().haveNameMatching("validate.*|place.*|confirm.*|cancel.*|approve.*|reject.*|modify.*|change.*|update.*|delete.*|save.*|persist.*")
             .because("DTO는 비즈니스 로직을 가질 수 없습니다 (데이터 전달만)");
 
         rule.check(classes);
@@ -266,8 +265,7 @@ class DtoRecordArchTest {
             .and().arePublic()
             .and().doNotHaveName("of")  // Record 생성 메서드 허용
             .and().doNotHaveName("from")  // Record 생성 메서드 허용
-            .and().haveNameMatching("validate.*|process.*|calculate.*")
-            .should().beDeclared()
+            .should().haveNameMatching("validate.*|process.*|calculate.*")
             .because("DTO는 비즈니스 로직을 가질 수 없습니다 (생성 메서드 of/from만 허용)");
 
         rule.check(classes);

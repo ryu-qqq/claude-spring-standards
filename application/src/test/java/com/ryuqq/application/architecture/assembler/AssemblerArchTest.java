@@ -249,7 +249,7 @@ class AssemblerArchTest {
     void assembler_MustNotBeFinal() {
         ArchRule rule = classes()
             .that().haveSimpleNameEndingWith("Assembler")
-            .should().notBeFinal()
+            .should().notHaveModifier(FINAL)
             .because("Spring은 프록시 생성을 위해 Assembler가 final이 아니어야 합니다");
 
         rule.check(classes);

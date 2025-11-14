@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 
+import static com.tngtech.archunit.core.domain.JavaModifier.FINAL;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 /**
@@ -121,9 +122,8 @@ class AggregateRootArchTest {
     void aggregateRoot_MustNotHaveSetterMethods() {
         ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().resideInAPackage("..domain..aggregate..")
-            .and().arePublic()
-            .and().haveNameMatching("set[A-Z].*")
-            .should().beDeclared()
+            .should().bePublic()
+            .andShould().haveNameMatching("set[A-Z].*")
             .because("Aggregate Root는 불변성을 유지하고 비즈니스 메서드로만 상태를 변경해야 합니다 (Setter 절대 금지)");
 
         rule.check(classes);
@@ -298,7 +298,7 @@ class AggregateRootArchTest {
             .that().resideInAPackage("..domain..aggregate..")
             .and().areNotInterfaces()
             .and().areNotEnums()
-            .should().notBeFinal()
+            .should().notHaveModifier(FINAL)
             .because("Aggregate Root는 확장 가능성을 위해 final이 아니어야 합니다");
 
         rule.check(classes);

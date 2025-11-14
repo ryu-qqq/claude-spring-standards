@@ -96,13 +96,12 @@ class JpaRepositoryArchTest {
     @Test
     @DisplayName("규칙 4: Query Method 추가 금지")
     void jpaRepository_MustNotHaveQueryMethods() {
-        ArchRule rule = methods()
+        ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Repository")
             .and().areDeclaredInClassesThat().haveSimpleNameNotContaining("QueryDsl")
             .and().areDeclaredInClassesThat().areInterfaces()
             .and().arePublic()
-            .and().haveNameMatching("find.*|search.*|count.*|exists.*|get.*")
-            .should().notBeDeclared()
+            .should().haveNameMatching("find.*|search.*|count.*|exists.*|get.*")
             .because("JpaRepository는 Query Method 추가가 금지됩니다 (QueryDslRepository 사용)");
 
         rule.check(allClasses);
@@ -125,9 +124,10 @@ class JpaRepositoryArchTest {
     @DisplayName("규칙 6: Custom Repository 구현 금지")
     void jpaRepository_MustNotHaveCustomImplementation() {
         ArchRule rule = classes()
-            .that().haveSimpleNameMatching(".*RepositoryImpl")
+            .that(DescribedPredicate.describe("have name matching '.*RepositoryImpl'",
+                javaClass -> javaClass.getSimpleName().matches(".*RepositoryImpl")))
             .and().resideInAPackage("..repository..")
-            .should().notExist()
+            .should().haveSimpleNameNotEndingWith("RepositoryImpl")
             .because("Custom Repository 구현이 금지됩니다 (QueryDslRepository 사용)");
 
         rule.check(allClasses);

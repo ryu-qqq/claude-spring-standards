@@ -103,7 +103,7 @@ class PersistencePortArchTest {
         ArchRule rule = methods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("PersistencePort")
             .and().haveNameMatching("persist")
-            .should().beDeclared()
+            .should().beDeclaredInClassesThat().haveSimpleNameEndingWith("PersistencePort")
             .because("PersistencePort는 persist() 메서드를 무조건 제공해야 합니다");
 
         rule.check(classes);
@@ -117,8 +117,7 @@ class PersistencePortArchTest {
     void persistencePort_MustNotHaveSaveUpdateDeleteMethods() {
         ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("PersistencePort")
-            .and().haveNameMatching("save|update|delete|remove")
-            .should().beDeclared()
+            .should().haveNameMatching("save|update|delete|remove")
             .because("PersistencePort는 persist() 하나로 신규/수정을 통합 처리해야 합니다");
 
         rule.check(classes);
@@ -132,8 +131,7 @@ class PersistencePortArchTest {
     void persistencePort_MustNotHaveFindMethods() {
         ArchRule rule = noMethods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("PersistencePort")
-            .and().haveNameMatching("find.*|get.*|load.*|exists.*|count.*")
-            .should().beDeclared()
+            .should().haveNameMatching("find.*|get.*|load.*|exists.*|count.*")
             .because("조회 메서드는 QueryPort에서 처리해야 합니다 (CQRS 분리)");
 
         rule.check(classes);
