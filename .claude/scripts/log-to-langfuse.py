@@ -36,9 +36,45 @@ def append_to_jsonl(event_type: str, data: dict):
         f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
 
 
+def extract_trace_id(commit_msg: str) -> str:
+    """
+    커밋 메시지에서 Trace ID 추출
+
+    예시:
+    - "test: Email VO 검증 테스트" → "Email-VO"
+    - "feat: Member 생성 API" → "Member-생성-API"
+    - "struct: Order 리팩토링" → "Order-리팩토링"
+    """
+    # 커밋 prefix 제거 (test:, feat:, struct:, fix:, chore: 등)
+    msg = commit_msg
+    for prefix in ["test:", "feat:", "impl:", "struct:", "fix:", "chore:", "docs:"]:
+        if msg.startswith(prefix):
+            msg = msg[len(prefix):].strip()
+            break
+
+    # 공백을 하이픈으로 변경
+    trace_id = msg.replace(" ", "-")
+
+    # 특수문자 제거 (하이픈, 한글, 영문, 숫자만 유지)
+    import re
+    trace_id = re.sub(r'[^a-zA-Z0-9가-힣-]', '', trace_id)
+
+    # 최대 50자로 제한
+    if len(trace_id) > 50:
+        trace_id = trace_id[:50]
+
+    return trace_id
+
+
 def upload_to_langfuse(event_type: str, data: dict):
     """
-    LangFuse SDK로 업로드
+    LangFuse SDK로 Span 업로드 (개별 Phase 측정)
+
+    핵심 아이디어:
+    - Red/Green/Structural 각각 독립적인 Span 생성
+    - 같은 기능은 같은 Trace ID 사용 (커밋 메시지에서 추출)
+    - 세션 관리 불필요 (각 커밋이 독립적)
+
     환경 변수 필요:
     - LANGFUSE_PUBLIC_KEY
     - LANGFUSE_SECRET_KEY
@@ -46,8 +82,6 @@ def upload_to_langfuse(event_type: str, data: dict):
     """
     try:
         from langfuse import Langfuse
-        from langfuse.types import TraceContext
-        import uuid
     except ImportError:
         # langfuse SDK 없으면 JSONL만 저장
         return
@@ -60,33 +94,73 @@ def upload_to_langfuse(event_type: str, data: dict):
         return
 
     try:
-        # LangFuse 클라이언트 생성
         langfuse = Langfuse()
 
-        # Trace ID 생성 (32 lowercase hex chars)
-        trace_id = uuid.uuid4().hex
-        project = data.get("project", "unknown")
+        if event_type == "tdd_commit":
+            # 커밋 메시지에서 Trace ID 추출
+            commit_msg = data.get("commit_msg", "unknown")
+            trace_id = extract_trace_id(commit_msg)
 
-        # Trace context 생성
-        trace_context = TraceContext(
-            trace_id=trace_id,
-            trace_name=f"TDD Cycle - {project}"
-        )
+            # Phase별 Span 이름
+            phase = data.get("tdd_phase", "unknown")
+            phase_names = {
+                "red": "🔴 Red Phase",
+                "green": "🟢 Green Phase",
+                "structural": "♻️ Structural Phase"
+            }
+            span_name = phase_names.get(phase, f"{phase} Phase")
 
-        # 이벤트 타입별 이름 매핑
-        event_name_map = {
-            "tdd_commit": f"TDD Commit - {data.get('tdd_phase', 'unknown')}",
-            "tdd_test": "Test Execution",
-            "archunit_check": "ArchUnit Validation"
-        }
-        event_name = event_name_map.get(event_type, event_type)
+            # 독립적인 Span 생성 (즉시 시작하고 종료)
+            span = langfuse.start_span(
+                trace_id=trace_id,
+                name=span_name,
+                input={
+                    "commit_hash": data.get("commit_hash"),
+                    "commit_msg": commit_msg,
+                    "files_changed": data.get("files_changed"),
+                    "lines_changed": data.get("lines_changed")
+                },
+                metadata={
+                    "project": data.get("project"),
+                    "tdd_phase": phase,
+                    "timestamp": data.get("timestamp")
+                }
+            )
 
-        # Event 생성
-        langfuse.create_event(
-            trace_context=trace_context,
-            name=event_name,
-            metadata=data
-        )
+            # 즉시 종료 (duration은 커밋 작업 시간)
+            span.end()
+
+        elif event_type == "tdd_test":
+            # 테스트 결과도 Span으로 기록
+            trace_id = "test-execution"
+
+            span = langfuse.start_span(
+                trace_id=trace_id,
+                name="Test Execution",
+                input={
+                    "test_status": data.get("test_status")
+                },
+                metadata={
+                    "tests_passed": data.get("tests_passed"),
+                    "tests_failed": data.get("tests_failed"),
+                    "duration_seconds": data.get("duration_seconds")
+                }
+            )
+            span.end()
+
+        elif event_type == "archunit_check":
+            # ArchUnit 검증 결과
+            trace_id = "archunit-check"
+
+            span = langfuse.start_span(
+                trace_id=trace_id,
+                name="ArchUnit Validation",
+                metadata={
+                    "violations": data.get("violations"),
+                    "timestamp": data.get("timestamp")
+                }
+            )
+            span.end()
 
         # Flush to ensure upload
         langfuse.flush()
