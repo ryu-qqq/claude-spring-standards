@@ -9,3 +9,4 @@
 # Multi-line Test
 # New Hook Test
 # Auto Hook Test
+# Debug Hook
