@@ -16,18 +16,24 @@ public record Email(String value) {
     }
 
     private static void validate(String value) {
-        if (value == null) {
+        validateNotEmpty(value);
+        validateLength(value);
+        validateFormat(value);
+    }
+
+    private static void validateNotEmpty(String value) {
+        if (value == null || value.trim().isEmpty()) {
             throw new InvalidEmailFormatException("이메일은 필수입니다.");
         }
+    }
 
-        if (value.trim().isEmpty()) {
-            throw new InvalidEmailFormatException("이메일은 필수입니다.");
-        }
-
+    private static void validateLength(String value) {
         if (value.length() > MAX_LENGTH) {
             throw new InvalidEmailFormatException("이메일은 320자를 초과할 수 없습니다.");
         }
+    }
 
+    private static void validateFormat(String value) {
         if (!value.contains("@")) {
             throw new InvalidEmailFormatException("유효한 이메일 형식이 아닙니다.");
         }
