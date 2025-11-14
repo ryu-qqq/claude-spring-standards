@@ -111,13 +111,15 @@ RECENT_COMMIT=$(git log -1 --pretty=%h 2>/dev/null || echo "")
 if [[ -n "$RECENT_COMMIT" ]]; then
     COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
 
-    # 커밋 메시지에서 TDD Phase 재감지
+    # 커밋 메시지에서 TDD Phase 재감지 (Kent Beck + Tidy First)
     COMMIT_PHASE="unknown"
-    if echo "$COMMIT_MSG" | grep -qiE "(test|red|failing)"; then
+    if echo "$COMMIT_MSG" | grep -qiE "^struct:"; then
+        COMMIT_PHASE="structural"
+    elif echo "$COMMIT_MSG" | grep -qiE "^test:|(test|red|failing)"; then
         COMMIT_PHASE="red"
-    elif echo "$COMMIT_MSG" | grep -qiE "(impl|implement|green|pass)"; then
+    elif echo "$COMMIT_MSG" | grep -qiE "^feat:|^impl:|(implement|green|pass)"; then
         COMMIT_PHASE="green"
-    elif echo "$COMMIT_MSG" | grep -qiE "(refactor|clean|improve)"; then
+    elif echo "$COMMIT_MSG" | grep -qiE "^refactor:|(refactor|clean|improve)"; then
         COMMIT_PHASE="refactor"
     fi
 

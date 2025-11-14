@@ -4,88 +4,160 @@
 
 ---
 
-##  Kent Beck TDD + LangFuse 메트릭 추적
+##  Kent Beck TDD + Tidy First 철학
 
-이 프로젝트의 핵심 철학은 **테스트 주도 개발 (TDD)**과 **작은 커밋**입니다:
+이 프로젝트의 핵심 철학은 **테스트 주도 개발 (TDD)**과 **Tidy First (구조 먼저, 기능 나중)**입니다:
 
-### Kent Beck의 TDD 사이클
-
-```
-Red (테스트 작성) → Green (최소 구현) → Refactor (리팩토링) → Commit
-         ↓                ↓                  ↓              ↓
-    실패하는 테스트     테스트 통과         코드 개선      작은 변경 커밋
-         ↓                ↓                  ↓              ↓
-    .claude/hooks/track-tdd-cycle.sh (자동 추적)
-         ↓
-    LangFuse (메트릭 수집)
-         ├─ TDD 사이클 시간 측정
-         ├─ 커밋 크기 추적 (작을수록 좋음)
-         ├─ 테스트 커버리지 변화
-         └─ 리팩토링 빈도 분석
-```
-
-### 시스템 아키텍처
+### Kent Beck의 TDD 사이클 (3단계)
 
 ```
-개발자: TDD 사이클 (Red → Green → Refactor → Commit)
-         ↓
-Claude Code: 비즈니스 로직 구현
-         ↓
-./gradlew test (테스트 실행)
-         ↓
-track-tdd-cycle.sh (Hook 트리거)
-         ├─ 테스트 결과 파싱
-         ├─ 커밋 정보 추출
-         └─ log-to-langfuse.py 호출
-         ↓
-LangFuse API (메트릭 업로드)
-         ├─ TDD Phase 추적 (Red/Green/Refactor)
-         ├─ 커밋 크기 측정
-         ├─ 테스트 성공률
-         └─ ArchUnit 검증 결과
+Red (테스트 작성) → Green (최소 구현) → Refactor (코드 개선)
+         ↓                ↓                  ↓
+    실패하는 테스트     테스트 통과         구조 개선
+         ↓                ↓                  ↓
+     test: 커밋        feat: 커밋        struct: 커밋
+```
+
+### Tidy First 원칙 (Kent Beck)
+
+**핵심 개념**: 코드 변경을 **구조적 변경(Structural)**과 **동작 변경(Behavioral)**으로 엄격히 분리
+
+#### 1️⃣ Structural Changes (구조적 변경)
+- **정의**: 동작을 변경하지 않고 코드 구조만 개선
+- **예시**:
+  - 변수/메서드 이름 변경 (Rename)
+  - 메서드 추출 (Extract Method)
+  - 코드 이동 (Move Code)
+  - 중복 제거 (Remove Duplication)
+- **검증**: 테스트 결과가 변경 전후 동일해야 함
+- **커밋**: `struct:` prefix 사용
+  ```bash
+  git commit -m "struct: Email 검증 로직 메서드 추출"
+  ```
+
+#### 2️⃣ Behavioral Changes (동작 변경)
+- **정의**: 실제 기능 추가 또는 변경
+- **예시**:
+  - 새 메서드/클래스 추가
+  - 비즈니스 로직 변경
+  - 알고리즘 개선
+- **커밋**: `test:` (Red) 또는 `feat:` (Green) prefix 사용
+  ```bash
+  git commit -m "test: Email VO 검증 테스트 추가"
+  git commit -m "feat: Email VO 구현 (RFC 5322 검증)"
+  ```
+
+#### 3️⃣ 철칙: 절대 섞지 말 것!
+
+```
+❌ 잘못된 예 (섞음):
+- 메서드 이름 변경 + 새 기능 추가 (동시에)
+
+✅ 올바른 예 (분리):
+1. struct: 메서드 이름 변경 → 커밋
+2. test: 새 기능 테스트 추가 → 커밋
+3. feat: 새 기능 구현 → 커밋
+```
+
+### TDD + Tidy First 통합 워크플로우
+
+```
+1️⃣ Structural Changes 먼저 (필요 시)
+   ├─ struct: 리네이밍, 메서드 추출 등
+   ├─ 테스트 통과 확인
+   └─ struct: 커밋
+
+2️⃣ Red: 테스트 작성
+   ├─ test: 실패하는 테스트 작성
+   ├─ 컴파일 에러 확인
+   └─ test: 커밋
+
+3️⃣ Green: 최소 구현
+   ├─ feat: 테스트 통과할 만큼만 구현
+   ├─ 테스트 통과 확인
+   └─ feat: 커밋
+
+4️⃣ Refactor: 구조 개선 (필요 시)
+   ├─ struct: 중복 제거, 명확성 개선
+   ├─ 테스트 통과 확인 (동작 변경 없음)
+   └─ struct: 커밋
+
+5️⃣ 반복
+```
+
+### LangFuse 메트릭 추적
+
+```
+개발자: TDD + Tidy First 수행
+    ↓
+.git/hooks/post-commit (자동 트리거)
+    ↓
+log-to-langfuse.py (메트릭 수집)
+    ├─ 커밋 타입 분류 (struct:/test:/feat:)
+    ├─ TDD Phase 추적 (Red/Green/Refactor)
+    ├─ 커밋 크기 측정
+    └─ JSONL 로그 + LangFuse 업로드
 ```
 
 ### 핵심 메트릭
 
 | 메트릭 | 측정 항목 | 목표 |
 |--------|----------|------|
-| **TDD 사이클 시간** | Red → Commit 평균 시간 | < 15분 |
-| **커밋 크기** | 파일 변경 수, 라인 수 | 작을수록 좋음 |
+| **커밋 타입 비율** | struct:/test:/feat: 비율 | Balanced |
+| **TDD 사이클 시간** | test: → feat: 평균 시간 | < 15분 |
+| **커밋 크기** | 파일 변경 수, 라인 수 | 작을수록 좋음 (1-3 파일) |
+| **Tidy First 준수율** | Structural 먼저 커밋 비율 | > 80% |
 | **테스트 성공률** | 테스트 통과율 | > 95% |
-| **리팩토링 빈도** | Green 후 Refactor 비율 | > 50% |
 | **ArchUnit 준수율** | 아키텍처 규칙 위반 | 0회 |
 
-**핵심 성과**: 테스트가 컨벤션을 강제하고, 작은 커밋이 빠른 피드백을 보장
+**핵심 원칙**:
+- **작은 커밋**: 한 번에 한 가지만 변경
+- **분리된 커밋**: Structural과 Behavioral 절대 섞지 않음
+- **테스트 주도**: 테스트 먼저, 구현은 나중
 
 ### LangFuse 통합 (자동 메트릭 수집)
 
-**목적**: TDD 사이클과 개발 메트릭을 자동으로 수집하여 개발 효율 분석
+**목적**: TDD + Tidy First 워크플로우 메트릭 자동 수집
 
 **자동 추적 이벤트**:
 1. **tdd_commit**: Git 커밋 시
-   - 커밋 메시지, 해시, 변경 파일 수, 라인 수
-   - TDD Phase 자동 감지 (Red/Green/Refactor)
+   - 커밋 타입 자동 분류 (`struct:`, `test:`, `feat:`)
+   - TDD Phase 감지 (Red/Green/Refactor)
+   - 커밋 크기 (파일 수, 라인 수)
+   - Tidy First 준수 여부
+
 2. **tdd_test**: 테스트 실행 시 (`./gradlew test`)
-   - 테스트 성공/실패 수, 실행 시간
+   - 테스트 성공/실패 수
+   - 실행 시간
+
 3. **archunit_check**: ArchUnit 실행 시
    - 아키텍처 규칙 위반 수
 
+**커밋 타입 자동 감지**:
+```bash
+# Structural Changes
+"struct: ..." → Phase: structural
+
+# Red (Test First)
+"test: ..." → Phase: red
+
+# Green (Make it Work)
+"feat: ..." 또는 "impl: ..." → Phase: green
+```
+
 **설정**:
 ```bash
-# 환경 변수 설정 (선택적)
-export LANGFUSE_PUBLIC_KEY="pk-lf-..."
-export LANGFUSE_SECRET_KEY="sk-lf-..."
-export LANGFUSE_HOST="https://us.cloud.langfuse.com"
-
-# 환경 변수 없어도 작동 (로컬 JSONL 로그에만 저장)
+# .env 파일에서 자동 로드 (프로젝트 디렉토리 진입 시)
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://us.cloud.langfuse.com
 ```
 
 **로그 파일 위치**:
 - `~/.claude/logs/tdd-cycle.jsonl` (로컬 JSONL 로그)
+- LangFuse Cloud (환경 변수 설정 시)
 
-**참고**:
-- LangFuse 환경 변수 없어도 로컬 JSONL 로그는 항상 저장
-- `requests` 라이브러리 없어도 작동 (로컬 로그만)
+**대시보드 확인**: https://us.cloud.langfuse.com
 
 ---
 
@@ -257,40 +329,36 @@ LangFuse Dashboard (분석)
 
 **핵심 개념**:
 - **Plan 파일 기반**: `docs/prd/plans/{ISSUE-KEY}-{layer}-plan.md` 파일에서 다음 테스트 읽기
-- **TDD 4단계**: Red (테스트 작성) → Green (최소 구현) → Refactor (리팩토링) → Tidy (정리)
-- **TestFixture 필수**: 모든 레이어에서 Object Mother 패턴 사용
-- **짧은 커밋 주기**: 테스트 하나당 커밋 (Red, Green, Refactor 각각 커밋)
+- **TDD 3단계**: Red (test:) → Green (feat:) → Refactor (struct:)
+- **Tidy First 준수**: Structural 변경은 항상 별도 커밋
+- **작은 커밋**: 한 번에 한 가지만 (test:, feat:, struct: 분리)
 - **Zero-Tolerance 자동 준수**: 각 레이어별 규칙 자동 검증
 
 **Layer별 TDD 커맨드**:
 ```bash
 # Domain Layer TDD
 /kb/domain/go          # Plan 파일에서 다음 테스트 실행
-/kb/domain/red         # Red: 테스트 작성 → 실패 확인
-/kb/domain/green       # Green: 최소 구현 → 테스트 통과
-/kb/domain/refactor    # Refactor: 코드 개선
-/kb/domain/tidy        # Tidy: TestFixture 정리
+/kb/domain/red         # Red: test: 테스트 작성 → 실패 확인 → 커밋
+/kb/domain/green       # Green: feat: 최소 구현 → 테스트 통과 → 커밋
+/kb/domain/refactor    # Refactor: struct: 구조 개선 → 커밋
 
 # Application Layer TDD
 /kb/application/go     # UseCase TDD 실행
-/kb/application/red    # Transaction 경계 주의
-/kb/application/green  # 최소 구현
-/kb/application/refactor
-/kb/application/tidy
+/kb/application/red    # test: 커밋 (Transaction 경계 주의)
+/kb/application/green  # feat: 커밋 (최소 구현)
+/kb/application/refactor  # struct: 커밋 (구조 개선)
 
 # Persistence Layer TDD
 /kb/persistence/go     # Repository/Adapter TDD 실행
-/kb/persistence/red    # Long FK 전략 준수
-/kb/persistence/green  # QueryDSL DTO Projection
-/kb/persistence/refactor
-/kb/persistence/tidy
+/kb/persistence/red    # test: 커밋 (Long FK 전략 준수)
+/kb/persistence/green  # feat: 커밋 (QueryDSL DTO Projection)
+/kb/persistence/refactor  # struct: 커밋
 
 # REST API Layer TDD
 /kb/rest-api/go        # Controller TDD 실행
-/kb/rest-api/red       # MockMvc 테스트 작성
-/kb/rest-api/green     # RESTful 설계 준수
-/kb/rest-api/refactor
-/kb/rest-api/tidy
+/kb/rest-api/red       # test: 커밋 (MockMvc 테스트)
+/kb/rest-api/green     # feat: 커밋 (RESTful 설계)
+/kb/rest-api/refactor  # struct: 커밋
 
 # Integration Tests
 /kb/integration/go     # E2E 테스트 실행
@@ -304,14 +372,20 @@ docs/prd/plans/MEMBER-001-domain-plan.md
 # 2. TDD 사이클 실행
 /kb/domain/go
 → Plan 파일 읽기 → 다음 테스트 찾기
-→ Red: 테스트 작성 → 실패 확인 → 커밋
-→ Green: 최소 구현 → 통과 확인 → 커밋
-→ Refactor: 코드 개선 → 통과 확인 → 커밋
+→ Red: test: 테스트 작성 → 실패 확인 → test: 커밋
+→ Green: feat: 최소 구현 → 통과 확인 → feat: 커밋
+→ Refactor: struct: 구조 개선 → 통과 확인 → struct: 커밋
 → Plan 파일에 완료 표시
 
 # 3. 다음 테스트로 이동
 /kb/domain/go (반복)
 ```
+
+**커밋 메시지 규칙**:
+- `test:` - 실패하는 테스트 추가 (Red Phase)
+- `feat:` - 테스트 통과 구현 (Green Phase)
+- `struct:` - 구조 개선 (Refactor Phase, 동작 변경 없음)
+- `fix:` - 버그 수정 (test: + feat: 조합)
 
 **Layer별 Zero-Tolerance 규칙**:
 - **Domain**: Lombok 금지, Law of Demeter, Tell Don't Ask
@@ -355,37 +429,73 @@ tail -f ~/.claude/logs/tdd-cycle.jsonl
 
 ---
 
-## 🎯 개발 워크플로우 (Kent Beck TDD)
+## 🎯 개발 워크플로우 (Kent Beck TDD + Tidy First)
 
 ### 1. TDD 사이클 워크플로우
 
 ```bash
-# Red Phase: 실패하는 테스트 작성
-vim domain/src/test/java/.../OrderTest.java
-# → 테스트 작성 후 커밋
-git add .
-git commit -m "test: Order 생성 테스트 추가"
-# → track-tdd-cycle.sh 자동 실행 (Phase: red)
-
-# Green Phase: 최소 구현
-vim domain/src/main/java/.../Order.java
-# → 테스트 통과할 만큼만 구현
+# 🔴 Red Phase: 실패하는 테스트 작성
+vim domain/src/test/java/.../EmailTest.java
+# → 테스트 작성
 ./gradlew test
-# → track-tdd-cycle.sh 자동 실행 (test_status: success)
+# → 컴파일 에러 또는 테스트 실패 확인
 git add .
-git commit -m "impl: Order 생성 로직 구현"
-# → track-tdd-cycle.sh 자동 실행 (Phase: green)
+git commit -m "test: Email VO 검증 테스트 추가"
+# → post-commit hook → LangFuse (Phase: red)
 
-# Refactor Phase: 코드 개선
-vim domain/src/main/java/.../Order.java
-# → 리팩토링 수행
+# 🟢 Green Phase: 최소 구현
+vim domain/src/main/java/.../Email.java
+# → 테스트 통과할 만큼만 구현 (최소한의 코드)
+./gradlew test
+# → 테스트 통과 확인
+git add .
+git commit -m "feat: Email VO 구현 (RFC 5322 검증)"
+# → post-commit hook → LangFuse (Phase: green)
+
+# ♻️ Refactor Phase: 구조 개선 (필요 시)
+vim domain/src/main/java/.../Email.java
+# → 중복 제거, 메서드 추출, 이름 변경 등
+# → 동작 변경 없음! 테스트 결과 동일해야 함
 ./gradlew test
 # → 테스트 여전히 통과 확인
 git add .
-git commit -m "refactor: Order 생성 로직 개선"
-# → track-tdd-cycle.sh 자동 실행 (Phase: refactor)
+git commit -m "struct: Email 검증 로직 메서드 추출"
+# → post-commit hook → LangFuse (Phase: structural)
 
 # 결과: LangFuse에 3개 커밋 메트릭 자동 수집
+# - test: (Red)
+# - feat: (Green)
+# - struct: (Refactor)
+```
+
+### 2. Tidy First 실전 예시
+
+```bash
+# 시나리오: Email VO에 도메인 검증 추가하기
+
+# ❌ 잘못된 방법 (섞음)
+git commit -m "feat: 도메인 검증 추가 및 변수명 변경"
+# → Structural(변수명)과 Behavioral(검증) 섞음
+
+# ✅ 올바른 방법 (분리)
+
+# 1️⃣ Structural 먼저
+vim Email.java
+# → 변수명 value → emailAddress 변경
+./gradlew test  # 통과
+git commit -m "struct: Email 변수명 명확화 (value → emailAddress)"
+
+# 2️⃣ Red
+vim EmailTest.java
+# → 도메인 검증 테스트 추가
+./gradlew test  # 실패
+git commit -m "test: Email 도메인 형식 검증 테스트 추가"
+
+# 3️⃣ Green
+vim Email.java
+# → 도메인 검증 로직 추가
+./gradlew test  # 통과
+git commit -m "feat: Email 도메인 형식 검증 구현"
 ```
 
 ### 2. 검증 워크플로우
@@ -405,11 +515,35 @@ git commit -m "refactor: Order 생성 로직 개선"
 ### 3. 메트릭 분석 워크플로우
 
 ```bash
-# JSONL 로그 확인
-cat ~/.claude/logs/tdd-cycle.jsonl | jq .
+# JSONL 로그 실시간 확인
+tail -f ~/.claude/logs/tdd-cycle.jsonl
 
-# LangFuse 대시보드 확인 (환경 변수 설정 시)
+# 예시 출력:
+# {"event_type":"tdd_commit","data":{"commit_msg":"test: Email 검증 테스트 추가","tdd_phase":"red",...}}
+# {"event_type":"tdd_commit","data":{"commit_msg":"feat: Email VO 구현","tdd_phase":"green",...}}
+# {"event_type":"tdd_commit","data":{"commit_msg":"struct: 검증 로직 메서드 추출","tdd_phase":"structural",...}}
+
+# LangFuse 대시보드 (환경 변수 설정 시)
 # → https://us.cloud.langfuse.com
-# → TDD 사이클 시간, 커밋 크기, 테스트 성공률 확인
+# → 커밋 타입 비율 (struct:/test:/feat:)
+# → TDD 사이클 시간 (test: → feat: 평균)
+# → Tidy First 준수율
 ```
+
+### 4. 커밋 규칙 요약
+
+| Prefix | 용도 | Phase | 예시 |
+|--------|------|-------|------|
+| `test:` | 실패하는 테스트 추가 | Red | `test: Email VO 검증 테스트 추가` |
+| `feat:` | 테스트 통과 구현 | Green | `feat: Email VO 구현 (RFC 5322)` |
+| `struct:` | 구조 개선 (동작 동일) | Refactor | `struct: Email 검증 로직 메서드 추출` |
+| `fix:` | 버그 수정 | - | `fix: Email null 처리 누락 수정` |
+| `chore:` | 빌드/설정 변경 | - | `chore: Gradle 버전 업데이트` |
+
+**핵심 원칙**:
+- ✅ 한 커밋에는 하나의 타입만
+- ✅ Structural과 Behavioral 절대 섞지 않기
+- ✅ 작은 커밋 (1-3 파일)
+- ✅ 모든 테스트 통과 시에만 커밋
+
 ---
