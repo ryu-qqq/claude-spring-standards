@@ -11,6 +11,7 @@ if [[ -f ".env" ]]; then
     set +a
 fi
 
+
 # 프로젝트 정보
 PROJECT_NAME=$(basename "$(pwd)")
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
