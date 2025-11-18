@@ -31,8 +31,8 @@
 
 ```mermaid
 graph LR
-    A[1. PRD 작성] --> B[2. 컨벤션 검증]
-    B --> C[3. Task 분할]
+    A[1. PRD 작성] --> B[2. Task 분할]
+    B --> C[3. 컨벤션 검증]
     C --> D[4. TDD Plan 생성]
     D --> E[5. TDD 실행]
     E --> F[6. PR & 배포]
@@ -52,28 +52,7 @@ graph LR
 
 **결과물**: `docs/prd/{project-name}.md`
 
-### 2️⃣ PRD 컨벤션 검증 및 수정 ⭐
-
-```bash
-# PRD가 88개 코딩 컨벤션을 준수하는지 검증
-/validate-conventions docs/prd/member-management.md
-
-# 출력 예시:
-# ❌ 위반 사항:
-#   - Domain Layer: Lombok 사용 (Line 56)
-#   - Application Layer: @Transactional 내 외부 API 호출 (Line 123)
-#
-# 📋 상세 리포트: docs/prd/member-management-validation-report.md
-
-# 위반 사항 수정 후 재검증
-/validate-conventions docs/prd/member-management.md
-
-# ✅ 모든 규칙 통과 시 다음 단계로 진행
-```
-
-**검증 규칙**: Zero-Tolerance (Lombok 금지, Law of Demeter, Long FK 전략 등) - 총 88개 규칙
-
-### 3️⃣ 레이어별 Task 분할 (Breakdown)
+### 2️⃣ 레이어별 Task 분할 (Breakdown)
 
 ```bash
 # PRD를 헥사고날 아키텍처 5개 레이어로 분할
@@ -89,6 +68,34 @@ graph LR
 ```
 
 **결과물**: `docs/prd/tasks/MEMBER-{001-005}.md` (5개 파일)
+
+### 3️⃣ Task별 컨벤션 검증 및 수정 ⭐
+
+```bash
+# 각 Task 파일을 레이어별 규칙으로 검증
+/validate-conventions docs/prd/tasks/MEMBER-001.md
+
+# 출력 예시:
+# 🔍 Layer: Domain Layer (12개 규칙 적용)
+# ❌ 위반 사항:
+#   - [CRITICAL] Lombok 사용 발견 (Line 56)
+#   - [WARNING] Law of Demeter 위반 (Line 78)
+#
+# 📋 상세 리포트: docs/prd/tasks/MEMBER-001-validation-report.md
+
+# 위반 사항 수정 후 재검증
+/validate-conventions docs/prd/tasks/MEMBER-001.md
+
+# ✅ 통과 시 다음 Task 검증
+/validate-conventions docs/prd/tasks/MEMBER-002.md
+/validate-conventions docs/prd/tasks/MEMBER-003.md
+# ... (5개 Task 모두 검증)
+```
+
+**검증 효율성**:
+- ✅ **레이어별 규칙만 적용**: Domain (12개), Application (26개), Persistence (23개), REST API (22개)
+- ✅ **범위가 작아서 빠름**: 전체 PRD 검증보다 5배 빠름
+- ✅ **정확한 검증**: 레이어 특화 규칙 집중 검증
 
 ### 4️⃣ TDD Plan 생성 (Kent Beck 사이클)
 
@@ -202,8 +209,8 @@ tail -f ~/.claude/logs/tdd-cycle.jsonl
 | 단계 | 소요 시간 | 산출물 |
 |------|-----------|--------|
 | 1. PRD 작성 (`/create-prd`) | 30분 | `member-management.md` |
-| 2. 컨벤션 검증 (`/validate-conventions`) | 5분 | `validation-report.md` |
-| 3. Task 분할 (`/breakdown-prd`) | 5분 | 5개 Task 파일 |
+| 2. Task 분할 (`/breakdown-prd`) | 5분 | 5개 Task 파일 |
+| 3. 컨벤션 검증 (`/validate-conventions` × 5) | 10분 | 5개 validation-report |
 | 4. TDD Plan 생성 (`/create-plan` × 5) | 10분 | 5개 Plan 파일 |
 | 5. TDD 실행 (Cursor Multi-agent) | 2-4시간 | 실제 구현 코드 |
 | 6. PR & 배포 | 30분 | GitHub PR |
