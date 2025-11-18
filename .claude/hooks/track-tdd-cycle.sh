@@ -28,10 +28,12 @@ if echo "$COMMIT_MSG" | grep -qiE "^struct:"; then
     TDD_PHASE="structural"
 elif echo "$COMMIT_MSG" | grep -qiE "^test:"; then
     TDD_PHASE="red"
-elif echo "$COMMIT_MSG" | grep -qiE "^impl:|^feat:"; then
+elif echo "$COMMIT_MSG" | grep -qiE "^(impl:|feat:|fix:)"; then
     TDD_PHASE="green"
 elif echo "$COMMIT_MSG" | grep -qiE "^refactor:"; then
     TDD_PHASE="refactor"
+elif echo "$COMMIT_MSG" | grep -qiE "^(docs:|chore:)"; then
+    TDD_PHASE="non-tdd"
 fi
 
 # LangFuse 로거 호출
