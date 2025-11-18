@@ -282,28 +282,179 @@ adapter-out/persistence/adapter/query/
 
 ---
 
-## 🛠️ 개발 워크플로우
+## 🛠️ 개발 플로우 가이드라인
 
-### 1. TDD 사이클
+### 전체 플로우 (PRD → 구현 → 배포)
 
-```bash
-# 🔴 Red Phase: 실패하는 테스트 작성
-vim src/test/java/.../EmailTest.java
-./gradlew test  # 실패 확인
-git commit -m "test: Email VO 검증 테스트 추가"
-
-# 🟢 Green Phase: 최소 구현
-vim src/main/java/.../Email.java
-./gradlew test  # 통과 확인
-git commit -m "feat: Email VO 구현 (RFC 5322 검증)"
-
-# ♻️ Refactor Phase: 구조 개선 (필요 시)
-vim src/main/java/.../Email.java
-./gradlew test  # 여전히 통과 확인
-git commit -m "struct: Email 검증 로직 메서드 추출"
+```mermaid
+graph LR
+    A[1. PRD 작성] --> B[2. 컨벤션 검증]
+    B --> C[3. Task 분할]
+    C --> D[4. TDD Plan 생성]
+    D --> E[5. TDD 실행]
+    E --> F[6. PR & 배포]
 ```
 
-### 2. 검증
+### 1️⃣ PRD 작성 (대화형)
+
+```bash
+# Claude Code에서 대화형으로 PRD 생성
+/create-prd
+
+# 출력 예시:
+# ✅ PRD 생성 완료: docs/prd/member-management.md
+# Epic: 회원 관리 시스템
+# Issue Prefix: MEMBER
+```
+
+**결과물**: `docs/prd/{project-name}.md`
+
+### 2️⃣ PRD 컨벤션 검증 및 수정
+
+```bash
+# PRD가 88개 코딩 컨벤션을 준수하는지 검증
+/validate-conventions docs/prd/member-management.md
+
+# 출력 예시:
+# ❌ 위반 사항:
+#   - Domain Layer: Lombok 사용 (Line 56)
+#   - Application Layer: @Transactional 내 외부 API 호출 (Line 123)
+#   - Persistence Layer: JPA 관계 어노테이션 (Line 78)
+#
+# 📋 상세 리포트: docs/prd/member-management-validation-report.md
+
+# 위반 사항 수정 후 재검증
+/validate-conventions docs/prd/member-management.md
+
+# ✅ 모든 규칙 통과 시 다음 단계로 진행
+```
+
+**검증 규칙**:
+- Zero-Tolerance: Lombok 금지, Law of Demeter, Long FK 전략
+- Transaction 경계, Spring 프록시 제약사항
+- Javadoc 필수
+- 총 88개 규칙 자동 검증
+
+**결과물**: `docs/prd/{project-name}-validation-report.md`
+
+### 3️⃣ 레이어별 Task 분할 (Breakdown)
+
+```bash
+# PRD를 헥사고날 아키텍처 5개 레이어로 분할
+/breakdown-prd docs/prd/member-management.md
+
+# 출력 예시:
+# ✅ 5개 Task 생성 완료:
+#   1. MEMBER-001: Domain Layer 구현
+#   2. MEMBER-002: Application Layer 구현
+#   3. MEMBER-003: Persistence Layer 구현
+#   4. MEMBER-004: REST API Layer 구현
+#   5. MEMBER-005: Integration Test
+```
+
+**결과물**:
+```
+docs/prd/tasks/
+├── MEMBER-001.md  (Domain Layer)
+├── MEMBER-002.md  (Application Layer)
+├── MEMBER-003.md  (Persistence Layer)
+├── MEMBER-004.md  (REST API Layer)
+└── MEMBER-005.md  (Integration Test)
+```
+
+### 4️⃣ TDD Plan 생성 (Kent Beck 사이클)
+
+```bash
+# 각 Task를 TDD 사이클 단위로 분할
+/create-plan MEMBER-001
+
+# 출력 예시:
+# ✅ TDD Plan 생성 완료:
+#   └─ docs/prd/plans/MEMBER-001-domain-plan.md
+#
+# 📊 사이클 요약:
+#   - 총 사이클 수: 5
+#   - 예상 소요 시간: 75분 (5 사이클 × 15분)
+#   - Red → Green → Refactor → Tidy (각 5개)
+```
+
+**결과물**: `docs/prd/plans/MEMBER-001-domain-plan.md`
+
+**Plan 구조**:
+```markdown
+### 1️⃣ Member Aggregate Root 설계 (Cycle 1)
+
+#### 🔴 Red: 테스트 작성
+- [ ] MemberTest.java 생성
+- [ ] shouldCreateMemberWithValidData() 작성
+- [ ] 커밋: test: Member Aggregate 생성 테스트 추가 (Red)
+
+#### 🟢 Green: 최소 구현
+- [ ] Member.java 생성 (Plain Java)
+- [ ] 커밋: feat: Member Aggregate 구현 (Green)
+
+#### ♻️ Refactor: 리팩토링
+- [ ] Law of Demeter 준수 확인
+- [ ] 커밋: struct: Member Aggregate 개선 (Refactor)
+
+#### 🧹 Tidy: TestFixture 정리
+- [ ] MemberFixture.java 생성
+- [ ] 커밋: test: MemberFixture 정리 (Tidy)
+```
+
+### 5️⃣ TDD 실행 (짧은 사이클 5-15분)
+
+#### Kent Beck TDD 커맨드 (`/kb`)
+
+```bash
+# Domain Layer TDD 실행
+/kb/domain/go
+# → Plan 파일 읽기
+# → Red: test: 커밋
+# → Green: feat: 커밋
+# → Refactor: struct: 커밋
+# → Tidy: test: 커밋
+# → Plan에 완료 표시
+
+# 다른 레이어도 동일
+/kb/application/go
+/kb/persistence/go
+/kb/rest-api/go
+/kb/integration/go
+```
+
+#### Cursor 멀티 에이전트로 병렬 실행 (권장 🚀)
+
+**Cursor Composer 사용**:
+```
+1. Cursor IDE 열기
+2. Composer (Cmd+I) 열기
+3. 파일 첨부: docs/prd/plans/MEMBER-001-domain-plan.md
+4. 프롬프트: "이 Plan의 첫 번째 사이클을 TDD로 실행해줘"
+5. Agent 모드 선택: Multi-agent (병렬 처리)
+```
+
+**장점**:
+- 🚀 **5배 빠름**: 5개 파일 동시 작성 (Test, Impl, Fixture, ArchUnit, Docs)
+- 🎯 **Zero-Tolerance 자동 준수**: 컨벤션 자동 적용
+- 📝 **작은 커밋**: 각 Phase별 자동 커밋
+- 🔄 **LangFuse 자동 업로드**: post-commit hook 자동 실행
+
+**예시**:
+```
+사용자: "MEMBER-001 Plan의 Cycle 1을 실행해줘"
+
+Cursor Composer (Multi-agent):
+├─ Agent 1: MemberTest.java 작성 (Red)
+├─ Agent 2: Member.java 작성 (Green)
+├─ Agent 3: MemberFixture.java 작성 (Tidy)
+├─ Agent 4: ArchUnit 테스트 추가 (Refactor)
+└─ Agent 5: Javadoc 추가 (Refactor)
+
+결과: 5분 만에 1개 사이클 완료 (단일 Agent는 25분)
+```
+
+### 6️⃣ 검증 및 PR
 
 ```bash
 # ArchUnit 테스트
@@ -311,17 +462,41 @@ git commit -m "struct: Email 검증 로직 메서드 추출"
 
 # 전체 테스트
 ./gradlew test
-```
 
-### 3. 메트릭 확인
-
-```bash
-# JSONL 로그 실시간 모니터링
+# 메트릭 확인
 tail -f ~/.claude/logs/tdd-cycle.jsonl
 
 # LangFuse 대시보드 (환경 변수 설정 시)
 # → https://cloud.langfuse.com
 ```
+
+---
+
+## 📊 개발 플로우 타임라인 예시
+
+| 단계 | 소요 시간 | 산출물 |
+|------|-----------|--------|
+| 1. PRD 작성 (`/create-prd`) | 30분 | `member-management.md` |
+| 2. 컨벤션 검증 (`/validate-conventions`) | 5분 | `validation-report.md` |
+| 3. Task 분할 (`/breakdown-prd`) | 5분 | 5개 Task 파일 |
+| 4. TDD Plan 생성 (`/create-plan` × 5) | 10분 | 5개 Plan 파일 |
+| 5. TDD 실행 (Cursor Multi-agent) | 2-4시간 | 실제 구현 코드 |
+| 6. PR & 배포 | 30분 | GitHub PR |
+| **총합** | **3-5시간** | **완전한 기능 구현** |
+
+**전통적 방법 대비**:
+- ❌ 전통적: 1-2주 (계획 없이 바로 코딩 → 리팩토링 지옥)
+- ✅ 이 방법: 3-5시간 (Plan 기반 TDD → 한 번에 완성)
+
+---
+
+## 🎯 핵심 원칙
+
+1. **Plan First**: 코드 작성 전 반드시 Plan 생성
+2. **Small Cycles**: 5-15분 내 완료 가능한 작은 사이클
+3. **Tidy First**: Structural과 Behavioral 절대 섞지 말 것
+4. **Zero-Tolerance**: 88개 규칙 자동 검증
+5. **Multi-agent**: Cursor Composer로 병렬 실행 (5배 빠름)
 
 ---
 
