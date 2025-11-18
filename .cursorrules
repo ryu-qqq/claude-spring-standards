@@ -1,8 +1,8 @@
 # Spring DDD Standards - Cursor AI Rules
 
-> **컨벤션 원본**: `docs/coding_convention/` (88개 규칙)
-> **Cache**: `.claude/cache/rules/` (JSON 검색용)
-> **Global Framework**: `~/.claude/` (SuperClaude)
+> **온라인 문서**: https://ryu-qqq.github.io/claude-spring-standards/
+> **로컬 컨벤션**: `docs/coding_convention/` (88개 규칙)
+> **프로젝트 템플릿**: Spring Boot 3.5 + Java 21 헥사고날 아키텍처
 
 ---
 
