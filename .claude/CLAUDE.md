@@ -147,10 +147,11 @@ log-to-langfuse.py (메트릭 수집)
 
 **설정**:
 ```bash
-# .env 파일에서 자동 로드 (프로젝트 디렉토리 진입 시)
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_HOST=https://us.cloud.langfuse.com
+# ~/.zshrc에 환경 변수 추가 (영구 설정)
+echo 'export LANGFUSE_PUBLIC_KEY="pk-lf-..."' >> ~/.zshrc
+echo 'export LANGFUSE_SECRET_KEY="sk-lf-..."' >> ~/.zshrc
+echo 'export LANGFUSE_HOST="https://us.cloud.langfuse.com"' >> ~/.zshrc
+source ~/.zshrc
 ```
 
 **로그 파일 위치**:

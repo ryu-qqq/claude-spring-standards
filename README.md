@@ -351,12 +351,11 @@ LangFuse가 작동하려면 **다음 4가지 조건이 모두 필요**합니다:
 # 2. Python langfuse 패키지 설치
 pip3 install langfuse
 
-# 3. .env 파일 생성 (선택사항 - LangFuse Cloud 사용 시만)
-cat > .env << 'EOF'
-LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key
-LANGFUSE_SECRET_KEY=sk-lf-your-secret-key
-LANGFUSE_HOST=https://us.cloud.langfuse.com
-EOF
+# 3. ~/.zshrc에 LangFuse 환경 변수 추가 (선택사항 - LangFuse Cloud 사용 시만)
+echo 'export LANGFUSE_PUBLIC_KEY="pk-lf-your-public-key"' >> ~/.zshrc
+echo 'export LANGFUSE_SECRET_KEY="sk-lf-your-secret-key"' >> ~/.zshrc
+echo 'export LANGFUSE_HOST="https://us.cloud.langfuse.com"' >> ~/.zshrc
+source ~/.zshrc
 # LangFuse 계정 생성: https://cloud.langfuse.com
 
 # 4. 테스트
@@ -366,7 +365,7 @@ tail -1 ~/.claude/logs/tdd-cycle.jsonl
 # → LangFuse Cloud 업로드는 2번+3번 필요
 ```
 
-**중요**: `.env` 파일만 만들어도 LangFuse가 작동하지 않습니다!
+**중요**: 환경 변수만 설정해도 LangFuse가 작동하지 않습니다!
 → **반드시 `./scripts/setup-hooks.sh`로 Git Hook을 먼저 설치**해야 합니다.
 
 **대시보드**: https://cloud.langfuse.com → Traces 탭
@@ -584,6 +583,7 @@ python3 .claude/scripts/log-to-langfuse.py \
 # Cursor IDE의 Docs 기능에 추가:
 https://ryu-qqq.github.io/claude-spring-standards/
 
+```
 
 ---
 

@@ -4,12 +4,12 @@
 # Git Post-Commit Hook for LangFuse TDD Tracking
 # =====================================================
 
-# .env 파일 로드 (LangFuse 환경 변수)
-if [[ -f ".env" ]]; then
-    set -a
-    source .env
-    set +a
-fi
+# LangFuse 환경 변수는 ~/.zshrc에 설정되어 있음
+# 설정 방법:
+#   echo 'export LANGFUSE_PUBLIC_KEY="pk-lf-..."' >> ~/.zshrc
+#   echo 'export LANGFUSE_SECRET_KEY="sk-lf-..."' >> ~/.zshrc
+#   echo 'export LANGFUSE_HOST="https://us.cloud.langfuse.com"' >> ~/.zshrc
+#   source ~/.zshrc
 
 
 # 프로젝트 정보
