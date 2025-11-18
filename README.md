@@ -7,6 +7,7 @@
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blue.svg)](https://alistair.cockburn.us/hexagonal-architecture/)
 [![TDD](https://img.shields.io/badge/TDD-Kent%20Beck-red.svg)](https://www.amazon.com/Test-Driven-Development-Kent-Beck/dp/0321146530)
+[![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-blue.svg)](https://ryu-qqq.github.io/claude-spring-standards/)
 
 ---
 
@@ -33,13 +34,19 @@
 git clone https://github.com/ryu-qqq/claude-spring-standards.git my-new-project
 cd my-new-project
 
-# 2. Git 히스토리 초기화 (선택)
+# 2. Git Hooks 설치
+./scripts/setup-hooks.sh
+
+# 3. 빌드 및 테스트
+./gradlew clean build
+
+# 4. Git 히스토리 초기화 (선택)
 rm -rf .git
 git init
 git add .
 git commit -m "chore: Initial commit from Spring Standards Template"
 
-# 3. 프로젝트명 변경 (선택)
+# 5. 프로젝트명 변경 (선택)
 # TODO: setup-new-project.sh 스크립트 예정
 ```
 
@@ -57,17 +64,13 @@ cp /tmp/spring-template/.cursorrules .
 cp /tmp/spring-template/.coderabbit.yaml .
 cp -r /tmp/spring-template/.claude .
 cp -r /tmp/spring-template/docs/coding_convention docs/
+cp -r /tmp/spring-template/config .
+cp -r /tmp/spring-template/scripts .
 
-# 3. Git Hooks 설정
-cp /tmp/spring-template/.git/hooks/post-commit .git/hooks/
-chmod +x .git/hooks/post-commit
-git config core.hooksPath .git/hooks
+# 3. Git Hooks 설치
+./scripts/setup-hooks.sh
 
-# 4. 환경 변수 설정 (LangFuse 사용 시)
-cp /tmp/spring-template/.env.example .env
-# → .env에 LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY 입력
-
-# 5. 테스트
+# 4. 테스트
 git commit --allow-empty -m "test: Migration 테스트"
 tail -1 ~/.claude/logs/tdd-cycle.jsonl
 ```
@@ -162,26 +165,36 @@ LangFuse Dashboard (분석)
 - **사이클 시간**: test: → feat: 평균 시간
 - **Tidy First 준수율**: Structural 분리 비율
 
-### 설정 방법
+### 설정 방법 (4가지 조건 필요)
+
+LangFuse가 작동하려면 **다음 4가지 조건이 모두 필요**합니다:
 
 ```bash
-# 1. LangFuse 계정 생성
-# https://cloud.langfuse.com
+# 1. Git Hooks 설치 (가장 중요!)
+./scripts/setup-hooks.sh
+# → .git/hooks/post-commit 심볼릭 링크 생성
+# → 이것이 없으면 .env가 있어도 LangFuse 작동 안 함!
 
-# 2. .env 파일 설정
+# 2. Python langfuse 패키지 설치
+pip3 install langfuse
+
+# 3. .env 파일 생성 (선택사항 - LangFuse Cloud 사용 시만)
 cat > .env << 'EOF'
 LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key
 LANGFUSE_SECRET_KEY=sk-lf-your-secret-key
 LANGFUSE_HOST=https://us.cloud.langfuse.com
 EOF
-
-# 3. Python SDK 설치
-pip3 install langfuse
+# LangFuse 계정 생성: https://cloud.langfuse.com
 
 # 4. 테스트
 git commit --allow-empty -m "test: LangFuse 테스트"
 tail -1 ~/.claude/logs/tdd-cycle.jsonl
+# → JSONL 로그는 항상 작동 (1번만 설치하면 됨)
+# → LangFuse Cloud 업로드는 2번+3번 필요
 ```
+
+**중요**: `.env` 파일만 만들어도 LangFuse가 작동하지 않습니다!
+→ **반드시 `./scripts/setup-hooks.sh`로 Git Hook을 먼저 설치**해야 합니다.
 
 **대시보드**: https://cloud.langfuse.com → Traces 탭
 
@@ -465,6 +478,35 @@ python3 .claude/scripts/log-to-langfuse.py \
 - ✅ Domain Layer 구현 (Email, Password, UserDomain)
 - ✅ Orchestration Pattern 구현 (Facade, Outbox, State Manager)
 - ✅ 테스트 커버리지 98% 달성
+
+---
+
+## 📖 온라인 문서
+
+### GitHub Pages
+**URL**: https://ryu-qqq.github.io/claude-spring-standards/
+
+온라인에서 코딩 컨벤션을 확인할 수 있습니다:
+- 88개 규칙 전체
+- 레이어별 가이드
+- Zero-Tolerance 규칙
+- 검색 및 내비게이션
+
+### Cursor IDE에서 사용
+```
+# Cursor IDE의 Docs 탭에 추가:
+https://ryu-qqq.github.io/claude-spring-standards/
+
+# 그럼 AI가 온라인 문서를 참조할 수 있습니다
+```
+
+### 로컬에서 사용
+```bash
+# @mention으로 직접 참조
+@docs/coding_convention/02-domain-layer/aggregate/guide.md
+
+# .cursorrules가 자동으로 읽힘 (344 라인 요약)
+```
 
 ---
 
