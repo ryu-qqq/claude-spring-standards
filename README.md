@@ -250,8 +250,6 @@ cd my-new-project
 
 ### 기존 프로젝트 적용
 
-**상세 가이드**: [Migration Guide](docs/migration/README.md)
-
 ```bash
 # 1. 템플릿 클론 (임시)
 git clone https://github.com/ryu-qqq/claude-spring-standards.git /tmp/spring-template
@@ -478,22 +476,7 @@ adapter-out/persistence/adapter/query/
 
 ### Claude Code (비즈니스 로직, 리뷰)
 
-```bash
-# 프로젝트 메모리 로드
-/sc:load
-
-# 아키텍처 검증
-/sc:analyze
-
-# Git 커밋
-/sc:git
-```
-
-### Cursor IDE (빠른 코드 생성)
-
-- `.cursorrules` 자동 로드
-- 컨벤션 준수 코드 자동 생성
-- Boilerplate 빠른 작성
+### Cursor IDE (워크트리로 빠른 병렬 개발)
 
 ### CodeRabbit (PR 자동 리뷰)
 
@@ -505,7 +488,7 @@ adapter-out/persistence/adapter/query/
 **통합 워크플로우**:
 ```
 1. Claude Code → 비즈니스 로직 설계
-2. Cursor IDE → Boilerplate 생성
+2. Cursor IDE → tdd plans를 병렬 워크트리로 코드 생성
 3. Claude Code → 복잡한 로직 구현
 4. CodeRabbit → PR 리뷰
 ```
@@ -515,10 +498,8 @@ adapter-out/persistence/adapter/query/
 ## 📖 문서
 
 ### 핵심 가이드
-- **[Migration Guide](docs/migration/README.md)** ⭐ - 기존 프로젝트 적용 방법
 - **[코딩 컨벤션](docs/coding_convention/)** - 88개 상세 규칙
 - **[.claude/CLAUDE.md](.claude/CLAUDE.md)** - 프로젝트 설정
-- **[.cursorrules](.cursorrules)** - Cursor IDE 컨벤션
 - **[.coderabbit.yaml](.coderabbit.yaml)** - CodeRabbit 설정
 
 ### Layer별 가이드
@@ -602,34 +583,6 @@ python3 .claude/scripts/log-to-langfuse.py \
 
 ---
 
-## 📝 최근 업데이트
-
-### 2025-11-14 ⭐
-- ✅ **Kent Beck TDD + Tidy First 철학 완전 통합**
-  - Structural vs Behavioral 변경 엄격 분리
-  - 커밋 메시지 규칙 (test:/feat:/struct:)
-  - 작은 커밋 원칙 (1-3 파일)
-- ✅ **LangFuse Span 기반 메트릭 자동 수집**
-  - Post-commit hook 자동 실행
-  - 32-char hex Trace ID (MD5 hash)
-  - Multi-line commit message 안전 처리
-  - p50/p99 Analytics 지원
-- ✅ **AI 도구 완전 통합**
-  - Claude Code: `.claude/CLAUDE.md`
-  - Cursor IDE: `.cursorrules` (345 lines)
-  - CodeRabbit: `.coderabbit.yaml` (TDD 검증)
-- ✅ **Migration Guide 작성**
-  - 기존 프로젝트 적용 가이드 (7단계)
-  - 트러블슈팅 섹션
-  - 복사-붙여넣기 가능한 명령어
-
-### 2025-11-13
-- ✅ Domain Layer 구현 (Email, Password, UserDomain)
-- ✅ Orchestration Pattern 구현 (Facade, Outbox, State Manager)
-- ✅ 테스트 커버리지 98% 달성
-
----
-
 ## 📖 온라인 문서
 
 ### GitHub Pages
@@ -643,12 +596,9 @@ python3 .claude/scripts/log-to-langfuse.py \
 
 ### AI IDE에서 사용
 ```
-# Cursor IDE, Windsurf 등 AI IDE의 Docs 기능에 추가:
+# Cursor IDE의 Docs 기능에 추가:
 https://ryu-qqq.github.io/claude-spring-standards/
 
-# 로컬 파일 참조:
-@docs/coding_convention/02-domain-layer/aggregate/guide.md
-```
 
 ---
 
@@ -674,8 +624,7 @@ https://ryu-qqq.github.io/claude-spring-standards/
 
 ## 🔗 링크
 
-- [Kent Beck - Test Driven Development](https://www.amazon.com/Test-Driven-Development-Kent-Beck/dp/0321146530)
-- [Kent Beck - Tidy First?](https://www.oreilly.com/library/view/tidy-first/9781098151232/)
+
 - [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 - [LangFuse Documentation](https://langfuse.com/docs)
 - [ArchUnit User Guide](https://www.archunit.org/userguide/html/000_Index.html)
