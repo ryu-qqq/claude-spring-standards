@@ -372,6 +372,40 @@ tail -1 ~/.claude/logs/tdd-cycle.jsonl
 
 **상세 가이드**: [LangFuse README](.claude/scripts/README-langfuse-trace.md)
 
+### 다른 프로젝트에 설치하기
+
+**복사할 파일 (4개)**:
+```bash
+# 1. TDD 추적 스크립트
+cp .claude/hooks/track-tdd-cycle.sh /path/to/your-project/.claude/hooks/
+
+# 2. Post-commit wrapper
+cp .claude/hooks/post-commit /path/to/your-project/.claude/hooks/
+
+# 3. Python 로거
+cp .claude/scripts/log-to-langfuse.py /path/to/your-project/.claude/scripts/
+
+# 4. 설치 스크립트
+cp scripts/setup-hooks.sh /path/to/your-project/scripts/
+```
+
+**설치**:
+```bash
+cd /path/to/your-project
+
+# 디렉토리 생성 (없을 경우)
+mkdir -p .claude/hooks .claude/scripts
+
+# 설치 스크립트 실행
+./scripts/setup-hooks.sh
+
+# 테스트
+git commit --allow-empty -m "test: LangFuse test"
+tail -1 ~/.claude/logs/tdd-cycle.jsonl | jq .
+```
+
+**로그 위치**: `~/.claude/logs/tdd-cycle.jsonl` (모든 프로젝트 통합)
+
 ---
 
 ## 🏗️ 아키텍처
