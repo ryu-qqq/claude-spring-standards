@@ -20,7 +20,7 @@
 ✅ **Kent Beck TDD**: Red (test:) → Green (feat:) → Refactor (struct:)
 ✅ **Tidy First**: Structural과 Behavioral 변경 엄격 분리
 ✅ **Zero-Tolerance**: Lombok 금지, Law of Demeter, Long FK 전략
-✅ **AI 도구 통합**: Claude Code + Cursor IDE + CodeRabbit
+✅ **AI 도구 통합**: Claude Code + CodeRabbit
 ✅ **자동화 메트릭**: LangFuse Span 기반 TDD 사이클 추적
 
 ---
@@ -492,20 +492,13 @@ python3 .claude/scripts/log-to-langfuse.py \
 - Zero-Tolerance 규칙
 - 검색 및 내비게이션
 
-### Cursor IDE에서 사용
+### AI IDE에서 사용
 ```
-# Cursor IDE의 Docs 탭에 추가:
+# Cursor IDE, Windsurf 등 AI IDE의 Docs 기능에 추가:
 https://ryu-qqq.github.io/claude-spring-standards/
 
-# 그럼 AI가 온라인 문서를 참조할 수 있습니다
-```
-
-### 로컬에서 사용
-```bash
-# @mention으로 직접 참조
+# 로컬 파일 참조:
 @docs/coding_convention/02-domain-layer/aggregate/guide.md
-
-# .cursorrules가 자동으로 읽힘 (344 라인 요약)
 ```
 
 ---

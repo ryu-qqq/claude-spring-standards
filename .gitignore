@@ -38,7 +38,7 @@ bin/
 
 ### Cursor IDE ###
 .cursor/
-!.cursor/settings.json
+.cursorrules
 
 # Claude Code settings (local overrides)
 .claude/settings.local.json
