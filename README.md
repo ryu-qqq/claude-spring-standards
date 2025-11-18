@@ -248,23 +248,6 @@ cd my-new-project
 ./gradlew clean build
 ```
 
-### 기존 프로젝트 적용
-
-```bash
-# 1. 템플릿 클론 (임시)
-git clone https://github.com/ryu-qqq/claude-spring-standards.git /tmp/spring-template
-
-# 2. 컨벤션 파일 복사
-cd /path/to/your/project
-cp -r /tmp/spring-template/.claude .
-cp -r /tmp/spring-template/docs/coding_convention docs/
-cp -r /tmp/spring-template/config .
-cp -r /tmp/spring-template/scripts .
-
-# 3. Git Hooks 설치
-./scripts/setup-hooks.sh
-```
-
 ---
 
 ## 📚 Kent Beck TDD + Tidy First 철학
@@ -477,6 +460,8 @@ adapter-out/persistence/adapter/query/
 ### Claude Code (비즈니스 로직, 리뷰)
 
 ### Cursor IDE (워크트리로 빠른 병렬 개발)
+
+![Cursor Agent Mode](img/cursor_agent_mode.png)
 
 ### CodeRabbit (PR 자동 리뷰)
 
