@@ -53,21 +53,7 @@ if [[ ! -d ".git/hooks" ]]; then
     log_success ".git/hooks directory created"
 fi
 
-# 1. pre-commit hook 설치
-log_info "Installing pre-commit hook..."
-
-if [[ -f ".git/hooks/pre-commit" ]] && [[ ! -L ".git/hooks/pre-commit" ]]; then
-    log_warning "Existing pre-commit hook found (not a symlink)"
-    read -p "   Overwrite? (y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "Installation cancelled"
-        exit 1
-    fi
-    rm .git/hooks/pre-commit
-fi
-
-# config/hooks 또는 .claude/hooks 경로 자동 감지
+# 1. Hook 디렉토리 및 파일 확인
 if [[ -d "config/hooks" ]]; then
     HOOKS_DIR="config/hooks"
     HOOKS_RELATIVE="../../config/hooks"
@@ -75,16 +61,55 @@ elif [[ -d ".claude/hooks" ]]; then
     HOOKS_DIR=".claude/hooks"
     HOOKS_RELATIVE="../../.claude/hooks"
 else
-    log_error "Hook directory not found (config/hooks or .claude/hooks)"
+    log_error "Hook directory not found!"
+    echo ""
+    echo "Please create one of the following directories and add hook files:"
+    echo "  - ${GREEN}config/hooks/${NC} (for fileflow/crawlinghub style projects)"
+    echo "  - ${GREEN}.claude/hooks/${NC} (for claude-spring-standards style projects)"
+    echo ""
+    echo "Required files:"
+    echo "  - pre-commit (optional - code validation)"
+    echo "  - post-commit (required - TDD tracking)"
+    echo ""
+    echo "You can copy from:"
+    echo "  ${GREEN}cp -r /path/to/claude-spring-standards/.claude/hooks .claude/${NC}"
+    echo ""
     exit 1
 fi
 
-ln -sf "$HOOKS_RELATIVE/pre-commit" .git/hooks/pre-commit
-chmod +x "$HOOKS_DIR/pre-commit"
+# Hook 파일 존재 여부 확인
+if [[ ! -f "$HOOKS_DIR/post-commit" ]]; then
+    log_error "post-commit hook not found in $HOOKS_DIR/"
+    echo ""
+    echo "Please copy the post-commit hook file:"
+    echo "  ${GREEN}cp /path/to/claude-spring-standards/.claude/hooks/post-commit $HOOKS_DIR/${NC}"
+    echo ""
+    exit 1
+fi
 
-log_success "pre-commit hook installed"
+# 2. pre-commit hook 설치 (선택사항)
+if [[ -f "$HOOKS_DIR/pre-commit" ]]; then
+    log_info "Installing pre-commit hook..."
 
-# 2. post-commit hook 설치
+    if [[ -f ".git/hooks/pre-commit" ]] && [[ ! -L ".git/hooks/pre-commit" ]]; then
+        log_warning "Existing pre-commit hook found (not a symlink)"
+        read -p "   Overwrite? (y/n): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_error "Installation cancelled"
+            exit 1
+        fi
+        rm .git/hooks/pre-commit
+    fi
+
+    ln -sf "$HOOKS_RELATIVE/pre-commit" .git/hooks/pre-commit
+    chmod +x "$HOOKS_DIR/pre-commit"
+    log_success "pre-commit hook installed"
+else
+    log_info "pre-commit hook not found, skipping..."
+fi
+
+# 3. post-commit hook 설치 (필수)
 log_info "Installing post-commit hook..."
 
 if [[ -f ".git/hooks/post-commit" ]] && [[ ! -L ".git/hooks/post-commit" ]]; then
