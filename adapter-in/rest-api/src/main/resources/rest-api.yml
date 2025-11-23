@@ -18,11 +18,16 @@ api:
     # API v1 베이스 경로
     base-v1: /api/v1
 
-    # Example 도메인 엔드포인트
-    example:
-      base: /examples
+    # Seller 도메인 엔드포인트
+    seller:
+      base: /sellers
       by-id: /{id}
-      admin-search: /admin/examples/search
+      status: /{id}/status
+
+    # Schedule 도메인 엔드포인트
+    schedule:
+      base: /schedules
+      by-id: /{id}
 
   # 에러 응답 설정 (RFC 7807 Problem Details)
   # @see com.ryuqq.adapter.in.rest.config.properties.ApiErrorProperties
