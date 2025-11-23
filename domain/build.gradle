@@ -14,14 +14,8 @@ dependencies {
     // ========================================
     // STRICTLY NO EXTERNAL DEPENDENCIES
     // ========================================
-    // Domain must remain pure Java with minimal dependencies
-    // Only common utilities allowed (e.g., Apache Commons Lang)
-
-    // Common Utilities (Optional, use judiciously)
-    implementation libs.commons.lang3
-
-    // Validation API (JSR-380) - Pure annotations, no implementation
-    implementation libs.jakarta.validation.api
+    // Domain must remain PURE JAVA - NO external libraries
+    // Business logic ONLY - use Java Standard Library
 
     // ========================================
     // Test Dependencies
@@ -32,14 +26,11 @@ dependencies {
     // ArchUnit for architecture validation
     testImplementation libs.archunit.junit5
 
-    // Bootstrap testFixtures (ArchUnit 유틸리티 사용)
-    testImplementation testFixtures(project(':bootstrap:bootstrap-web-api'))
-
     // ========================================
     // Test Fixtures Dependencies
     // ========================================
     // Domain TestFixtures는 순수 Java만 사용 (Domain Purity 유지)
-    testFixturesImplementation libs.commons.lang3
+    // NO external dependencies
 }
 
 // ========================================
@@ -68,10 +59,29 @@ tasks.register('verifyDomainPurity') {
 
     doLast {
         def forbiddenDependencies = [
+            // Framework Dependencies
             'org.springframework',
             'jakarta.persistence',
             'org.hibernate',
-            'org.projectlombok'
+            'org.projectlombok',
+
+            // Validation (Domain이 직접 검증 로직 구현해야 함)
+            'jakarta.validation',
+            'javax.validation',
+
+            // External Utilities (Java Standard Library만 사용)
+            'org.apache.commons',
+            'com.google.guava',
+            'io.vavr',
+
+            // JSON Libraries (Domain은 JSON 관심 없음)
+            'com.fasterxml.jackson',
+            'com.google.gson',
+
+            // Logging (Domain은 로깅 관심 없음)
+            'org.slf4j',
+            'ch.qos.logback',
+            'org.apache.logging.log4j'
         ]
 
         configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->

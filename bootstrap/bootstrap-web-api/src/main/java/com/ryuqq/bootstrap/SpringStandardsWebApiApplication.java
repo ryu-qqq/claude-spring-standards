@@ -7,27 +7,30 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 /**
  * Spring Standards Web API Application
  *
- * <p>Hexagonal Architecture 기반 Spring Boot 애플리케이션의 진입점입니다.</p>
+ * <p>Hexagonal Architecture 기반 Spring Boot 애플리케이션의 진입점입니다.
  *
- * <p><strong>아키텍처 구조:</strong></p>
+ * <p><strong>아키텍처 구조:</strong>
+ *
  * <ul>
- *   <li><strong>Domain Layer:</strong> 비즈니스 로직과 도메인 모델</li>
- *   <li><strong>Application Layer:</strong> Use Case 구현 (CQRS 패턴)</li>
- *   <li><strong>Adapter-In:</strong> REST API 컨트롤러 (Inbound)</li>
- *   <li><strong>Adapter-Out:</strong> 데이터베이스, 외부 API 연동 (Outbound)</li>
- *   <li><strong>Bootstrap:</strong> 애플리케이션 실행 및 빈 와이어링</li>
+ *   <li><strong>Domain Layer:</strong> 비즈니스 로직과 도메인 모델
+ *   <li><strong>Application Layer:</strong> Use Case 구현 (CQRS 패턴)
+ *   <li><strong>Adapter-In:</strong> REST API 컨트롤러 (Inbound)
+ *   <li><strong>Adapter-Out:</strong> 데이터베이스, 외부 API 연동 (Outbound)
+ *   <li><strong>Bootstrap:</strong> 애플리케이션 실행 및 빈 와이어링
  * </ul>
  *
- * <p><strong>Component Scan 범위:</strong></p>
+ * <p><strong>Component Scan 범위:</strong>
+ *
  * <ul>
- *   <li>com.ryuqq.domain</li>
- *   <li>com.ryuqq.application</li>
- *   <li>com.ryuqq.adapter.in.rest</li>
- *   <li>com.ryuqq.adapter.out.persistence</li>
- *   <li>com.ryuqq.bootstrap</li>
+ *   <li>com.ryuqq.domain
+ *   <li>com.ryuqq.application
+ *   <li>com.ryuqq.adapter.in.rest
+ *   <li>com.ryuqq.adapter.out.persistence
+ *   <li>com.ryuqq.bootstrap
  * </ul>
  *
- * <p><strong>실행 방법:</strong></p>
+ * <p><strong>실행 방법:</strong>
+ *
  * <pre>{@code
  * # Gradle로 실행
  * ./gradlew :bootstrap:bootstrap-web-api:bootRun
@@ -42,16 +45,15 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  * @author windsurf
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.ryuqq.domain",
-    "com.ryuqq.application",
-    "com.ryuqq.adapter.in.rest",
-    "com.ryuqq.adapter.out.persistence",
-    "com.ryuqq.bootstrap"
-})
-@ConfigurationPropertiesScan(basePackages = {
-    "com.ryuqq.adapter.in.rest.config.properties"
-})
+@SpringBootApplication(
+        scanBasePackages = {
+            "com.ryuqq.domain",
+            "com.ryuqq.application",
+            "com.ryuqq.adapter.in.rest",
+            "com.ryuqq.adapter.out.persistence",
+            "com.ryuqq.bootstrap"
+        })
+@ConfigurationPropertiesScan(basePackages = {"com.ryuqq.adapter.in.rest.config.properties"})
 public class SpringStandardsWebApiApplication {
 
     /**

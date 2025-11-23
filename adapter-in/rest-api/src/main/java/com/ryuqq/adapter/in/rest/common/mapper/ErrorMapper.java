@@ -1,6 +1,6 @@
 package com.ryuqq.adapter.in.rest.common.mapper;
 
-import com.ryuqq.domain.common.DomainException;
+import com.ryuqq.domain.common.exception.DomainException;
 
 import java.net.URI;
 import java.util.Locale;

@@ -10,7 +10,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
 import com.ryuqq.adapter.in.rest.common.error.ErrorMapperRegistry;
-import com.ryuqq.domain.common.DomainException;
+import com.ryuqq.domain.common.exception.DomainException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

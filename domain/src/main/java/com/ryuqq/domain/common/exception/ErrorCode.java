@@ -1,4 +1,4 @@
-package com.ryuqq.domain.common;
+package com.ryuqq.domain.common.exception;
 
 /**
  * ErrorCode - 비즈니스 예외 에러 코드 인터페이스

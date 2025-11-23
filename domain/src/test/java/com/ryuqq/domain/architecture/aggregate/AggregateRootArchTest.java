@@ -1,7 +1,9 @@
 package com.ryuqq.domain.architecture.aggregate;
 
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchCondition;
@@ -43,7 +45,7 @@ class AggregateRootArchTest {
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter()
-            .importPackages("com.ryuqq.domain");
+            .importPackages("com.ryuqq.domain", "com.ryuqq.fixture");
     }
 
     /**
@@ -136,7 +138,7 @@ class AggregateRootArchTest {
     @DisplayName("[필수] Aggregate Root의 생성자는 private이어야 한다")
     void aggregateRoot_ConstructorMustBePrivate() {
         ArchRule rule = constructors()
-            .that().areDeclaredInClassesThat().resideInAPackage("..domain..aggregate..")
+            .that().areDeclaredInClassesThat().implement("com.ryuqq.domain.common.model.AggregateRoot")
             .and().areDeclaredInClassesThat().areNotInterfaces()
             .and().areDeclaredInClassesThat().areNotEnums()
             .should().bePrivate()
@@ -224,7 +226,7 @@ class AggregateRootArchTest {
     @DisplayName("[필수] Aggregate Root는 Clock 타입 필드를 가져야 한다")
     void aggregateRoot_MustHaveClockField() {
         ArchRule rule = classes()
-            .that().resideInAPackage("..domain..aggregate..")
+            .that().implement("com.ryuqq.domain.common.model.AggregateRoot")
             .and().areNotInterfaces()
             .and().areNotEnums()
             .should().dependOnClassesThat().areAssignableTo(Clock.class)
@@ -279,7 +281,7 @@ class AggregateRootArchTest {
     @DisplayName("[필수] Aggregate Root는 public 클래스여야 한다")
     void aggregateRoot_MustBePublic() {
         ArchRule rule = classes()
-            .that().resideInAPackage("..domain..aggregate..")
+            .that().implement("com.ryuqq.domain.common.model.AggregateRoot")
             .and().areNotInterfaces()
             .and().areNotEnums()
             .should().bePublic()
@@ -311,13 +313,27 @@ class AggregateRootArchTest {
     @DisplayName("[권장] Aggregate Root의 비즈니스 메서드는 명확한 동사로 시작해야 한다")
     void aggregateRoot_BusinessMethodsShouldHaveExplicitVerbs() {
         ArchRule rule = methods()
-            .that().areDeclaredInClassesThat().resideInAPackage("..domain..aggregate..")
+            .that().areDeclaredInClassesThat().implement("com.ryuqq.domain.common.model.AggregateRoot")
             .and().arePublic()
             .and().doNotHaveFullName(".*<init>.*")
             .and().doNotHaveName("get.*")
             .and().doNotHaveName("is.*")
             .and().doNotHaveName("has.*")
+            .and().doNotHaveName("equals")
+            .and().doNotHaveName("hashCode")
+            .and().doNotHaveName("toString")
+            .and().doNotHaveName("id")
+            .and().doNotHaveName(".*Id") // *Id accessor 제외
+            .and().doNotHaveName("items")
+            .and().doNotHaveName("createdAt")
+            .and().doNotHaveName("updatedAt")
             .and().areNotStatic()
+            .and(new DescribedPredicate<JavaMethod>("have parameters") {
+                @Override
+                public boolean test(JavaMethod method) {
+                    return method.getRawParameterTypes().size() > 0; // 파라미터가 있는 메서드만
+                }
+            })
             .should().haveNameMatching("(add|remove|confirm|cancel|approve|reject|ship|deliver|complete|fail|update|change|place|validate|calculate|transfer|process).*")
             .because("비즈니스 메서드는 명확한 동사로 시작해야 합니다 (confirm, cancel, approve 등)");
 

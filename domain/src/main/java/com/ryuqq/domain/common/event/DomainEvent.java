@@ -1,4 +1,4 @@
-package com.ryuqq.domain.common;
+package com.ryuqq.domain.common.event;
 
 /**
  * 도메인 이벤트 마커 인터페이스

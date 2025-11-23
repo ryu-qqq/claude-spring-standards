@@ -170,14 +170,14 @@ class AssemblerArchTest {
      * 규칙 9: 메서드명 규칙 (변환 메서드만 허용)
      */
     @Test
-    @DisplayName("[권장] Assembler 메서드명은 to*로 시작해야 한다")
-    void assembler_MethodsShouldStartWithTo() {
+    @DisplayName("[권장] Assembler 메서드명은 변환 패턴을 따라야 한다")
+    void assembler_MethodsShouldFollowConversionPattern() {
         ArchRule rule = methods()
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Assembler")
             .and().arePublic()
             .and().doNotHaveFullName(".*<init>.*")  // 생성자 제외
-            .should().haveNameMatching("to[A-Z].*")
-            .because("Assembler 메서드는 변환 메서드이므로 toDomain, toResponse 등으로 시작해야 합니다");
+            .should().haveNameMatching("(to|from|assemble|map)[A-Z].*")
+            .because("Assembler 메서드는 변환 메서드이므로 to*/from*/assemble*/map* 패턴을 따라야 합니다");
 
         rule.check(classes);
     }

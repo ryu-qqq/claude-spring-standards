@@ -1,4 +1,4 @@
-package com.ryuqq.domain.common;
+package com.ryuqq.domain.common.exception;
 
 import java.util.Map;
 
