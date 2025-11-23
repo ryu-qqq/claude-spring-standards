@@ -414,7 +414,12 @@ tail -1 ~/.claude/logs/tdd-cycle.jsonl | jq .
 
 ```
 adapter-in/          # 외부 요청 진입점
-├─ rest-api/        # HTTP REST API
+├─ rest-api/        # HTTP REST API (93개 규칙, CQRS 패턴)
+│  ├─ controller/   # Command/Query Controller 분리
+│  ├─ dto/          # Command/Query/Response DTO
+│  ├─ mapper/       # API ↔ Application DTO 변환
+│  ├─ error/        # ErrorMapper 패턴 (RFC 7807)
+│  └─ config/       # Endpoint Properties
 └─ ...
 
 application/         # 비즈니스 유스케이스
@@ -521,15 +526,20 @@ adapter-out/persistence/adapter/query/
 - **[.coderabbit.yaml](.coderabbit.yaml)** - CodeRabbit 설정
 
 ### Layer별 가이드
-- [Domain Layer](docs/coding_convention/02-domain-layer/) - 12개 규칙
-- [Application Layer](docs/coding_convention/03-application-layer/) - 26개 규칙
-- [Persistence Layer](docs/coding_convention/04-persistence-layer/) - 23개 규칙
-- [REST API Layer](docs/coding_convention/01-adapter-in-layer/rest-api/) - 22개 규칙
+- [Domain Layer](docs/coding_convention/02-domain-layer/) - 98개 규칙
+- [Application Layer](docs/coding_convention/03-application-layer/) - 76개 규칙
+- [Persistence Layer](docs/coding_convention/04-persistence-layer/) - 114개 규칙
+- [REST API Layer](docs/coding_convention/01-adapter-in-layer/rest-api/) - 93개 규칙
+  - [REST API README](adapter-in/rest-api/README.md) - 아키텍처 및 패턴 가이드
 - [Testing](docs/coding_convention/05-testing/) - 3개 규칙
 
 ### 자동화
 - [LangFuse Trace Guide](.claude/scripts/README-langfuse-trace.md) - Span 기반 메트릭
 - [Git Post-Commit Hook](.git/hooks/post-commit) - 자동 메트릭 수집
+
+### 모듈별 README
+- **[REST API Layer README](adapter-in/rest-api/README.md)** - REST API 아키텍처, 패턴, ArchUnit 검증 (93개 규칙)
+- **[Persistence MySQL README](adapter-out/persistence-mysql/README.md)** - MySQL 영속성 아키텍처, QueryDSL, ArchUnit 검증 (114개 규칙)
 
 ---
 
