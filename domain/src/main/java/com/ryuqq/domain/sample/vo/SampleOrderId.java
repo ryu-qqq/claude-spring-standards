@@ -1,7 +1,5 @@
 package com.ryuqq.domain.sample.vo;
 
-import com.ryuqq.domain.common.model.Identifier;
-
 /**
  * Sample Order Identifier (예시)
  *
@@ -15,9 +13,8 @@ import com.ryuqq.domain.common.model.Identifier;
  *
  * @author ryu-qqq
  * @since 2025-11-21
- * @see Identifier
  */
-public record SampleOrderId(Long value) implements Identifier<Long> {
+public record SampleOrderId(Long value) {
 
     public SampleOrderId {
         if (value == null || value < 0) {

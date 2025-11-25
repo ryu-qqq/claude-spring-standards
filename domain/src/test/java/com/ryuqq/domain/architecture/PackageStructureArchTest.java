@@ -26,11 +26,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
  * <pre>
  * domain/
  * ├── common/                # 공통 인터페이스
- * │   ├── model/             # Domain Model Markers
- * │   │   ├── AggregateRoot.java
- * │   │   ├── Entity.java
- * │   │   ├── ValueObject.java
- * │   │   └── Identifier.java
  * │   ├── event/             # Domain Event Interface
  * │   │   └── DomainEvent.java
  * │   ├── exception/         # Base Exception
@@ -66,27 +61,7 @@ class PackageStructureArchTest {
     // ==================== domain.common 패키지 규칙 ====================
 
     /**
-     * 규칙 1: domain.common.model 패키지는 Marker 인터페이스만 포함해야 한다
-     */
-    @Test
-    @DisplayName("[필수] domain.common.model 패키지는 Marker 인터페이스만 포함해야 한다")
-    void domainCommonModel_ShouldOnlyContainMarkerInterfaces() {
-        ArchRule rule = classes()
-            .that().resideInAPackage("com.ryuqq.domain.common.model")
-            .should().beInterfaces()
-            .because("domain.common.model 패키지는 Domain Model Marker 인터페이스만 포함해야 합니다\n" +
-                    "예시:\n" +
-                    "  - AggregateRoot.java ✅ (interface)\n" +
-                    "  - Entity.java ✅ (interface)\n" +
-                    "  - ValueObject.java ✅ (interface)\n" +
-                    "  - Identifier.java ✅ (interface)\n" +
-                    "  - Order.java ❌ (concrete class, Bounded Context에 위치해야 함)");
-
-        rule.check(classes);
-    }
-
-    /**
-     * 규칙 2: domain.common.event 패키지는 DomainEvent 인터페이스만 포함해야 한다
+     * 규칙 1: domain.common.event 패키지는 DomainEvent 인터페이스만 포함해야 한다
      */
     @Test
     @DisplayName("[필수] domain.common.event 패키지는 DomainEvent 인터페이스만 포함해야 한다")
@@ -103,7 +78,7 @@ class PackageStructureArchTest {
     }
 
     /**
-     * 규칙 3: domain.common.exception 패키지는 Base Exception과 ErrorCode 인터페이스만 포함해야 한다
+     * 규칙 2: domain.common.exception 패키지는 Base Exception과 ErrorCode 인터페이스만 포함해야 한다
      */
     @Test
     @DisplayName("[필수] domain.common.exception 패키지는 Base Exception과 ErrorCode 인터페이스만 포함해야 한다")
@@ -123,7 +98,7 @@ class PackageStructureArchTest {
     }
 
     /**
-     * 규칙 4: domain.common.util 패키지는 Utility 인터페이스만 포함해야 한다
+     * 규칙 3: domain.common.util 패키지는 Utility 인터페이스만 포함해야 한다
      */
     @Test
     @DisplayName("[필수] domain.common.util 패키지는 Utility 인터페이스만 포함해야 한다")
@@ -142,50 +117,7 @@ class PackageStructureArchTest {
     // ==================== Bounded Context 패키지 규칙 ====================
 
     /**
-     * 규칙 5: Aggregate는 domain.[bc].aggregate 패키지에 위치해야 한다
-     */
-    @Test
-    @DisplayName("[필수] Aggregate는 domain.[bc].aggregate 패키지에 위치해야 한다")
-    void aggregates_ShouldBeInAggregatePackage() {
-        ArchRule rule = classes()
-            .that().implement("com.ryuqq.domain.common.model.AggregateRoot")
-            .or().implement("com.ryuqq.domain.common.model.Entity")
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .should().resideInAPackage("..domain..aggregate..")
-            .because("Aggregate Root와 내부 Entity는 domain.[bc].aggregate 패키지에 위치해야 합니다\n" +
-                    "예시:\n" +
-                    "  - domain.order.aggregate.Order ✅ (AggregateRoot)\n" +
-                    "  - domain.order.aggregate.OrderItem ✅ (내부 Entity)\n" +
-                    "  - domain.order.vo.Order ❌ (잘못된 패키지)");
-
-        rule.check(classes);
-    }
-
-    /**
-     * 규칙 6: Value Object는 domain.[bc].vo 패키지에 위치해야 한다
-     */
-    @Test
-    @DisplayName("[필수] Value Object는 domain.[bc].vo 패키지에 위치해야 한다")
-    void valueObjects_ShouldBeInVoPackage() {
-        ArchRule rule = classes()
-            .that().implement("com.ryuqq.domain.common.model.ValueObject")
-            .and().haveSimpleNameNotContaining("Fixture")
-            .and().haveSimpleNameNotContaining("Mother")
-            .and().haveSimpleNameNotContaining("Test")
-            .should().resideInAPackage("..domain..vo..")
-            .because("Value Object는 domain.[bc].vo 패키지에 위치해야 합니다\n" +
-                    "예시:\n" +
-                    "  - domain.order.vo.OrderId ✅\n" +
-                    "  - domain.order.vo.Money ✅\n" +
-                    "  - domain.order.aggregate.Money ❌ (잘못된 패키지)");
-
-        rule.check(classes);
-    }
-
-    /**
-     * 규칙 7: Domain Event는 domain.[bc].event 패키지에 위치해야 한다
+     * 규칙 4: Domain Event는 domain.[bc].event 패키지에 위치해야 한다
      */
     @Test
     @DisplayName("[필수] Domain Event는 domain.[bc].event 패키지에 위치해야 한다")
@@ -206,7 +138,7 @@ class PackageStructureArchTest {
     }
 
     /**
-     * 규칙 8: Concrete Exception은 domain.[bc].exception 패키지에 위치해야 한다
+     * 규칙 5: Concrete Exception은 domain.[bc].exception 패키지에 위치해야 한다
      */
     @Test
     @DisplayName("[필수] Concrete Exception은 domain.[bc].exception 패키지에 위치해야 한다")
@@ -229,7 +161,7 @@ class PackageStructureArchTest {
     // ==================== 순환 의존성 금지 ====================
 
     /**
-     * 규칙 9: Bounded Context 간 순환 의존성이 없어야 한다
+     * 규칙 6: Bounded Context 간 순환 의존성이 없어야 한다
      */
     @Test
     @DisplayName("[필수] Bounded Context 간 순환 의존성이 없어야 한다")
@@ -247,7 +179,7 @@ class PackageStructureArchTest {
     // ==================== 공통 패키지 접근 규칙 ====================
 
     /**
-     * 규칙 10: domain.common 패키지는 모든 Bounded Context에서 접근 가능해야 한다
+     * 규칙 7: domain.common 패키지는 모든 Bounded Context에서 접근 가능해야 한다
      */
     @Test
     @DisplayName("[필수] domain.common 패키지는 모든 Bounded Context에서 접근 가능해야 한다")
@@ -269,7 +201,7 @@ class PackageStructureArchTest {
     // ==================== 네이밍 규칙 ====================
 
     /**
-     * 규칙 11: Bounded Context 패키지명은 소문자로 시작해야 한다
+     * 규칙 8: Bounded Context 패키지명은 소문자로 시작해야 한다
      */
     @Test
     @DisplayName("[권장] Bounded Context 패키지명은 소문자 단어로 구성되어야 한다")
@@ -295,7 +227,7 @@ class PackageStructureArchTest {
     // ==================== 패키지 격리 규칙 ====================
 
     /**
-     * 규칙 12: Bounded Context 내부 패키지는 다른 Bounded Context에 의존하지 않아야 한다
+     * 규칙 9: Bounded Context 내부 패키지는 다른 Bounded Context에 의존하지 않아야 한다
      */
     @Test
     @DisplayName("[필수] Bounded Context는 다른 Bounded Context 내부에 의존하지 않아야 한다")

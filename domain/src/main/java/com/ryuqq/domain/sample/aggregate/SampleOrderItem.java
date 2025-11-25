@@ -1,6 +1,5 @@
 package com.ryuqq.domain.sample.aggregate;
 
-import com.ryuqq.domain.common.model.Entity;
 import com.ryuqq.domain.sample.vo.SampleMoney;
 import com.ryuqq.domain.sample.vo.SampleOrderItemId;
 
@@ -20,7 +19,6 @@ import java.util.Objects;
  *
  * <p><strong>Aggregate 내부 Entity 규칙:</strong></p>
  * <ul>
- *   <li>✅ Entity 인터페이스 구현 (AggregateRoot 아님!)</li>
  *   <li>✅ Private 생성자 (Factory Method 사용)</li>
  *   <li>✅ equals/hashCode는 ID 기반</li>
  *   <li>✅ 외부 접근 불가 (package-private 또는 public이지만 Aggregate Root를 통해서만)</li>
@@ -29,9 +27,8 @@ import java.util.Objects;
  *
  * @author ryu-qqq
  * @since 2025-11-21
- * @see Entity
  */
-public class SampleOrderItem implements Entity {
+public class SampleOrderItem {
 
     private final SampleOrderItemId id;
     private final long productId;  // Long FK (Product Aggregate 참조)

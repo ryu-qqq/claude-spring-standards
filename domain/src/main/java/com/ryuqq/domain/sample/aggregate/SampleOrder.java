@@ -1,6 +1,5 @@
 package com.ryuqq.domain.sample.aggregate;
 
-import com.ryuqq.domain.common.model.AggregateRoot;
 import com.ryuqq.domain.sample.vo.SampleMoney;
 import com.ryuqq.domain.sample.vo.SampleOrderId;
 import com.ryuqq.domain.sample.vo.SampleOrderItemId;
@@ -27,7 +26,6 @@ import java.util.Objects;
  *
  * <p><strong>Aggregate Root 규칙:</strong></p>
  * <ul>
- *   <li>✅ AggregateRoot 인터페이스 구현</li>
  *   <li>✅ Private 생성자</li>
  *   <li>✅ Factory Method (forNew, of, reconstitute)</li>
  *   <li>✅ Clock 의존성 (생성자 파라미터)</li>
@@ -37,9 +35,8 @@ import java.util.Objects;
  *
  * @author ryu-qqq
  * @since 2025-11-21
- * @see AggregateRoot
  */
-public class SampleOrder implements AggregateRoot {
+public class SampleOrder {
 
     private final SampleOrderId id;
     private final long customerId;  // Long FK (Customer Aggregate 참조)

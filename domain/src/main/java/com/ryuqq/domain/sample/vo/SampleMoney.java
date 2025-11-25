@@ -1,7 +1,5 @@
 package com.ryuqq.domain.sample.vo;
 
-import com.ryuqq.domain.common.model.ValueObject;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -21,7 +19,6 @@ import java.math.RoundingMode;
  * <p><strong>Value Object 패턴:</strong></p>
  * <ul>
  *   <li>✅ Record 타입 (불변)</li>
- *   <li>✅ ValueObject 인터페이스 구현</li>
  *   <li>✅ of() Factory Method</li>
  *   <li>✅ 생성자 검증</li>
  *   <li>✅ 비즈니스 로직 포함 (add, subtract 등)</li>
@@ -29,9 +26,8 @@ import java.math.RoundingMode;
  *
  * @author ryu-qqq
  * @since 2025-11-21
- * @see ValueObject
  */
-public record SampleMoney(BigDecimal amount) implements ValueObject {
+public record SampleMoney(BigDecimal amount) {
 
     /**
      * Compact Constructor - 유효성 검증
