@@ -12,6 +12,13 @@ plugins {
     id 'java-test-fixtures'
 }
 
+// ========================================
+// REST Docs Snippets Output Directory
+// ========================================
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
 dependencies {
     // ========================================
     // Core Dependencies
@@ -56,7 +63,36 @@ dependencies {
 // ========================================
 // Test Coverage (70% for adapters)
 // ========================================
+// Infrastructure/Security 클래스는 통합테스트에서 커버
+// - auth/** : Security 인프라 (Filter, Handler, Config)
+// - common/dto/** : 공통 유틸리티 Record
+// - common/error/** : 에러 처리 인프라
+// - common/mapper/** : 매퍼 인터페이스
+// - common/controller/** : 글로벌 예외 처리
+// ========================================
+def jacocoExcludePatterns = [
+    '**/auth/**',
+    '**/common/dto/**',
+    '**/common/error/**',
+    '**/common/mapper/**',
+    '**/common/controller/**',
+    '**/config/**'
+]
+
+tasks.jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludePatterns)
+        }))
+    }
+}
+
 tasks.jacocoTestCoverageVerification {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludePatterns)
+        }))
+    }
     violationRules {
         rule {
             limit {
@@ -67,5 +103,6 @@ tasks.jacocoTestCoverageVerification {
 }
 
 tasks.test {
+    outputs.dir snippetsDir
     finalizedBy tasks.jacocoTestCoverageVerification
 }

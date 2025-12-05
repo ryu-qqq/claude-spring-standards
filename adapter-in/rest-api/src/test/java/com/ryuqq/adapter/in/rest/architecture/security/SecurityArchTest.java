@@ -1,0 +1,566 @@
+package com.ryuqq.adapter.in.rest.architecture.security;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaModifier;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.lang.ArchRule;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+/**
+ * Security Layer ArchUnit 검증 테스트 (Zero-Tolerance)
+ *
+ * <p>Security 관련 아키텍처 규칙을 검증합니다.
+ *
+ * <p><strong>검증 규칙:</strong>
+ *
+ * <ul>
+ *   <li>ApiPaths: final 클래스, private 생성자, static final 필드
+ *   <li>SecurityPaths: final 클래스, private 생성자
+ *   <li>Config: @Configuration, @EnableWebSecurity, @EnableMethodSecurity
+ *   <li>Filter: OncePerRequestFilter 상속, *Filter 네이밍
+ *   <li>Handler: AuthenticationEntryPoint/AccessDeniedHandler 구현
+ *   <li>Component: @Component 어노테이션
+ *   <li>Lombok 금지
+ * </ul>
+ *
+ * <p><strong>참고 문서:</strong>
+ *
+ * <ul>
+ *   <li>security/security-guide.md - Security 아키텍처 가이드
+ *   <li>security/api-paths-guide.md - API 경로 Constants 가이드
+ *   <li>security/security-archunit.md - ArchUnit 테스트 가이드
+ * </ul>
+ *
+ * @author development-team
+ * @since 1.0.0
+ */
+@DisplayName("Security Layer ArchUnit Tests (Zero-Tolerance)")
+@Tag("architecture")
+@Tag("adapter-rest")
+@Tag("security")
+class SecurityArchTest {
+
+    private static JavaClasses classes;
+
+    @BeforeAll
+    static void setUp() {
+        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
+    }
+
+    // =========================================================================
+    // API Paths Constants 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("ApiPaths Constants 규칙")
+    class ApiPathsRules {
+
+        /** 규칙 1: ApiPaths 클래스는 auth.paths 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] ApiPaths는 auth.paths 패키지에 위치해야 한다")
+        void apiPaths_MustBeInAuthPathsPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleName("ApiPaths")
+                            .should()
+                            .resideInAPackage("..auth.paths..")
+                            .because("ApiPaths는 auth.paths 패키지에 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 2: ApiPaths 클래스는 final이어야 한다 */
+        @Test
+        @DisplayName("[필수] ApiPaths는 final 클래스여야 한다")
+        void apiPaths_MustBeFinal() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleName("ApiPaths")
+                            .should()
+                            .haveModifier(JavaModifier.FINAL)
+                            .because("ApiPaths는 인스턴스화 및 상속을 방지하기 위해 final이어야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 3: ApiPaths 필드는 static final이어야 한다 */
+        @Test
+        @DisplayName("[필수] ApiPaths 필드는 static final이어야 한다")
+        void apiPaths_FieldsMustBeStaticFinal() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleName("ApiPaths")
+                            .and()
+                            .areNotPrivate() // private 생성자용 필드 제외
+                            .should()
+                            .beStatic()
+                            .andShould()
+                            .beFinal()
+                            .because("ApiPaths의 경로 필드는 상수로서 static final이어야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 4: ApiPaths 필드는 String 타입이어야 한다 */
+        @Test
+        @DisplayName("[필수] ApiPaths 필드는 String 타입이어야 한다")
+        void apiPaths_FieldsMustBeStringType() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleName("ApiPaths")
+                            .and()
+                            .areStatic()
+                            .and()
+                            .areFinal()
+                            .should()
+                            .haveRawType(String.class)
+                            .because("ApiPaths의 경로 필드는 String 타입이어야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // SecurityPaths Constants 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("SecurityPaths Constants 규칙")
+    class SecurityPathsRules {
+
+        /** 규칙 5: SecurityPaths 클래스는 auth.paths 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] SecurityPaths는 auth.paths 패키지에 위치해야 한다")
+        void securityPaths_MustBeInAuthPathsPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleName("SecurityPaths")
+                            .should()
+                            .resideInAPackage("..auth.paths..")
+                            .because("SecurityPaths는 auth.paths 패키지에 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 6: SecurityPaths 클래스는 final이어야 한다 */
+        @Test
+        @DisplayName("[필수] SecurityPaths는 final 클래스여야 한다")
+        void securityPaths_MustBeFinal() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleName("SecurityPaths")
+                            .should()
+                            .haveModifier(JavaModifier.FINAL)
+                            .because("SecurityPaths는 인스턴스화 및 상속을 방지하기 위해 final이어야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // Security Config 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Security Config 규칙")
+    class SecurityConfigRules {
+
+        /** 규칙 7: SecurityConfig는 auth.config 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] SecurityConfig는 auth.config 패키지에 위치해야 한다")
+        void securityConfig_MustBeInAuthConfigPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("SecurityConfig")
+                            .and()
+                            .resideInAPackage("..adapter.in.rest..")
+                            .should()
+                            .resideInAPackage("..auth.config..")
+                            .because("SecurityConfig는 auth.config 패키지에 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 8: SecurityConfig는 @Configuration 어노테이션을 가져야 한다 */
+        @Test
+        @DisplayName("[필수] SecurityConfig는 @Configuration을 가져야 한다")
+        void securityConfig_MustHaveConfigurationAnnotation() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("SecurityConfig")
+                            .and()
+                            .resideInAPackage("..auth.config..")
+                            .should()
+                            .beAnnotatedWith(
+                                    org.springframework.context.annotation.Configuration.class)
+                            .because("SecurityConfig는 Spring Bean 설정을 위해 @Configuration이 필수입니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 9: SecurityConfig는 @EnableWebSecurity 어노테이션을 가져야 한다 */
+        @Test
+        @DisplayName("[필수] SecurityConfig는 @EnableWebSecurity를 가져야 한다")
+        void securityConfig_MustHaveEnableWebSecurityAnnotation() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("SecurityConfig")
+                            .and()
+                            .resideInAPackage("..auth.config..")
+                            .should()
+                            .beAnnotatedWith(
+                                    org.springframework.security.config.annotation.web.configuration
+                                            .EnableWebSecurity.class)
+                            .because(
+                                    "SecurityConfig는 Spring Security 활성화를 위해 @EnableWebSecurity가"
+                                            + " 필수입니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // Security Filter 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Security Filter 규칙")
+    class SecurityFilterRules {
+
+        /** 규칙 10: Security Filter는 auth.filter 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] Security Filter는 auth.filter 패키지에 위치해야 한다")
+        void securityFilter_MustBeInAuthFilterPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAssignableTo(OncePerRequestFilter.class)
+                            .and()
+                            .resideInAPackage("..adapter.in.rest..")
+                            .and()
+                            .haveSimpleNameContaining("Authentication")
+                            .should()
+                            .resideInAPackage("..auth.filter..")
+                            .because("인증 관련 Filter는 auth.filter 패키지에 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 11: JWT Authentication Filter는 OncePerRequestFilter를 상속해야 한다 */
+        @Test
+        @DisplayName("[필수] JWT Authentication Filter는 OncePerRequestFilter를 상속해야 한다")
+        void jwtFilter_MustExtendOncePerRequestFilter() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameContaining("JwtAuthenticationFilter")
+                            .and()
+                            .resideInAPackage("..adapter.in.rest..")
+                            .should()
+                            .beAssignableTo(OncePerRequestFilter.class)
+                            .because(
+                                    "JWT 인증 필터는 요청당 한 번만 실행되어야 하므로 OncePerRequestFilter를 상속해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 12: Security Filter는 *Filter 네이밍 규칙을 따라야 한다 */
+        @Test
+        @DisplayName("[필수] Security Filter는 *Filter 네이밍 규칙을 따라야 한다")
+        void securityFilter_MustFollowNamingConvention() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .areAssignableTo(OncePerRequestFilter.class)
+                            .and()
+                            .resideInAPackage("..auth.filter..")
+                            .should()
+                            .haveSimpleNameEndingWith("Filter")
+                            .because("Security Filter는 *Filter 네이밍 규칙을 따라야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // Security Handler 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Security Handler 규칙")
+    class SecurityHandlerRules {
+
+        /** 규칙 13: Security Handler는 auth.handler 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] Security Handler는 auth.handler 패키지에 위치해야 한다")
+        void securityHandler_MustBeInAuthHandlerPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .implement(AuthenticationEntryPoint.class)
+                            .or()
+                            .implement(AccessDeniedHandler.class)
+                            .should()
+                            .resideInAPackage("..auth.handler..")
+                            .because("Security Handler는 auth.handler 패키지에 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 14: AuthenticationEntryPoint 구현체는 @Component를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] AuthenticationEntryPoint 구현체는 @Component를 가져야 한다")
+        void authenticationEntryPoint_MustHaveComponentAnnotation() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .implement(AuthenticationEntryPoint.class)
+                            .and()
+                            .resideInAPackage("..auth.handler..")
+                            .should()
+                            .beAnnotatedWith(Component.class)
+                            .because("AuthenticationEntryPoint 구현체는 Bean 등록을 위해 @Component가 필수입니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 15: AccessDeniedHandler 구현체는 @Component를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] AccessDeniedHandler 구현체는 @Component를 가져야 한다")
+        void accessDeniedHandler_MustHaveComponentAnnotation() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .implement(AccessDeniedHandler.class)
+                            .and()
+                            .resideInAPackage("..auth.handler..")
+                            .should()
+                            .beAnnotatedWith(Component.class)
+                            .because("AccessDeniedHandler 구현체는 Bean 등록을 위해 @Component가 필수입니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // Security Component 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Security Component 규칙")
+    class SecurityComponentRules {
+
+        /** 규칙 16: Security Component는 auth.component 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] Security Component는 auth.component 패키지에 위치해야 한다")
+        void securityComponent_MustBeInAuthComponentPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameContaining("TokenProvider")
+                            .or()
+                            .haveSimpleNameContaining("TokenResolver")
+                            .or()
+                            .haveSimpleNameContaining("CookieProvider")
+                            .should()
+                            .resideInAPackage("..auth.component..")
+                            .because("Security 관련 Component는 auth.component 패키지에 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 17: Security Component는 @Component를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] Security Component는 @Component를 가져야 한다")
+        void securityComponent_MustHaveComponentAnnotation() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..auth.component..")
+                            .and()
+                            .areNotInterfaces()
+                            .and()
+                            .areNotNestedClasses()
+                            .should()
+                            .beAnnotatedWith(Component.class)
+                            .because("Security Component는 Bean 등록을 위해 @Component가 필수입니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // Security Properties 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Security Properties 규칙")
+    class SecurityPropertiesRules {
+
+        /** 규칙 18: Security Properties는 auth.config 또는 config.properties 패키지에 위치해야 한다 */
+        @Test
+        @DisplayName("[필수] Security Properties는 적절한 패키지에 위치해야 한다")
+        void securityProperties_MustBeInCorrectPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("SecurityProperties")
+                            .and()
+                            .resideInAPackage("..adapter.in.rest..")
+                            .should()
+                            .resideInAnyPackage("..auth.config..", "..config.properties..")
+                            .because(
+                                    "Security Properties는 auth.config 또는 config.properties 패키지에"
+                                            + " 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 19: Security Properties는 @ConfigurationProperties를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] Security Properties는 @ConfigurationProperties를 가져야 한다")
+        void securityProperties_MustHaveConfigurationPropertiesAnnotation() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("SecurityProperties")
+                            .and()
+                            .resideInAPackage("..adapter.in.rest..")
+                            .should()
+                            .beAnnotatedWith(
+                                    org.springframework.boot.context.properties
+                                            .ConfigurationProperties.class)
+                            .because(
+                                    "Security Properties는 설정 바인딩을 위해 @ConfigurationProperties가"
+                                            + " 필수입니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // 금지 규칙 (Prohibition Rules)
+    // =========================================================================
+
+    @Nested
+    @DisplayName("금지 규칙 (Prohibition Rules)")
+    class ProhibitionRules {
+
+        /** 규칙 20: Security Layer는 Lombok을 사용하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Security Layer는 Lombok을 사용하지 않아야 한다")
+        void securityLayer_MustNotUseLombok() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..auth..")
+                            .should()
+                            .beAnnotatedWith("lombok.Data")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Builder")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Getter")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Setter")
+                            .orShould()
+                            .beAnnotatedWith("lombok.AllArgsConstructor")
+                            .orShould()
+                            .beAnnotatedWith("lombok.NoArgsConstructor")
+                            .orShould()
+                            .beAnnotatedWith("lombok.RequiredArgsConstructor")
+                            .orShould()
+                            .beAnnotatedWith("lombok.Value")
+                            .because("Security Layer는 Pure Java를 사용해야 하며 Lombok은 금지됩니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 21: Security Layer는 Domain Layer를 직접 의존하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Security Layer는 Domain Layer를 직접 의존하지 않아야 한다")
+        void securityLayer_MustNotDependOnDomain() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..auth..")
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAnyPackage("com.ryuqq.domain..")
+                            .because("Security Layer는 Domain Layer를 직접 의존하면 안 됩니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /** 규칙 22: Security Layer는 Persistence Layer를 직접 의존하지 않아야 한다 */
+        @Test
+        @DisplayName("[금지] Security Layer는 Persistence Layer를 직접 의존하지 않아야 한다")
+        void securityLayer_MustNotDependOnPersistence() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..auth..")
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAnyPackage("..adapter.out.persistence..")
+                            .because("Security Layer는 Persistence Layer를 직접 의존하면 안 됩니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // 패키지 구조 규칙
+    // =========================================================================
+
+    @Nested
+    @DisplayName("패키지 구조 규칙")
+    class PackageStructureRules {
+
+        /** 규칙 23: auth 패키지는 표준 하위 구조를 가져야 한다 */
+        @Test
+        @DisplayName("[필수] auth 패키지는 표준 하위 구조를 가져야 한다")
+        void authPackage_MustHaveStandardSubStructure() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..auth..")
+                            .and()
+                            .resideOutsideOfPackage("..architecture..")
+                            .and()
+                            .haveSimpleNameNotEndingWith("Test")
+                            .should()
+                            .resideInAnyPackage(
+                                    "..auth.paths..",
+                                    "..auth.config..",
+                                    "..auth.filter..",
+                                    "..auth.handler..",
+                                    "..auth.component..")
+                            .because(
+                                    "auth 패키지는 paths, config, filter, handler, component 하위 구조를 가져야"
+                                            + " 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+}

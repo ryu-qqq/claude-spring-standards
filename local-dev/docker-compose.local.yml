@@ -1,0 +1,172 @@
+version: '3.8'
+
+# ===============================================
+# Spring Standards Template - Local Development
+# ===============================================
+# MySQL + Redis + Web API + Admin Tools 로컬 개발 환경
+#
+# 사용법:
+#   cd local-dev
+#   docker-compose -f docker-compose.local.yml up -d
+#
+# Admin Tools:
+#   - phpMyAdmin: http://localhost:18080 (MySQL 관리)
+#   - Redis Commander: http://localhost:18081 (Redis 관리)
+#
+# 추후 확장 예정:
+#   - bootstrap-scheduler (배치/스케줄러)
+#   - bootstrap-worker (워커 프로세스)
+# ===============================================
+
+services:
+  # ===============================================
+  # Infrastructure Services
+  # ===============================================
+
+  mysql:
+    image: mysql:8.0
+    container_name: template-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: template
+      MYSQL_USER: template
+      MYSQL_PASSWORD: template
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - template-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: template-redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - template-network
+
+  # ===============================================
+  # Admin Tools (UI)
+  # ===============================================
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: template-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "18080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - template-network
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: template-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    ports:
+      - "18081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - template-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Application Services
+  # ===============================================
+
+  web-api:
+    build:
+      context: ..
+      dockerfile: bootstrap/bootstrap-web-api/Dockerfile
+    container_name: template-web-api
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+
+      # Database
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: template
+      DB_USER: root
+      DB_PASSWORD: root
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+
+      # Logging
+      LOG_LEVEL: DEBUG
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - template-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Future Services (확장 예정)
+  # ===============================================
+  #
+  # scheduler:
+  #   build:
+  #     context: ..
+  #     dockerfile: bootstrap/bootstrap-scheduler/Dockerfile
+  #   container_name: template-scheduler
+  #   # ...
+  #
+  # worker:
+  #   build:
+  #     context: ..
+  #     dockerfile: bootstrap/bootstrap-worker/Dockerfile
+  #   container_name: template-worker
+  #   # ...
+
+# ===============================================
+# Networks
+# ===============================================
+networks:
+  template-network:
+    driver: bridge
+
+# ===============================================
+# Volumes
+# ===============================================
+volumes:
+  mysql_data:
+  redis_data:

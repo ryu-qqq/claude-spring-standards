@@ -1,13 +1,16 @@
 package com.ryuqq.adapter.in.rest.common.dto;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
+import org.slf4j.MDC;
 
 /**
  * ApiResponse - 표준 API 응답 래퍼
  *
- * <p>모든 REST API 응답의 일관된 형식을 제공합니다.</p>
+ * <p>모든 REST API 응답의 일관된 형식을 제공합니다.
  *
- * <p><strong>사용 예시:</strong></p>
+ * <p><strong>사용 예시:</strong>
+ *
  * <pre>{@code
  * // 성공 응답
  * ApiResponse<UserDto> response = ApiResponse.success(userDto);
@@ -17,7 +20,8 @@ import java.time.LocalDateTime;
  * ApiResponse<Void> response = ApiResponse.failure(error);
  * }</pre>
  *
- * <p><strong>응답 형식:</strong></p>
+ * <p><strong>응답 형식:</strong>
+ *
  * <pre>{@code
  * {
  *   "success": true,
@@ -33,12 +37,7 @@ import java.time.LocalDateTime;
  * @since 2025-10-23
  */
 public record ApiResponse<T>(
-    boolean success,
-    T data,
-    ErrorInfo error,
-    LocalDateTime timestamp,
-    String requestId
-) {
+        boolean success, T data, ErrorInfo error, LocalDateTime timestamp, String requestId) {
 
     /**
      * 성공 응답 생성
@@ -50,13 +49,7 @@ public record ApiResponse<T>(
      * @since 2025-10-23
      */
     public static <T> ApiResponse<T> ofSuccess(T data) {
-        return new ApiResponse<>(
-            true,
-            data,
-            null,
-            LocalDateTime.now(),
-            generateRequestId()
-        );
+        return new ApiResponse<>(true, data, null, LocalDateTime.now(), generateRequestId());
     }
 
     /**
@@ -81,13 +74,7 @@ public record ApiResponse<T>(
      * @since 2025-10-23
      */
     public static <T> ApiResponse<T> ofFailure(ErrorInfo error) {
-        return new ApiResponse<>(
-            false,
-            null,
-            error,
-            LocalDateTime.now(),
-            generateRequestId()
-        );
+        return new ApiResponse<>(false, null, error, LocalDateTime.now(), generateRequestId());
     }
 
     /**
@@ -107,14 +94,19 @@ public record ApiResponse<T>(
     /**
      * Request ID 생성
      *
-     * <p>실제 운영 환경에서는 MDC나 분산 추적 시스템의 Trace ID를 사용하는 것이 좋습니다.</p>
+     * <p>MDC의 traceId를 우선 사용하고, 없으면 UUID를 생성합니다.
      *
-     * @return Request ID
+     * <p>분산 추적 시스템 (Micrometer, Sleuth 등)과 통합됩니다.
+     *
+     * @return Request ID (traceId 또는 UUID)
      * @author ryu-qqq
      * @since 2025-10-23
      */
     private static String generateRequestId() {
-        // TODO: MDC or Distributed Tracing ID 사용 권장
-        return "req-" + System.currentTimeMillis();
+        String traceId = MDC.get("traceId");
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
+        return UUID.randomUUID().toString();
     }
 }

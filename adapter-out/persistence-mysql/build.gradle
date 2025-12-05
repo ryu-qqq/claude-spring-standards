@@ -36,7 +36,7 @@ dependencies {
     annotationProcessor libs.jakarta.persistence.api
 
     // Database Drivers (Runtime)
-    runtimeOnly libs.postgresql
+    runtimeOnly libs.mysql.connector
     runtimeOnly libs.h2 // For testing
 
     // Connection Pooling
@@ -44,7 +44,7 @@ dependencies {
 
     // Flyway Migration
     implementation libs.flyway.core
-    runtimeOnly libs.flyway.postgresql
+    runtimeOnly libs.flyway.mysql
 
     // ========================================
     // Test Dependencies
@@ -55,6 +55,9 @@ dependencies {
 
     // ArchUnit for architecture validation
     testImplementation libs.archunit.junit5
+
+    // YAML parsing for config validation tests
+    testImplementation libs.snakeyaml
 
     // Bootstrap testFixtures (ArchUnit 유틸리티 사용)
     testImplementation testFixtures(project(':domain'))

@@ -329,7 +329,6 @@ knowledge_base:
       - "**/docs/coding_convention/**/*.md"
       - "**/CODING_STANDARDS.md"
       - "**/.cursorrules"
-      - "**/.claude/scripts/README-langfuse-trace.md"
 
   learnings:
     scope: "organization"
@@ -337,11 +336,6 @@ knowledge_base:
   # 외부 지식 통합 (선택)
   web_search:
     enabled: true
-
-  # TDD 메트릭 추적 (참고)
-  # - LangFuse Dashboard: https://us.cloud.langfuse.com
-  # - 자동 수집: TDD Phase, 커밋 크기, Tidy First 준수율
-  # - JSONL 로그: ~/.claude/logs/tdd-cycle.jsonl
 
 code_generation:
   docstrings:

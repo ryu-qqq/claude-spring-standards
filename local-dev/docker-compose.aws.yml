@@ -1,0 +1,140 @@
+version: '3.8'
+
+# ===============================================
+# Spring Standards Template - AWS 연결 환경
+# ===============================================
+# 로컬에서 실제 AWS 리소스(RDS, ElastiCache, SQS 등)에 연결
+#
+# 사전 조건:
+#   1. AWS SSM Session Manager 설치
+#   2. Bastion Host (EC2) 또는 SSM 엔드포인트 설정
+#   3. ./scripts/aws-port-forward.sh 실행 (별도 터미널)
+#
+# 사용법:
+#   터미널 1: ./scripts/aws-port-forward.sh  # 포트 포워딩
+#   터미널 2: ./scripts/aws-start.sh         # 애플리케이션 시작
+#
+# Admin Tools:
+#   - phpMyAdmin: http://localhost:18080 (AWS RDS 관리)
+#   - Redis Commander: http://localhost:18081 (AWS ElastiCache 관리)
+#
+# 추후 확장 예정:
+#   - bootstrap-scheduler (배치/스케줄러)
+#   - bootstrap-worker (워커 프로세스)
+# ===============================================
+
+services:
+  # ===============================================
+  # Admin Tools (UI) - AWS 리소스 연결
+  # ===============================================
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: template-phpmyadmin-aws
+    environment:
+      PMA_HOST: host.docker.internal
+      PMA_PORT: ${AWS_RDS_LOCAL_PORT:-13307}
+      PMA_USER: ${AWS_RDS_USERNAME:-admin}
+      PMA_PASSWORD: ${AWS_RDS_PASSWORD}
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "18080:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - template-aws-network
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: template-redis-commander-aws
+    environment:
+      REDIS_HOSTS: aws:host.docker.internal:${AWS_REDIS_LOCAL_PORT:-16380}
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    ports:
+      - "18081:8081"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - template-aws-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Application Services (AWS 리소스 연결)
+  # ===============================================
+
+  web-api:
+    build:
+      context: ..
+      dockerfile: bootstrap/bootstrap-web-api/Dockerfile
+    container_name: template-web-api-aws
+    env_file:
+      - .env.aws
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SERVER_PORT: 8080
+
+      # Database (AWS RDS - SSM 포트 포워딩 경유)
+      # host.docker.internal = 호스트 머신의 localhost
+      DB_HOST: host.docker.internal
+      DB_PORT: ${AWS_RDS_LOCAL_PORT:-13307}
+      DB_NAME: ${AWS_RDS_DATABASE:-template}
+      DB_USER: ${AWS_RDS_USERNAME:-admin}
+      DB_PASSWORD: ${AWS_RDS_PASSWORD}
+
+      # Redis (AWS ElastiCache - SSM 포트 포워딩 경유)
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: ${AWS_REDIS_LOCAL_PORT:-16380}
+      REDIS_PASSWORD: ${AWS_REDIS_PASSWORD:-}
+
+      # AWS Credentials (SQS, S3 등 직접 연결용)
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
+      # SQS (선택 - 활성화 시)
+      # SPRING_CLOUD_AWS_SQS_ENABLED: "true"
+      # SQS_QUEUE_URL: ${AWS_SQS_QUEUE_URL}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - template-aws-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Future Services (확장 예정)
+  # ===============================================
+  #
+  # scheduler:
+  #   build:
+  #     context: ..
+  #     dockerfile: bootstrap/bootstrap-scheduler/Dockerfile
+  #   container_name: template-scheduler-aws
+  #   env_file:
+  #     - .env.aws
+  #   environment:
+  #     # ... (web-api와 유사)
+  #
+  # worker:
+  #   build:
+  #     context: ..
+  #     dockerfile: bootstrap/bootstrap-worker/Dockerfile
+  #   container_name: template-worker-aws
+  #   env_file:
+  #     - .env.aws
+  #   environment:
+  #     # ... (web-api와 유사)
+
+# ===============================================
+# Networks
+# ===============================================
+networks:
+  template-aws-network:
+    driver: bridge

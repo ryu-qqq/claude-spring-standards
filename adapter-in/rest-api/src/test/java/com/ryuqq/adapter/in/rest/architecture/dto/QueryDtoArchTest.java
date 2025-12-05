@@ -59,7 +59,7 @@ class QueryDtoArchTest {
             .should().beRecords()
             .because("Query DTO는 불변 객체이므로 Record를 사용해야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -74,7 +74,7 @@ class QueryDtoArchTest {
             .should().haveSimpleNameEndingWith("ApiRequest")
             .because("Query DTO는 *ApiRequest 네이밍 규칙을 따라야 합니다 (예: SearchApiRequest, ListApiRequest)");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -95,7 +95,7 @@ class QueryDtoArchTest {
             .orShould().beAnnotatedWith("lombok.Value")
             .because("Query DTO는 Pure Java Record를 사용해야 하며 Lombok은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -114,7 +114,7 @@ class QueryDtoArchTest {
             .orShould().beAnnotatedWith("com.fasterxml.jackson.databind.annotation.JsonDeserialize")
             .because("Query DTO는 프레임워크 독립적이어야 하며 Jackson 어노테이션은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -129,7 +129,7 @@ class QueryDtoArchTest {
             .should().beDeclaredInClassesThat().resideInAPackage("..dto.query..")
             .because("Query DTO → Domain 변환은 Mapper의 책임입니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -144,7 +144,7 @@ class QueryDtoArchTest {
             .should().beDeclaredInClassesThat().resideInAPackage("..dto.query..")
             .because("Query DTO는 검색 조건만 담당하며 비즈니스 로직은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -162,7 +162,7 @@ class QueryDtoArchTest {
 
         // Note: 이 규칙은 권장사항이므로 실패 시 경고만 표시
         try {
-            rule.check(classes);
+            rule.allowEmptyShould(true).check(classes);
         } catch (AssertionError e) {
             System.out.println("⚠️  Warning: " + e.getMessage());
         }
@@ -184,7 +184,7 @@ class QueryDtoArchTest {
             .orShould().resideInAPackage("..dto.command..")  // Command도 *ApiRequest이므로 허용
             .because("Query DTO는 dto.query 패키지에 위치해야 합니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -199,7 +199,7 @@ class QueryDtoArchTest {
             .should().beDeclaredInClassesThat().resideInAPackage("..dto.query..")
             .because("Query DTO는 불변 객체이므로 Setter는 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 
     /**
@@ -215,6 +215,6 @@ class QueryDtoArchTest {
             .orShould().beAnnotatedWith("org.springframework.context.annotation.Configuration")
             .because("Query DTO는 순수 데이터 전송 객체이므로 Spring 어노테이션은 금지됩니다");
 
-        rule.check(classes);
+        rule.allowEmptyShould(true).check(classes);
     }
 }

@@ -49,11 +49,6 @@ bin/
 claudedocs/
 spec-stories/
 
-# LangFuse telemetry (contains credentials)
-.langfuse.telemetry
-langfuse/__pycache__/
-langfuse/tests/__pycache__/
-
 # Windsurf IDE settings (personal configuration)
 .windsurfrules
 

@@ -1,6 +1,6 @@
 package com.ryuqq.bootstrap.config;
 
-import com.ryuqq.application.common.config.SystemClockHolder;
+// SystemClockHolder는 같은 패키지에 위치 (Infrastructure 구현체는 Bootstrap Layer)
 import com.ryuqq.domain.common.util.ClockHolder;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;

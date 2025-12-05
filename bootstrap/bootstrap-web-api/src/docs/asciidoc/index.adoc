@@ -1,0 +1,138 @@
+= API Documentation
+Development Team
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+:operation-curl-request-title: Example request
+:operation-http-response-title: Example response
+
+[[overview]]
+== Overview
+
+REST API Documentation
+
+[[overview-http-verbs]]
+=== HTTP Methods
+
+|===
+| Method | Description
+
+| `GET`
+| Retrieve resources
+
+| `POST`
+| Create new resources
+
+| `PUT`
+| Update existing resources (full replacement)
+
+| `PATCH`
+| Partial update of resources
+
+| `DELETE`
+| Delete resources
+|===
+
+[[overview-http-status-codes]]
+=== HTTP Status Codes
+
+|===
+| Status Code | Description
+
+| `200 OK`
+| Request successful
+
+| `201 Created`
+| Resource created successfully
+
+| `204 No Content`
+| Request successful, no content returned
+
+| `400 Bad Request`
+| Invalid request (validation error)
+
+| `401 Unauthorized`
+| Authentication required
+
+| `403 Forbidden`
+| Access denied
+
+| `404 Not Found`
+| Resource not found
+
+| `409 Conflict`
+| Resource state conflict
+
+| `500 Internal Server Error`
+| Server error
+|===
+
+[[overview-error-response]]
+=== Error Response (RFC 7807)
+
+All error responses follow RFC 7807 Problem Details format:
+
+[source,json]
+----
+{
+  "type": "about:blank",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "Validation failed",
+  "instance": "/api/v1/members",
+  "code": "VALIDATION_FAILED",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "traceId": "abc123def456"
+}
+----
+
+[[resources]]
+== Resources
+
+// ========================================
+// Member API (Example)
+// ========================================
+
+// Uncomment when member-create snippet exists:
+// [[resources-member]]
+// === Member API
+//
+// [[resources-member-create]]
+// ==== Create Member
+//
+// `POST /api/v1/members`
+//
+// operation::member-create[snippets='http-request,request-fields,http-response,response-fields']
+
+// ========================================
+// Auth API (Example)
+// ========================================
+
+// Uncomment when auth-login snippet exists:
+// [[resources-auth]]
+// === Auth API
+//
+// [[resources-auth-login]]
+// ==== Login
+//
+// `POST /api/v1/auth/login`
+//
+// operation::auth-login[snippets='http-request,request-fields,http-response,response-fields']
+
+[[appendix]]
+== Appendix
+
+=== API Versioning
+
+API version is included in the URL path:
+
+* `/api/v1/...` - Version 1 (Current)
+
+=== Date/Time Format
+
+All date/time values use ISO 8601 format in UTC:
+
+* `2025-01-01T00:00:00.000Z`

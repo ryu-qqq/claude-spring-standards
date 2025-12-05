@@ -104,5 +104,5 @@ This project documentation is open source and available under the MIT License.
 
 ---
 
-**Last Updated**: 2025-11-18
-**Version**: 2.6 (LangFuse Integration)
+**Last Updated**: 2025-12-05
+**Version**: 3.0
