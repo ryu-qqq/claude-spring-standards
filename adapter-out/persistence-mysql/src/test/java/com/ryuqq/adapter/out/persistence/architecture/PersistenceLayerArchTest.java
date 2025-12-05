@@ -174,20 +174,24 @@ class PersistenceLayerArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 3: JPA Entity와 Domain 분리 검증 */
+    /** 규칙 3: JPA Entity와 Domain 분리 검증 (Enum은 허용) */
     @Test
-    @DisplayName("[필수] JPA Entity는 Domain Layer를 의존하지 않아야 한다")
-    void persistence_JpaEntityMustNotDependOnDomain() {
+    @DisplayName("[필수] JPA Entity는 Domain Layer의 Enum만 의존할 수 있다")
+    void persistence_JpaEntityCanOnlyDependOnDomainEnums() {
         ArchRule rule =
                 noClasses()
                         .that()
                         .haveSimpleNameEndingWith("JpaEntity")
                         .should()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage("..domain..")
+                        .dependOnClassesThat(
+                                com.tngtech.archunit.base.DescribedPredicate.describe(
+                                        "Domain Layer classes that are not enums",
+                                        javaClass ->
+                                                javaClass.getPackageName().contains(".domain.")
+                                                        && !javaClass.isEnum()))
                         .because(
-                                "JPA Entity는 Domain Layer에 의존하면 안 됩니다 (Infrastructure → Domain 의존"
-                                        + " 금지)");
+                                "JPA Entity는 Domain Layer의 Enum만 의존할 수 있습니다 "
+                                        + "(VO, Entity 등 다른 Domain 클래스 의존 금지)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }
