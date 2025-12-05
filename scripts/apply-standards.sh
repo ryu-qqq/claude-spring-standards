@@ -173,12 +173,13 @@ selective_menu() {
     echo "7) ArchUnit 테스트 - Persistence Redis Layer"
     echo "8) Gradle 설정 (libs.versions.toml)"
     echo "9) 정적 분석 설정 (config/)"
+    echo "S) Serena MCP 설정 (.serena/) - Memories 포함"
     echo "A) 전체 선택"
     echo ""
     read -p "선택: " SELECTED_ITEMS
 
     if [[ "$SELECTED_ITEMS" == "A" || "$SELECTED_ITEMS" == "a" ]]; then
-        SELECTED_ITEMS="1,2,3,4,5,6,7,8,9"
+        SELECTED_ITEMS="1,2,3,4,5,6,7,8,9,S"
     fi
 }
 
@@ -402,6 +403,60 @@ copy_github_actions() {
 }
 
 # ============================================================================
+# Serena MCP 설정 복사
+# ============================================================================
+copy_serena_settings() {
+    print_step "Serena MCP 설정 복사 중..."
+
+    # 기존 .serena 백업
+    if [ -d "$TARGET_PROJECT/.serena" ]; then
+        BACKUP_DIR="$TARGET_PROJECT/.serena.backup.$(date +%Y%m%d_%H%M%S)"
+        mv "$TARGET_PROJECT/.serena" "$BACKUP_DIR"
+        print_info "기존 .serena 백업: $BACKUP_DIR"
+    fi
+
+    # .serena 디렉토리 생성
+    mkdir -p "$TARGET_PROJECT/.serena/memories"
+
+    # project.yml 복사 및 수정
+    if [ -f "$SOURCE_PROJECT/.serena/project.yml" ]; then
+        cp "$SOURCE_PROJECT/.serena/project.yml" "$TARGET_PROJECT/.serena/"
+
+        # 프로젝트명 치환 (패키지명의 마지막 부분 사용)
+        local project_name=$(echo "$PACKAGE_NAME" | awk -F. '{print $NF}')
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/project_name: .*/project_name: \"${project_name}\"/" "$TARGET_PROJECT/.serena/project.yml"
+        else
+            sed -i "s/project_name: .*/project_name: \"${project_name}\"/" "$TARGET_PROJECT/.serena/project.yml"
+        fi
+        print_success "project.yml 복사 완료 (프로젝트명: $project_name)"
+    fi
+
+    # .gitignore 복사
+    if [ -f "$SOURCE_PROJECT/.serena/.gitignore" ]; then
+        cp "$SOURCE_PROJECT/.serena/.gitignore" "$TARGET_PROJECT/.serena/"
+    fi
+
+    # memories 복사
+    if [ -d "$SOURCE_PROJECT/.serena/memories" ]; then
+        cp -r "$SOURCE_PROJECT/.serena/memories"/* "$TARGET_PROJECT/.serena/memories/" 2>/dev/null || true
+
+        # memories 내 패키지명 치환
+        find "$TARGET_PROJECT/.serena/memories" -type f -name "*.md" | while read file; do
+            replace_package_in_file "$file"
+        done
+
+        local memory_count=$(ls -1 "$TARGET_PROJECT/.serena/memories" 2>/dev/null | wc -l | tr -d ' ')
+        print_success "Serena Memories 복사 완료 ($memory_count개)"
+    fi
+
+    print_info "Memory 파일 목록:"
+    ls -1 "$TARGET_PROJECT/.serena/memories" 2>/dev/null | while read f; do
+        echo "   • $f"
+    done
+}
+
+# ============================================================================
 # 업데이트 모드 실행
 # ============================================================================
 run_update_mode() {
@@ -412,9 +467,10 @@ run_update_mode() {
     echo "1) Claude 설정만 (.claude/)"
     echo "2) 코딩 컨벤션 문서만 (docs/coding_convention/)"
     echo "3) ArchUnit 테스트만"
-    echo "4) 전체 업데이트"
+    echo "4) Serena MCP 설정만 (.serena/)"
+    echo "5) 전체 업데이트"
     echo ""
-    read -p "선택 (1/2/3/4): " UPDATE_CHOICE
+    read -p "선택 (1/2/3/4/5): " UPDATE_CHOICE
 
     case $UPDATE_CHOICE in
         1)
@@ -431,8 +487,12 @@ run_update_mode() {
             copy_archunit_persistence_redis
             ;;
         4)
+            copy_serena_settings
+            ;;
+        5)
             copy_claude_settings
             copy_coding_conventions
+            copy_serena_settings
             copy_archunit_domain
             copy_archunit_application
             copy_archunit_rest_api
@@ -452,6 +512,7 @@ run_new_mode() {
 
     copy_claude_settings
     copy_coding_conventions
+    copy_serena_settings
     copy_static_analysis_config
     copy_github_actions
     merge_gradle_settings
@@ -496,6 +557,7 @@ run_selective_mode() {
             7) copy_archunit_persistence_redis ;;
             8) merge_gradle_settings ;;
             9) copy_static_analysis_config ;;
+            [Ss]) copy_serena_settings ;;
         esac
     done
 }
@@ -511,8 +573,9 @@ print_summary() {
     echo ""
 
     echo "✅ 적용된 항목:"
-    [ -d "$TARGET_PROJECT/.claude" ] && echo "   • Claude 설정 (14 Skills, 12 Commands)"
+    [ -d "$TARGET_PROJECT/.claude" ] && echo "   • Claude 설정 (15 Skills, 13 Commands)"
     [ -d "$TARGET_PROJECT/docs/coding_convention" ] && echo "   • 코딩 컨벤션 문서 (146개)"
+    [ -d "$TARGET_PROJECT/.serena" ] && echo "   • Serena MCP 설정 (Memories 포함)"
     [ -d "$TARGET_PROJECT/config" ] && echo "   • 정적 분석 설정 (checkstyle, spotbugs, pmd)"
 
     echo ""
