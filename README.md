@@ -6,7 +6,8 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blue.svg)](https://alistair.cockburn.us/hexagonal-architecture/)
-[![Claude Skills](https://img.shields.io/badge/Claude%20Skills-14-purple.svg)](#claude-skills-14개)
+[![Claude Skills](https://img.shields.io/badge/Claude%20Skills-15-purple.svg)](#claude-skills-15개)
+[![Serena Memories](https://img.shields.io/badge/Serena%20Memories-45-green.svg)](#serena-memory-시스템)
 [![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-blue.svg)](https://ryu-qqq.github.io/claude-spring-standards/)
 
 ---
@@ -15,7 +16,7 @@
 
 **Spring Boot 3.5.x + Java 21** 기반의 프로덕션 레디 헥사고날 아키텍처 템플릿입니다.
 
-**14개 전문 Claude Skills**와 **88개 코딩 컨벤션 문서**가 일관된 고품질 코드 생성을 보장합니다.
+**15개 전문 Claude Skills**, **12개 Claude Commands**, **5개 자동화 Hooks**, **45개 Serena Memories**가 일관된 고품질 코드 생성을 보장합니다.
 
 ### 핵심 철학
 
@@ -24,7 +25,8 @@
 | **Documentation-Driven** | 88개 코딩 컨벤션 문서가 설계를 강제 |
 | **Smart Strategy** | 기존 코드 수정 → TDD, 신규 코드 생성 → Doc-Driven |
 | **Zero-Tolerance** | Lombok 금지, Law of Demeter, Long FK 전략 |
-| **AI-First** | Claude Code + Serena MCP + 14개 전문 Skills |
+| **AI-First** | Claude Code + Serena MCP + 자동화 Hooks |
+| **Contract-First** | 레이어 간 계약 명시로 병렬 작업 안전 보장 |
 
 ---
 
@@ -47,61 +49,79 @@ cd my-project
 
 ---
 
-## 개발 플로우
+## 개발 사이클
 
-### Plan → Impl 프로세스
+### 전체 플로우
 
 ```
-기능 요청
-    ↓
-/plan "{기능명}"
-    ↓
-┌─────────────────────────────────────────┐
-│ 1️⃣ 요구사항 분석 (requirements-analyst) │
-│ 2️⃣ 영향도 분석 (layer-architect)        │
-│ 3️⃣ 전략 결정 (TDD vs Doc-Driven)       │
-│ 4️⃣ Serena Memory 저장                  │
-└─────────────────────────────────────────┘
-    ↓                      ↓
-기존 코드 수정            신규 코드 생성
-    ↓                      ↓
-┌──────────┐          ┌──────────┐
-│   TDD    │          │ Doc-Driven│
-│ /kb/*/go │          │  /impl    │
-└──────────┘          └──────────┘
-    ↓                      ↓
-    └───────────┬──────────┘
-                ↓
-         ./gradlew test
-                ↓
-            feat: 커밋
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Development Lifecycle                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   /plan "{기능}"                                                             │
+│       ↓                                                                      │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │ 1️⃣ 요구사항 분석 (requirements-analyst)                              │   │
+│   │ 2️⃣ 영향도 분석 (layer-architect) - Serena MCP                       │   │
+│   │ 3️⃣ 전략 결정: TDD vs Doc-Driven                                     │   │
+│   │ 4️⃣ plan-{feature} 메모리 저장                                       │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│       ↓                                                                      │
+│   /design "{기능}"                                                           │
+│       ↓                                                                      │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │ 1️⃣ 사용 이력 검색 (component-usage-history)                          │   │
+│   │ 2️⃣ 기본 골격 생성 (component-dependency-graph)                       │   │
+│   │ 3️⃣ 옵션 질문 (component-options)                                     │   │
+│   │ 4️⃣ 컴포넌트 목록 + 레이어 간 계약 명시                               │   │
+│   │ 5️⃣ 체크리스트 JSON 생성                                              │   │
+│   │ 6️⃣ design-{feature} 메모리 저장                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│       ↓                                                                      │
+│   /impl:{layer} {feature}  또는  /kb/{layer}/go                             │
+│       ↓                                                                      │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │ 신규 생성 → /impl:domain, /impl:application, /impl:persistence, ...  │   │
+│   │ 기존 수정 → /kb/domain/go, /kb/application/go, ...                    │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│       ↓                                                                      │
+│   /status {feature}  →  진행률 확인                                          │
+│       ↓                                                                      │
+│   /verify {feature}  →  체크리스트 검증 + ArchUnit                           │
+│       ↓                                                                      │
+│   /complete {feature}  →  아카이브 + 메모리 정리                              │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1단계: 기능 분석 및 계획
+### 단계별 상세
+
+#### 1단계: 기능 분석 (`/plan`)
 
 ```bash
 /plan "주문 취소 기능"
 ```
 
-**출력 예시**:
-```markdown
-## 📊 영향도 분석 결과
+**프로세스**:
+1. **요구사항 분석**: 질문으로 비즈니스 규칙 도출
+2. **영향도 분석**: Serena MCP로 기존 코드 검색
+3. **전략 결정**: 수정(TDD) vs 신규(Doc-Driven)
+4. **메모리 저장**: `plan-{feature}` 자동 저장
 
-| 레이어 | 파일 | 상태 | 전략 |
-|--------|------|------|------|
-| Domain | Order.java | 🔧 수정 | TDD |
-| Application | - | 🆕 신규 | Doc |
-| Persistence | OrderEntity.java | 🔧 수정 | TDD |
-| REST API | - | 🆕 신규 | Doc |
+#### 2단계: 컴포넌트 설계 (`/design`)
 
-## 🚀 실행 계획
-1. [TDD] Domain: Order.cancel() 추가
-2. [Doc] Application: CancelOrderUseCase 생성
-3. [TDD] Persistence: OrderEntity 수정
-4. [Doc] REST API: POST /orders/{id}/cancel
+```bash
+/design "주문 취소 기능"
 ```
 
-### 2단계: Layer별 구현
+**프로세스**:
+1. **패턴 추천**: 사용 이력 기반 유사 패턴 제안
+2. **컴포넌트 도출**: 레이어별 필요 컴포넌트 목록화
+3. **계약 명시**: 레이어 간 인터페이스 스펙 정의 (병렬 작업 안전)
+4. **체크리스트 생성**: 규칙 기반 JSON 생성
+5. **메모리 저장**: `design-{feature}` 저장
+
+#### 3단계: Layer별 구현
 
 ```bash
 # 신규 코드 생성 (Doc-Driven)
@@ -114,6 +134,225 @@ cd my-project
 /kb/domain/go                   # Domain 기존 코드 TDD 수정
 /kb/application/go              # Application 기존 코드 TDD 수정
 ```
+
+#### 4단계: 검증 및 완료
+
+```bash
+# 진행률 빠른 확인
+/status order-cancel
+
+# 상세 검증 (규칙 + ArchUnit)
+/verify order-cancel
+
+# 완료 처리 (아카이브 + 메모리 정리)
+/complete order-cancel
+```
+
+---
+
+## 리팩토링 워크플로우
+
+기존 코드 리팩토링은 별도 플로우를 사용합니다.
+
+```bash
+# 리팩토링 분석
+/refactor-plan domain           # Domain Layer 전체 분석
+/refactor-plan Order            # 특정 클래스 분석
+
+# 결과: 코드 스멜 + 규칙 위반 + Phase별 계획
+
+# 실행
+/kb/domain/go "Order Aggregate Lombok 제거"
+```
+
+### `/plan` vs `/refactor-plan`
+
+| 항목 | `/plan` | `/refactor-plan` |
+|------|---------|------------------|
+| **목적** | 신규 기능 설계 | 기존 코드 개선 |
+| **입력** | 비즈니스 요구사항 | 코드/패키지/레이어 |
+| **분석** | 컴포넌트 설계 | 코드 스멜, 규칙 위반 |
+| **출력** | 체크리스트 + 계약 | 문제점 + 수정 전략 |
+
+---
+
+## Claude Commands (12개)
+
+### 핵심 개발 Commands
+
+| Command | 용도 |
+|---------|------|
+| `/plan "{기능}"` | 요구사항 분석 + 영향도 분석 + 구현 전략 |
+| `/design "{기능}"` | 컴포넌트 설계 + 체크리스트 JSON 생성 |
+| `/impl:domain {feature}` | Domain Layer 구현 |
+| `/impl:application {feature}` | Application Layer 구현 |
+| `/impl:persistence {feature}` | Persistence Layer 구현 |
+| `/impl:rest-api {feature}` | REST API Layer 구현 |
+
+### 진행 관리 Commands
+
+| Command | 용도 |
+|---------|------|
+| `/status {feature}` | 진행률 시각화 (빠른 확인) |
+| `/verify {feature}` | 체크리스트 검증 + ArchUnit 테스트 |
+| `/complete {feature}` | 완료 처리 + 아카이브 + 메모리 정리 |
+
+### 기타 Commands
+
+| Command | 용도 |
+|---------|------|
+| `/refactor-plan [scope]` | 리팩토링 분석 및 계획 |
+| `/create-prd` | PRD 문서 생성 |
+| `/memory-guide` | Serena Memory 사용 가이드 |
+
+### TDD Commands
+
+| Command | 용도 |
+|---------|------|
+| `/kb/domain/go` | Domain 기존 코드 TDD 수정 |
+| `/kb/application/go` | Application 기존 코드 TDD 수정 |
+| `/kb/persistence/go` | Persistence 기존 코드 TDD 수정 |
+| `/kb/rest-api/go` | REST API 기존 코드 TDD 수정 |
+
+---
+
+## Claude Hooks (5개)
+
+휴먼 에러 방지를 위한 자동화 훅 시스템입니다.
+
+| Hook | 트리거 | 역할 |
+|------|--------|------|
+| `user-prompt-submit.sh` | 프롬프트 제출 | 진행 중인 작업 표시 |
+| `pre-tool-use-impl.sh` | `/impl` 실행 전 | plan/design 메모리 존재 확인 |
+| `pre-tool-use-edit.sh` | Edit/Write 전 | 코딩 컨벤션 검증 |
+| `post-tool-use-format.sh` | Edit/Write 후 | 코드 포맷팅 |
+| `stop-session.sh` | 세션 종료 | 미완료 작업 경고 |
+
+### 훅 동작 예시
+
+```bash
+# /impl 실행 시 자동 검증
+/impl:domain order-cancel
+
+# Hook 결과:
+# ✅ plan-order-cancel 메모리 존재
+# ✅ design-order-cancel 메모리 존재
+# → 구현 진행
+
+# 메모리 없을 경우:
+# ⚠️ plan-order-cancel 메모리가 없습니다.
+# 먼저 /plan "주문 취소" 를 실행하세요.
+# → 실행 차단
+```
+
+---
+
+## Serena Memory 시스템
+
+### 메모리 구조 (45개)
+
+```
+Serena Memories
+├── 📋 Plan/Design (작업별)
+│   ├── plan-{feature}         # 분석 결과 + 구현 계획
+│   └── design-{feature}       # 체크리스트 JSON + 계약
+│
+├── 🧩 Component System (3개)
+│   ├── component-dependency-graph   # 전체 레이어 의존성
+│   ├── component-options            # 선택적 컴포넌트 + 질문
+│   └── component-usage-history      # 패턴 사용 이력
+│
+├── 📜 Layer Rules (42개)
+│   ├── domain-rules-*         # Domain Layer 규칙 (6개)
+│   ├── app-rules-*            # Application Layer 규칙 (6개)
+│   ├── persistence-rules-*    # Persistence Layer 규칙 (11개)
+│   ├── redis-rules-*          # Redis 규칙 (4개)
+│   └── rest-api-rules-*       # REST API Layer 규칙 (9개)
+│
+└── 🔍 Validation Rules (6개)
+    ├── convention-domain-layer-validation-rules
+    ├── convention-application-layer-validation-rules
+    ├── convention-persistence-mysql-validation-rules
+    ├── convention-persistence-redis-validation-rules
+    └── convention-rest-api-layer-validation-rules
+```
+
+### 메모리 라이프사이클
+
+```
+/plan → plan-{feature} 생성
+    ↓
+/design → design-{feature} 생성
+    ↓
+/impl → 규칙 메모리 참조하며 구현
+    ↓
+/complete → 아카이브 저장 → plan/design 메모리 삭제
+```
+
+### 세션 연속성
+
+```
+세션 1                          세션 2 (컴팩팅 후)
+────────                        ────────────────────
+/plan "기능A"                   "아까 작업 이어서"
+  ↓                               ↓
+write_memory("plan-A")          read_memory("plan-A")
+  ↓                               ↓
+/design "기능A"                 컨텍스트 복구 ✅
+  ↓                               ↓
+write_memory("design-A")        /impl:application 계속
+  ↓
+⚠️ 오토컴팩팅
+```
+
+---
+
+## Claude Skills (15개)
+
+### Planning & Analysis
+
+| Skill | 역할 | 활성화 |
+|-------|------|--------|
+| `requirements-analyst` | 추상적 요구사항 → 구체적 비즈니스 규칙 | `/plan` |
+| `layer-architect` | 영향도 분석, TDD vs Doc-Driven 결정 | `/plan` |
+| `refactoring-analyst` | 코드 스멜 탐지, 리팩토링 전략 | `/refactor-plan` |
+
+### Domain Layer
+
+| Skill | 역할 | 활성화 |
+|-------|------|--------|
+| `domain-expert` | Aggregate, VO, Event, Exception 설계 | `/impl:domain` |
+
+### Application Layer
+
+| Skill | 역할 | 활성화 |
+|-------|------|--------|
+| `usecase-expert` | Port-In 인터페이스, UseCase/Service 구현 | `/impl:application` |
+| `transaction-expert` | TransactionManager, ReadManager, Facade | `/impl:application` |
+| `factory-assembler-expert` | CommandFactory, QueryAssembler, Bundle | `/impl:application` |
+
+### Persistence Layer
+
+| Skill | 역할 | 활성화 |
+|-------|------|--------|
+| `entity-mapper-expert` | JPA Entity, EntityMapper (Long FK) | `/impl:persistence` |
+| `repository-expert` | JpaRepository, QueryDslRepository | `/impl:persistence` |
+| `adapter-expert` | CommandAdapter, QueryAdapter, LockAdapter | `/impl:persistence` |
+| `redis-expert` | Lettuce 캐시 + Redisson 분산락 | `/impl:persistence` |
+
+### REST API Layer
+
+| Skill | 역할 | 활성화 |
+|-------|------|--------|
+| `controller-expert` | REST Controller, Command/Query DTO | `/impl:rest-api` |
+
+### Cross-Cutting
+
+| Skill | 역할 | 활성화 |
+|-------|------|--------|
+| `testing-expert` | Integration Test, TestRestTemplate, Fixtures | 테스트 작성 시 |
+| `project-setup-expert` | Multi-module 구조, Gradle, Version Catalog | 프로젝트 설정 시 |
+| `devops-expert` | GitHub Actions, Terraform, Docker Compose | CI/CD 설정 시 |
 
 ---
 
@@ -132,7 +371,7 @@ cd my-project
 │  │  └─ error/         # ErrorMapper (RFC 7807)             │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
-                                ↓
+                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                        application/                             │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -145,7 +384,7 @@ cd my-project
 │  │  assembler/       # QueryAssembler (Response 조립)       │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
-                                ↓
+                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                          domain/                                │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -155,7 +394,7 @@ cd my-project
 │  │  exception/       # Domain Exception                    │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
-                                ↓
+                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                        adapter-out/                             │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -188,92 +427,18 @@ claude-spring-standards/
 ├── docs/
 │   └── coding_convention/     # 88개 코딩 컨벤션 문서
 ├── .claude/
-│   ├── commands/              # Claude Commands
-│   └── skills/                # 14개 Claude Skills
+│   ├── commands/              # 12개 Claude Commands
+│   ├── skills/                # 15개 Claude Skills
+│   └── hooks/                 # 5개 자동화 Hooks
+├── .serena/
+│   └── memories/              # 45개 Serena Memories
 ├── terraform/                 # IaC 인프라
 └── local-dev/                 # 로컬 개발 환경 (Docker Compose)
 ```
 
 ---
 
-## Claude Skills (14개)
-
-프로젝트에 특화된 14개 전문 Skills이 레이어별 구현을 가이드합니다.
-
-### Planning & Analysis
-
-| Skill | 역할 | 활성화 |
-|-------|------|--------|
-| `requirements-analyst` | 추상적 요구사항 → 구체적 비즈니스 규칙 (BR-XXX) | `/plan` |
-| `layer-architect` | 영향도 분석, TDD vs Doc-Driven 결정 | `/plan` |
-
-### Domain Layer
-
-| Skill | 역할 | 활성화 |
-|-------|------|--------|
-| `domain-expert` | Aggregate, VO, Event, Exception 설계 | `/impl:domain` |
-
-### Application Layer
-
-| Skill | 역할 | 활성화 |
-|-------|------|--------|
-| `usecase-expert` | Port-In 인터페이스, UseCase/Service 구현 | `/impl:application` |
-| `transaction-expert` | TransactionManager, ReadManager, Facade | `/impl:application` |
-| `factory-assembler-expert` | CommandFactory, QueryAssembler, Bundle | `/impl:application` |
-
-### Persistence Layer
-
-| Skill | 역할 | 활성화 |
-|-------|------|--------|
-| `entity-mapper-expert` | JPA Entity, EntityMapper (Long FK) | `/impl:persistence` |
-| `repository-expert` | JpaRepository, QueryDslRepository (DTO Projection) | `/impl:persistence` |
-| `adapter-expert` | CommandAdapter, QueryAdapter, LockAdapter | `/impl:persistence` |
-| `redis-expert` | Lettuce 캐시 + Redisson 분산락 | `/impl:persistence` |
-
-### REST API Layer
-
-| Skill | 역할 | 활성화 |
-|-------|------|--------|
-| `controller-expert` | REST Controller, Command/Query DTO | `/impl:rest-api` |
-
-### Cross-Cutting
-
-| Skill | 역할 | 활성화 |
-|-------|------|--------|
-| `testing-expert` | Integration Test, TestRestTemplate, Fixtures | 테스트 작성 시 |
-| `project-setup-expert` | Multi-module 구조, Gradle, Version Catalog | 프로젝트 설정 시 |
-| `devops-expert` | GitHub Actions, Terraform, Docker Compose | CI/CD 설정 시 |
-
----
-
-## Claude Commands
-
-### 핵심 Commands
-
-| Command | 용도 |
-|---------|------|
-| `/plan "{기능}"` | 요구사항 분석 + 영향도 분석 + 구현 계획 |
-| `/impl:domain {feature}` | Domain Layer 구현 (Aggregate, VO, Event) |
-| `/impl:application {feature}` | Application Layer 구현 (UseCase, Service) |
-| `/impl:persistence {feature}` | Persistence Layer 구현 (Entity, Repository) |
-| `/impl:rest-api {feature}` | REST API Layer 구현 (Controller, DTO) |
-| `/create-prd` | PRD 문서 생성 |
-| `/memory-guide` | Serena Memory 사용 가이드 |
-
-### TDD Commands
-
-| Command | 용도 |
-|---------|------|
-| `/kb/domain/go` | Domain 기존 코드 TDD 수정 |
-| `/kb/application/go` | Application 기존 코드 TDD 수정 |
-| `/kb/persistence/go` | Persistence 기존 코드 TDD 수정 |
-| `/kb/rest-api/go` | REST API 기존 코드 TDD 수정 |
-
----
-
 ## Zero-Tolerance 규칙
-
-다음 규칙은 **예외 없이** 반드시 준수해야 합니다.
 
 ### 1. Lombok 금지
 
@@ -288,9 +453,13 @@ public class Order {
     private final OrderId id;
     private final Long userId;
 
-    public Order(OrderId id, Long userId) {
+    private Order(OrderId id, Long userId) {
         this.id = id;
         this.userId = userId;
+    }
+
+    public static Order forNew(Long userId) {
+        return new Order(OrderId.empty(), userId);
     }
 
     public OrderId id() { return id; }
@@ -350,31 +519,52 @@ public Optional<Order> findById(OrderId id) { }
 
 ---
 
-## Serena Memory 연동
+## 레이어 간 계약 (Contract)
 
-### 컴팩팅 대응
+`/design` 커맨드에서 자동 생성되며, 병렬 작업 시 인터페이스 불일치를 방지합니다.
 
+```markdown
+## Domain ↔ Application 계약
+
+| 항목 | 스펙 |
+|------|------|
+| Aggregate 메서드 | `Order.cancel(Instant now): void` |
+| 반환 VO | `OrderId` |
+| 발행 Event | `OrderCancelledEvent(OrderId, Instant)` |
+
+## Application ↔ Persistence 계약
+
+| Port | 메서드 시그니처 | 반환 |
+|------|----------------|------|
+| `OrderPersistencePort` | `persist(Order)` | `OrderId` |
+| `OrderQueryPort` | `findById(OrderId)` | `Optional<Order>` |
+
+## Application ↔ REST API 계약
+
+| 구분 | 타입 | 필드 |
+|------|------|------|
+| Request | `CancelOrderRequest` | `reason: String` |
+| Response | `OrderResponse` | `id, status, cancelledAt` |
 ```
-세션 1                          세션 2 (컴팩팅 후)
-────────                        ────────────────────
-/plan "기능A"                   "아까 작업 이어서"
-  ↓                               ↓
-write_memory("plan-A")          read_memory("plan-A")
-  ↓                               ↓
-/impl:domain ...                컨텍스트 복구 ✅
-  ↓                               ↓
-⚠️ 오토컴팩팅                   /impl:application ... 계속
-```
 
-### 작업 재개
+---
+
+## 아카이브 시스템
+
+완료된 작업은 외부 아카이브에 저장됩니다.
+
+**위치**: `/Users/sangwon-ryu/archive/{project}/{feature}/{date}.md`
 
 ```bash
-# 진행 중인 작업 확인
-"현재 진행 중인 작업 확인해줘"
-
-# 특정 작업 재개
-"주문 취소 작업 이어서 해줘"
+/complete order-cancel
+# → /Users/sangwon-ryu/archive/claude-spring-standards/order-cancel/2024-12-08.md
 ```
+
+**아카이브 내용**:
+- 요구사항 요약
+- 생성된 컴포넌트 목록
+- 레이어 간 계약
+- 특이사항
 
 ---
 
@@ -436,7 +626,7 @@ write_memory("plan-A")          read_memory("plan-A")
 
 ## 라이선스
 
-© 2025 Ryu-qqq. All Rights Reserved.
+(c) 2025 Ryu-qqq. All Rights Reserved.
 
 ---
 
@@ -460,4 +650,4 @@ write_memory("plan-A")          read_memory("plan-A")
 
 ---
 
-*최종 업데이트: 2025-12-05*
+*최종 업데이트: 2025-12-08*
