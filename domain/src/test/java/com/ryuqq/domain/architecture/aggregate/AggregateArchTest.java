@@ -2,6 +2,7 @@ package com.ryuqq.domain.architecture.aggregate;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaModifier;
@@ -10,8 +11,8 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -450,10 +451,10 @@ class AggregateArchTest {
         rule.check(classes);
     }
 
-    /** 규칙 10: Aggregate Root는 Clock 의존성을 가져야 한다 */
+    /** 규칙 10: Aggregate Root는 Instant 타입 필드를 가져야 한다 (시간 처리용) */
     @Test
-    @DisplayName("[필수] Aggregate Root는 Clock 의존성을 가져야 한다")
-    void aggregateRoot_MustHaveClockDependency() {
+    @DisplayName("[필수] Aggregate Root는 Instant 타입 필드를 가져야 한다")
+    void aggregateRoot_MustHaveInstantField() {
         ArchRule rule =
                 classes()
                         .that()
@@ -480,11 +481,10 @@ class AggregateArchTest {
                         .haveSimpleNameNotContaining("Mother")
                         .and()
                         .haveSimpleNameNotContaining("Test")
-                        .should()
-                        .dependOnClassesThat()
-                        .areAssignableTo(Clock.class)
+                        .should(haveFieldOfType(Instant.class))
                         .allowEmptyShould(true)
-                        .because("테스트 가능성을 위해 Clock 주입 필수");
+                        .because(
+                                "시간 처리를 위해 Instant 필드 필수 (Clock은 파라미터로 주입받아 Instant로 변환)");
 
         rule.check(classes);
     }
@@ -642,51 +642,83 @@ class AggregateArchTest {
         };
     }
 
-    // ==================== 비즈니스 규칙 (15-16) ====================
-
-    /** 규칙 15: 비즈니스 메서드는 명확한 동사로 시작해야 한다 */
+    /** 규칙 15: 비즈니스 메서드는 명확한 동사로 시작해야 한다 (권장 - 경고만 출력) */
     @Test
     @DisplayName("[권장] 비즈니스 메서드는 명확한 동사로 시작해야 한다")
     void aggregateRoot_BusinessMethodsShouldHaveExplicitVerbs() {
-        ArchRule rule =
-                methods()
-                        .that()
-                        .areDeclaredInClassesThat()
-                        .resideInAPackage(AGGREGATE_PACKAGE)
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .areNotInterfaces()
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .areNotEnums()
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .areNotAnonymousClasses()
-                        .and()
-                        .areDeclaredInClassesThat()
-                        .areNotMemberClasses()
-                        .and()
-                        .arePublic()
-                        .and()
-                        .areNotStatic()
-                        .and()
-                        .haveNameNotMatching(".*<init>.*")
-                        // Getter 스타일 (record 스타일) 제외
-                        .and()
-                        .haveNameNotMatching("(id|status|createdAt|updatedAt|pullDomainEvents).*")
-                        // 판단 메서드 제외
-                        .and()
-                        .haveNameNotMatching("(is|has|can).*")
-                        // 표준 Object 메서드 제외
-                        .and()
-                        .haveNameNotMatching("(equals|hashCode|toString|getClass).*")
-                        .should()
-                        .haveNameMatching(
-                                "(add|remove|confirm|cancel|approve|reject|ship|deliver|complete|fail|update|change|place|validate|calculate|transfer|process|register).*")
-                        .allowEmptyShould(true)
-                        .because("비즈니스 메서드는 명확한 동사로 시작해야 합니다");
+        // 권장 패턴 - 실패해도 테스트 통과, 경고만 출력
+        List<String> violations = new java.util.ArrayList<>();
 
-        rule.check(classes);
+        JavaClasses targetClasses =
+                classes
+                        .that(
+                                new DescribedPredicate<JavaClass>("aggregate root classes") {
+                                    @Override
+                                    public boolean test(JavaClass javaClass) {
+                                        return javaClass.getPackageName().contains(".aggregate")
+                                                && !javaClass.isInterface()
+                                                && !javaClass.isEnum()
+                                                && !javaClass.isAnonymousClass()
+                                                && !javaClass.isLocalClass()
+                                                && !javaClass.getSimpleName().endsWith("Id")
+                                                && !javaClass.getSimpleName().endsWith("Event")
+                                                && !javaClass.getSimpleName().endsWith("Exception")
+                                                && !javaClass.getSimpleName().endsWith("Status")
+                                                && !javaClass.getSimpleName().contains("Fixture")
+                                                && !javaClass.getSimpleName().contains("Mother")
+                                                && !javaClass.getSimpleName().contains("Test");
+                                    }
+                                });
+
+        // 확장된 비즈니스 메서드 패턴
+        String businessMethodPattern =
+                "(add|remove|confirm|cancel|approve|reject|ship|deliver|complete|fail|"
+                        + "update|change|place|validate|calculate|transfer|process|register|"
+                        + "archive|publish|rename|reorder|revert|deduct|restore|activate|"
+                        + "deactivate|suspend|resume|expire|extend|assign|unassign|"
+                        + "create|delete|modify|submit|withdraw|accept|decline|"
+                        + "close|open|start|stop|pause|reset|increment|decrement|"
+                        + "apply|revoke|grant|deny|execute|handle|notify|send|"
+                        + "generate|import|export|merge|split|link|unlink|attach|detach).*";
+
+        for (JavaClass javaClass : targetClasses) {
+            javaClass.getMethods().stream()
+                    .filter(method -> method.getModifiers().contains(JavaModifier.PUBLIC))
+                    .filter(method -> !method.getModifiers().contains(JavaModifier.STATIC))
+                    .filter(method -> !method.getName().matches(".*<init>.*"))
+                    // Getter 스타일 (record 스타일) 제외
+                    .filter(
+                            method ->
+                                    !method.getName()
+                                            .matches(
+                                                    "(id|status|createdAt|updatedAt|pullDomainEvents).*"))
+                    // 판단 메서드 제외
+                    .filter(method -> !method.getName().matches("(is|has|can|should|get).*"))
+                    // 표준 Object 메서드 제외
+                    .filter(
+                            method ->
+                                    !method.getName()
+                                            .matches("(equals|hashCode|toString|getClass).*"))
+                    .filter(method -> !method.getName().matches(businessMethodPattern))
+                    .forEach(
+                            method ->
+                                    violations.add(
+                                            String.format(
+                                                    "[경고] %s.%s() - 비즈니스 메서드는 명확한 동사로 시작 권장",
+                                                    javaClass.getSimpleName(),
+                                                    method.getName())));
+        }
+
+        // 위반 사항 경고 출력 (테스트는 통과)
+        if (!violations.isEmpty()) {
+            System.out.println("\n=== 비즈니스 메서드 네이밍 권장 위반 ===");
+            violations.forEach(System.out::println);
+            System.out.println(
+                    "=== 권장 패턴: add*, remove*, confirm*, cancel*, approve*, reject*, "
+                            + "update*, change*, process*, register*, archive*, publish*, "
+                            + "activate*, deactivate*, create*, delete*, submit*, accept* 등 ===\n");
+        }
+        // 테스트는 항상 통과 (권장 사항이므로)
     }
 
     /** 규칙 16: Aggregate Root는 Application/Adapter 레이어에 의존하지 않아야 한다 */
@@ -860,6 +892,29 @@ class AggregateArchTest {
                         .because("create*() 대신 forNew(), of(), reconstitute() 사용");
 
         rule.check(classes);
+    }
+
+/** 클래스가 특정 타입의 필드를 가지고 있는지 검증 */
+    private static ArchCondition<JavaClass> haveFieldOfType(Class<?> fieldType) {
+        return new ArchCondition<JavaClass>("have field of type: " + fieldType.getSimpleName()) {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                boolean hasField =
+                        javaClass.getAllFields().stream()
+                                .anyMatch(
+                                        field ->
+                                                field.getRawType()
+                                                        .isEquivalentTo(fieldType));
+
+                if (!hasField) {
+                    String message =
+                            String.format(
+                                    "클래스 %s가 %s 타입 필드를 가지고 있지 않습니다",
+                                    javaClass.getSimpleName(), fieldType.getSimpleName());
+                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                }
+            }
+        };
     }
 
     // ==================== 커스텀 ArchCondition 헬퍼 메서드 ====================

@@ -1,7 +1,7 @@
 package com.ryuqq.adapter.in.rest.auth.component;
 
+import com.ryuqq.adapter.in.rest.auth.config.CookieProperties;
 import com.ryuqq.adapter.in.rest.auth.config.SecurityProperties;
-import com.ryuqq.adapter.in.rest.auth.config.SecurityProperties.CookieProperties;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Locale;
 import org.springframework.stereotype.Component;

@@ -1,5 +1,6 @@
 package com.ryuqq.adapter.in.rest.architecture.openapi;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.base.DescribedPredicate;
@@ -51,12 +52,6 @@ import org.junit.jupiter.api.Test;
 @Tag("adapter-rest")
 class OpenApiArchTest {
 
-    private static final String BASE_PACKAGE = "com.ryuqq.adapter.in.rest";
-    private static final String CONTROLLER_PACKAGE = "..controller..";
-    private static final String DTO_COMMAND_PACKAGE = "..dto.command..";
-    private static final String DTO_QUERY_PACKAGE = "..dto.query..";
-    private static final String DTO_RESPONSE_PACKAGE = "..dto.response..";
-
     private static JavaClasses allClasses;
 
     @BeforeAll
@@ -64,7 +59,7 @@ class OpenApiArchTest {
         allClasses =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages(BASE_PACKAGE);
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     // ========================================================================
@@ -82,7 +77,7 @@ class OpenApiArchTest {
             ArchRule rule =
                     classes()
                             .that()
-                            .resideInAPackage(CONTROLLER_PACKAGE)
+                            .resideInAPackage(CONTROLLER_PATTERN)
                             .and()
                             .haveSimpleNameEndingWith("Controller")
                             .and()
@@ -104,17 +99,21 @@ class OpenApiArchTest {
                     methods()
                             .that()
                             .areDeclaredInClassesThat()
-                            .resideInAPackage(CONTROLLER_PACKAGE)
+                            .resideInAPackage(CONTROLLER_PATTERN)
                             .and()
                             .areDeclaredInClassesThat()
                             .haveSimpleNameEndingWith("Controller")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(
+                                    "org.springframework.web.bind.annotation.RestController") // @RestController만 검증
                             .and()
                             .arePublic()
                             .and(areHttpMappingMethods())
                             .should()
                             .beAnnotatedWith("io.swagger.v3.oas.annotations.Operation")
                             .allowEmptyShould(true)
-                            .because("모든 API 메서드는 @Operation으로 설명이 필요합니다");
+                            .because("모든 API 메서드는 @Operation으로 설명이 필요합니다 (ApiDocsController 제외)");
 
             rule.allowEmptyShould(true).check(allClasses);
         }
@@ -127,17 +126,21 @@ class OpenApiArchTest {
                     methods()
                             .that()
                             .areDeclaredInClassesThat()
-                            .resideInAPackage(CONTROLLER_PACKAGE)
+                            .resideInAPackage(CONTROLLER_PATTERN)
                             .and()
                             .areDeclaredInClassesThat()
                             .haveSimpleNameEndingWith("Controller")
+                            .and()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(
+                                    "org.springframework.web.bind.annotation.RestController") // @RestController만 검증
                             .and()
                             .arePublic()
                             .and(areHttpMappingMethods())
                             .should()
                             .beAnnotatedWith("io.swagger.v3.oas.annotations.responses.ApiResponses")
                             .allowEmptyShould(true)
-                            .because("모든 API 메서드는 @ApiResponses로 응답 코드를 정의해야 합니다");
+                            .because("모든 API 메서드는 @ApiResponses로 응답 코드를 정의해야 합니다 (ApiDocsController 제외)");
 
             rule.allowEmptyShould(true).check(allClasses);
         }
@@ -150,15 +153,19 @@ class OpenApiArchTest {
                     methods()
                             .that()
                             .areDeclaredInClassesThat()
-                            .resideInAPackage(CONTROLLER_PACKAGE)
+                            .resideInAPackage(CONTROLLER_PATTERN)
                             .and()
                             .areDeclaredInClassesThat()
                             .haveSimpleNameEndingWith("Controller")
                             .and()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(
+                                    "org.springframework.web.bind.annotation.RestController") // @RestController만 검증
+                            .and()
                             .arePublic()
                             .should(haveParameterAnnotationOnPathVariable())
                             .allowEmptyShould(true)
-                            .because("PathVariable은 @Parameter로 설명이 필요합니다");
+                            .because("PathVariable은 @Parameter로 설명이 필요합니다 (ApiDocsController 제외)");
 
             rule.allowEmptyShould(true).check(allClasses);
         }
@@ -171,15 +178,19 @@ class OpenApiArchTest {
                     methods()
                             .that()
                             .areDeclaredInClassesThat()
-                            .resideInAPackage(CONTROLLER_PACKAGE)
+                            .resideInAPackage(CONTROLLER_PATTERN)
                             .and()
                             .areDeclaredInClassesThat()
                             .haveSimpleNameEndingWith("Controller")
                             .and()
+                            .areDeclaredInClassesThat()
+                            .areAnnotatedWith(
+                                    "org.springframework.web.bind.annotation.RestController") // @RestController만 검증
+                            .and()
                             .arePublic()
                             .should(haveParameterAnnotationOnRequestParam())
                             .allowEmptyShould(true)
-                            .because("RequestParam은 @Parameter로 설명이 필요합니다");
+                            .because("RequestParam은 @Parameter로 설명이 필요합니다 (ApiDocsController 제외)");
 
             rule.allowEmptyShould(true).check(allClasses);
         }
@@ -192,7 +203,7 @@ class OpenApiArchTest {
                     methods()
                             .that()
                             .areDeclaredInClassesThat()
-                            .resideInAPackage(CONTROLLER_PACKAGE)
+                            .resideInAPackage(CONTROLLER_PATTERN)
                             .and()
                             .areAnnotatedWith("io.swagger.v3.oas.annotations.Operation")
                             .should(haveNonEmptyOperationSummary())
@@ -218,7 +229,7 @@ class OpenApiArchTest {
             ArchRule rule =
                     classes()
                             .that()
-                            .resideInAPackage(DTO_COMMAND_PACKAGE)
+                            .resideInAPackage(DTO_COMMAND_PATTERN)
                             .and()
                             .haveSimpleNameEndingWith("ApiRequest")
                             .and()
@@ -238,7 +249,7 @@ class OpenApiArchTest {
             ArchRule rule =
                     classes()
                             .that()
-                            .resideInAPackage(DTO_QUERY_PACKAGE)
+                            .resideInAPackage(DTO_QUERY_PATTERN)
                             .and()
                             .haveSimpleNameEndingWith("ApiRequest")
                             .and()
@@ -258,7 +269,7 @@ class OpenApiArchTest {
             ArchRule rule =
                     classes()
                             .that()
-                            .resideInAPackage(DTO_QUERY_PACKAGE)
+                            .resideInAPackage(DTO_QUERY_PATTERN)
                             .and()
                             .areRecords()
                             .should()
@@ -285,7 +296,7 @@ class OpenApiArchTest {
             ArchRule rule =
                     classes()
                             .that()
-                            .resideInAPackage(DTO_RESPONSE_PACKAGE)
+                            .resideInAPackage(DTO_RESPONSE_PATTERN)
                             .and()
                             .haveSimpleNameEndingWith("ApiResponse")
                             .and()
@@ -316,7 +327,7 @@ class OpenApiArchTest {
             ArchRule requestRule =
                     classes()
                             .that()
-                            .resideInAnyPackage(DTO_COMMAND_PACKAGE, DTO_QUERY_PACKAGE)
+                            .resideInAnyPackage(DTO_COMMAND_PATTERN, DTO_QUERY_PATTERN)
                             .and()
                             .areRecords()
                             .and()
@@ -329,7 +340,7 @@ class OpenApiArchTest {
             ArchRule responseRule =
                     classes()
                             .that()
-                            .resideInAPackage(DTO_RESPONSE_PACKAGE)
+                            .resideInAPackage(DTO_RESPONSE_PATTERN)
                             .and()
                             .resideOutsideOfPackage("..common..")
                             .and()
@@ -352,7 +363,7 @@ class OpenApiArchTest {
                     classes()
                             .that()
                             .resideInAnyPackage(
-                                    DTO_COMMAND_PACKAGE, DTO_QUERY_PACKAGE, DTO_RESPONSE_PACKAGE)
+                                    DTO_COMMAND_PATTERN, DTO_QUERY_PATTERN, DTO_RESPONSE_PATTERN)
                             .and()
                             .areRecords()
                             .and()

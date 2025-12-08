@@ -1,6 +1,7 @@
 package com.ryuqq.adapter.out.persistence.redis.architecture.config;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -38,9 +39,15 @@ class RedisConfigArchTest {
 
     private static JavaClasses allClasses;
     private static JavaClasses configClasses;
+    private static boolean isRedisAvailable;
+    private static boolean isRedissonAvailable;
 
     @BeforeAll
     static void setUp() {
+        // Redis 의존성 체크
+        isRedisAvailable = isClassAvailable("org.springframework.data.redis.core.RedisTemplate");
+        isRedissonAvailable = isClassAvailable("org.redisson.api.RedissonClient");
+
         allClasses =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
@@ -53,6 +60,15 @@ class RedisConfigArchTest {
                                 javaClass ->
                                         javaClass.getSimpleName().endsWith("Config")
                                                 && javaClass.isAnnotatedWith(Configuration.class)));
+    }
+
+    private static boolean isClassAvailable(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     // ========================================================================
@@ -83,6 +99,8 @@ class RedisConfigArchTest {
         @Test
         @DisplayName("규칙 1-2: LettuceConfig가 존재해야 합니다")
         void lettuceConfig_MustExist() {
+            assumeTrue(isRedisAvailable, "Spring Data Redis 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     classes()
                             .that()
@@ -98,6 +116,8 @@ class RedisConfigArchTest {
         @Test
         @DisplayName("규칙 1-3: RedissonConfig가 존재해야 합니다")
         void redissonConfig_MustExist() {
+            assumeTrue(isRedissonAvailable, "Redisson 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     classes()
                             .that()
@@ -149,6 +169,8 @@ class RedisConfigArchTest {
         @Test
         @DisplayName("규칙 2-2: LettuceConfig는 RedisTemplate Bean을 정의해야 합니다")
         void lettuceConfig_MustDefineRedisTemplateBean() {
+            assumeTrue(isRedisAvailable, "Spring Data Redis 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     classes()
                             .that()
@@ -183,6 +205,8 @@ class RedisConfigArchTest {
         @Test
         @DisplayName("규칙 2-3: RedissonConfig는 RedissonClient Bean을 정의해야 합니다")
         void redissonConfig_MustDefineRedissonClientBean() {
+            assumeTrue(isRedissonAvailable, "Redisson 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     classes()
                             .that()
@@ -226,6 +250,8 @@ class RedisConfigArchTest {
         @Test
         @DisplayName("규칙 3-1: LettuceConfig는 Redisson 의존성을 가지지 않아야 합니다")
         void lettuceConfig_MustNotDependOnRedisson() {
+            assumeTrue(isRedisAvailable, "Spring Data Redis 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     noClasses()
                             .that()
@@ -242,6 +268,8 @@ class RedisConfigArchTest {
         @Test
         @DisplayName("규칙 3-2: RedissonConfig는 RedisTemplate 의존성을 가지지 않아야 합니다")
         void redissonConfig_MustNotDependOnRedisTemplate() {
+            assumeTrue(isRedissonAvailable, "Redisson 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     noClasses()
                             .that()

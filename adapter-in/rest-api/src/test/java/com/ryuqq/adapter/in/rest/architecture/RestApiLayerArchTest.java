@@ -1,9 +1,11 @@
 package com.ryuqq.adapter.in.rest.architecture;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +52,10 @@ class RestApiLayerArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
+        classes =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: Package 구조 검증 (controller, dto, mapper, error) */
@@ -164,10 +169,12 @@ class RestApiLayerArchTest {
                         .haveSimpleNameEndingWith("Controller")
                         .and()
                         .haveSimpleNameNotContaining("GlobalExceptionHandler")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("..application..port..")
-                        .because("Controller는 Application Layer의 UseCase Port를 의존해야 합니다");
+                        .because("Controller는 Application Layer의 UseCase Port를 의존해야 합니다 (ApiDocsController 제외)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -188,7 +195,7 @@ class RestApiLayerArchTest {
                         .haveSimpleNameNotEndingWith("ErrorMapper")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("com.ryuqq.domain..")
+                        .resideInAnyPackage(DOMAIN_ALL)
                         .because(
                                 "REST API Layer는 Domain Layer를 직접 의존하면 안 됩니다"
                                         + " (GlobalExceptionHandler, ErrorMapper 제외)");
@@ -208,7 +215,7 @@ class RestApiLayerArchTest {
                         .haveSimpleNameContaining("GlobalExceptionHandler")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAPackage("com.ryuqq.domain..exception..")
+                        .resideInAPackage(DOMAIN_EXCEPTION_ALL)
                         .because("GlobalExceptionHandler는 Domain Exception을 처리하기 위해 의존해야 합니다");
 
         rule.allowEmptyShould(true).check(classes);
@@ -226,7 +233,7 @@ class RestApiLayerArchTest {
                         .and()
                         .arePublic()
                         .should()
-                        .haveRawReturnType("com.ryuqq.domain..")
+                        .haveRawReturnType(DOMAIN_ALL)
                         .because("Controller는 Domain 객체를 직접 반환하면 안 되며 API DTO로 변환해야 합니다");
 
         rule.allowEmptyShould(true).check(classes);
@@ -246,7 +253,7 @@ class RestApiLayerArchTest {
                         .haveSimpleNameNotContaining("Error")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("com.ryuqq.domain..")
+                        .resideInAnyPackage(DOMAIN_ALL)
                         .because(
                                 "Mapper는 Application DTO만 사용하며 Domain 직접 의존은 금지됩니다 (ErrorMapper"
                                         + " 제외)");
@@ -324,13 +331,15 @@ class RestApiLayerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RestController.class)
                         .orShould()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RestControllerAdvice.class)
-                        .because("Controller는 @RestController 또는 @RestControllerAdvice를 사용해야 합니다");
+                        .because("Controller는 @RestController 또는 @RestControllerAdvice를 사용해야 합니다 (ApiDocsController 제외)");
 
         ArchRule mapperRule =
                 classes()

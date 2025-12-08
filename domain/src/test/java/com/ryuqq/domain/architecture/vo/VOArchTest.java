@@ -30,8 +30,8 @@ import org.junit.jupiter.api.Test;
  * <p><strong>검증 규칙 (총 9개)</strong>:
  *
  * <ul>
- *   <li>Record 사용 필수 (Enum VO 제외)
- *   <li>정적 팩토리 메서드 (of) 필수 (Enum VO 제외)
+ *   <li>Record 사용 필수 (Enum/Interface/Abstract 제외)
+ *   <li>정적 팩토리 메서드 (of) 필수 (Enum/Interface/Abstract 제외)
  *   <li>ID VO는 forNew() 추가 필수
  *   <li>Long ID VO는 isNew() 필수 (UUID ID 제외)
  *   <li>Enum VO는 displayName() 필수
@@ -39,6 +39,15 @@ import org.junit.jupiter.api.Test;
  *   <li>JPA 어노테이션 금지
  *   <li>Spring 어노테이션 금지
  *   <li>create*() 메서드 금지
+ * </ul>
+ *
+ * <p><strong>제외 대상</strong>:
+ *
+ * <ul>
+ *   <li>인터페이스 (LockKey, CacheKey, SortKey 등)
+ *   <li>추상 클래스
+ *   <li>Enum (별도 규칙 적용)
+ *   <li>테스트 관련 클래스 (Fixture, Mother, Test)
  * </ul>
  *
  * <p><strong>검증 대상 클래스가 없는 경우</strong>:
@@ -65,9 +74,9 @@ class VOArchTest {
         classes = new ClassFileImporter().importPackages(BASE_PACKAGE);
     }
 
-    /** 규칙 1: Value Object는 Record여야 한다 (Enum VO 제외) */
+    /** 규칙 1: Value Object는 Record여야 한다 (Enum/Interface/Abstract 제외) */
     @Test
-    @DisplayName("[필수] Value Object는 Record로 구현되어야 한다 (Enum 제외)")
+    @DisplayName("[필수] Value Object는 Record로 구현되어야 한다 (Enum/Interface/Abstract 제외)")
     void valueObjectsShouldBeRecords() {
         ArchRule rule =
                 classes()
@@ -75,6 +84,10 @@ class VOArchTest {
                         .resideInAPackage(VO_PACKAGE)
                         .and()
                         .areNotEnums() // Enum VO 제외
+                        .and()
+                        .areNotInterfaces() // 인터페이스 제외 (LockKey, CacheKey, SortKey 등)
+                        .and()
+                        .doNotHaveModifier(JavaModifier.ABSTRACT) // 추상 클래스 제외
                         .and()
                         .haveSimpleNameNotContaining("Fixture")
                         .and()
@@ -87,14 +100,17 @@ class VOArchTest {
                         .areNotMemberClasses()
                         .should(beRecords())
                         .allowEmptyShould(true) // vo 패키지에 클래스 없으면 통과
-                        .because("Value Object는 Java 21 Record로 구현해야 합니다 (Enum VO 제외)");
+                        .because(
+                                "Value Object는 Java 21 Record로 구현해야 합니다\n"
+                                        + "  - Enum, Interface, Abstract 클래스는 제외됩니다\n"
+                                        + "  - 예시: public record Money(BigDecimal amount) {}");
 
         rule.check(classes);
     }
 
-    /** 규칙 2: Value Object는 of() 메서드를 가져야 한다 (Enum VO 제외) */
+    /** 규칙 2: Value Object는 of() 메서드를 가져야 한다 (Enum/Interface/Abstract 제외) */
     @Test
-    @DisplayName("[필수] Value Object는 of() 정적 팩토리 메서드를 가져야 한다 (Enum 제외)")
+    @DisplayName("[필수] Value Object는 of() 정적 팩토리 메서드를 가져야 한다 (Enum/Interface/Abstract 제외)")
     void valueObjectsShouldHaveOfMethod() {
         ArchRule rule =
                 classes()
@@ -102,6 +118,10 @@ class VOArchTest {
                         .resideInAPackage(VO_PACKAGE)
                         .and()
                         .areNotEnums() // Enum VO 제외
+                        .and()
+                        .areNotInterfaces() // 인터페이스 제외
+                        .and()
+                        .doNotHaveModifier(JavaModifier.ABSTRACT) // 추상 클래스 제외
                         .and()
                         .haveSimpleNameNotContaining("Fixture")
                         .and()
@@ -114,7 +134,10 @@ class VOArchTest {
                         .areNotMemberClasses()
                         .should(haveStaticMethodWithName("of"))
                         .allowEmptyShould(true) // vo 패키지에 클래스 없으면 통과
-                        .because("Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다 (Enum VO 제외)");
+                        .because(
+                                "Value Object는 of() 정적 팩토리 메서드로 생성해야 합니다\n"
+                                        + "  - Enum, Interface, Abstract 클래스는 제외됩니다\n"
+                                        + "  - 예시: public static Money of(BigDecimal amount) {}");
 
         rule.check(classes);
     }
@@ -136,6 +159,10 @@ class VOArchTest {
                         .and()
                         .haveSimpleNameEndingWith("Id")
                         .and()
+                        .areNotInterfaces() // 인터페이스 제외
+                        .and()
+                        .doNotHaveModifier(JavaModifier.ABSTRACT) // 추상 클래스 제외
+                        .and()
                         .haveSimpleNameNotContaining("Fixture")
                         .and()
                         .haveSimpleNameNotContaining("Mother")
@@ -148,8 +175,9 @@ class VOArchTest {
                         .should(haveStaticMethodWithName("forNew"))
                         .allowEmptyShould(true) // ID VO가 없으면 통과
                         .because(
-                                "ID Value Object는 forNew() 메서드를 가져야 합니다 (Long ID: null, UUID ID:"
-                                        + " UUIDv7)");
+                                "ID Value Object는 forNew() 메서드를 가져야 합니다\n"
+                                        + "  - Long ID: forNew()가 null 반환 (DB가 ID 생성)\n"
+                                        + "  - UUID ID: forNew()가 UUIDv7 문자열 반환 (Application이 ID 생성)");
 
         rule.check(classes);
     }
@@ -169,6 +197,10 @@ class VOArchTest {
                         .and()
                         .haveSimpleNameEndingWith("Id")
                         .and()
+                        .areNotInterfaces() // 인터페이스 제외
+                        .and()
+                        .doNotHaveModifier(JavaModifier.ABSTRACT) // 추상 클래스 제외
+                        .and()
                         .haveSimpleNameNotContaining("Fixture")
                         .and()
                         .haveSimpleNameNotContaining("Mother")
@@ -180,7 +212,10 @@ class VOArchTest {
                         .areNotMemberClasses()
                         .should(haveLongFieldAndIsNewMethod())
                         .allowEmptyShould(true) // ID VO가 없으면 통과
-                        .because("Long 타입 ID VO는 isNew() 메서드로 null 여부를 확인해야 합니다 (UUID ID 제외)");
+                        .because(
+                                "Long 타입 ID VO는 isNew() 메서드로 null 여부를 확인해야 합니다\n"
+                                        + "  - Long ID (Auto Increment): isNew() 필수\n"
+                                        + "  - UUID ID (Application 생성): isNew() 불필요 (항상 값 존재)");
 
         rule.check(classes);
     }
@@ -280,6 +315,10 @@ class VOArchTest {
                         .that()
                         .resideInAPackage(VO_PACKAGE)
                         .and()
+                        .areNotInterfaces() // 인터페이스 제외
+                        .and()
+                        .doNotHaveModifier(JavaModifier.ABSTRACT) // 추상 클래스 제외
+                        .and()
                         .haveSimpleNameNotContaining("Fixture")
                         .and()
                         .haveSimpleNameNotContaining("Mother")
@@ -314,7 +353,9 @@ class VOArchTest {
                         .haveSimpleNameNotContaining("Test")
                         .should(haveMethodWithName("displayName"))
                         .allowEmptyShould(true) // Enum VO가 없으면 통과
-                        .because("Enum VO는 displayName() 메서드로 화면 표시용 이름을 제공해야 합니다");
+                        .because(
+                                "Enum VO는 displayName() 메서드로 화면 표시용 이름을 제공해야 합니다\n"
+                                        + "  - 예시: public String displayName() { return this.name; }");
 
         rule.check(classes);
     }

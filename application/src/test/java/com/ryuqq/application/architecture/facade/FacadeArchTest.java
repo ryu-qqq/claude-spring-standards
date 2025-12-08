@@ -20,6 +20,22 @@ import org.springframework.stereotype.Component;
  * Facade ArchUnit 검증 테스트 (Zero-Tolerance)
  *
  * <p>핵심 철학: Facade는 여러 Manager 조합만, 비즈니스 로직 금지
+ *
+ * <h3>Facade 의존성 규칙:</h3>
+ *
+ * <ul>
+ *   <li>TransactionManager 의존 필수 (여러 Manager 조합)
+ *   <li>TransactionEventRegistry 의존 허용 (Event 발행)
+ *   <li>Factory 의존 금지 (Factory는 Service 책임)
+ *   <li>Port/Repository 직접 의존 금지
+ * </ul>
+ *
+ * <h3>Event 발행 흐름:</h3>
+ *
+ * <pre>
+ * Facade → TransactionEventRegistry.registerAfterCommit(event)
+ *       → 트랜잭션 커밋 후 → ApplicationEventPublisher.publishEvent(event)
+ * </pre>
  */
 @DisplayName("Facade ArchUnit Tests (Zero-Tolerance)")
 @Tag("architecture")
@@ -267,6 +283,26 @@ class FacadeArchTest {
 
             rule.check(classes);
         }
+
+        @Test
+        @DisplayName("[금지] Facade는 Factory를 의존하지 않아야 한다")
+        void facade_MustNotDependOnFactories() {
+            assumeTrue(hasFacadeClasses, "Facade 클래스가 없어 테스트를 스킵합니다");
+
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .haveSimpleNameEndingWith("Facade")
+                            .should()
+                            .dependOnClassesThat()
+                            .haveSimpleNameEndingWith("Factory")
+                            .because(
+                                    "Facade는 Factory를 의존하지 않아야 합니다. "
+                                            + "Factory는 Service 책임입니다. "
+                                            + "Facade는 Manager 조합과 Event 발행만 담당합니다.");
+
+            rule.check(classes);
+        }
     }
 
     // ==================== 의존성 규칙 ====================
@@ -310,6 +346,30 @@ class FacadeArchTest {
                             .dependOnClassesThat()
                             .haveNameMatching(".*TransactionManager")
                             .because("Facade는 TransactionManager를 조합해야 합니다");
+
+            rule.check(classes);
+        }
+
+        @Test
+        @DisplayName("[허용] Facade는 TransactionEventRegistry를 의존할 수 있다")
+        void facade_CanDependOnTransactionEventRegistry() {
+            assumeTrue(hasFacadeClasses, "Facade 클래스가 없어 테스트를 스킵합니다");
+
+            // 이 테스트는 TransactionEventRegistry 의존이 허용됨을 문서화하는 역할
+            // 실제로 의존하지 않아도 통과하지만, 의존해도 금지 규칙에 걸리지 않음을 보장
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameEndingWith("Facade")
+                            .should()
+                            .dependOnClassesThat()
+                            .haveSimpleNameEndingWith("Manager")
+                            .orShould()
+                            .dependOnClassesThat()
+                            .haveSimpleNameEndingWith("EventRegistry")
+                            .because(
+                                    "Facade는 Manager와 EventRegistry를 의존할 수 있습니다. "
+                                            + "TransactionEventRegistry를 통해 트랜잭션 커밋 후 Event를 발행합니다.");
 
             rule.check(classes);
         }

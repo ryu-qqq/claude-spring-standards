@@ -1,0 +1,61 @@
+# ============================================================
+# REST API Adapter 로컬 개발 환경 설정
+# ============================================================
+# 활성화: spring.profiles.active=local
+#
+# ⚠️ 로컬 개발 시 Gateway 없이 직접 접근 허용
+# - JWT 직접 검증 또는 인증 비활성화 선택 가능
+# - CORS 완화 (localhost 허용)
+# ============================================================
+
+security:
+  # 로컬에서는 Gateway 우회 가능
+  gateway:
+    enabled: false
+
+  cookie:
+    domain: localhost
+    secure: false
+    same-site: lax
+
+  # 로컬 CORS 설정 (직접 접근 허용)
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:8080
+      - http://127.0.0.1:3000
+      - http://127.0.0.1:8080
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    exposed-headers:
+      - Authorization
+      - Set-Cookie
+      - X-Request-Id
+    allow-credentials: true
+
+# ============================================================
+# API Documentation (로컬: 전체 활성화)
+# ============================================================
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+  cache:
+    disabled: true
+
+# ============================================================
+# Logging (로컬: 상세 로깅)
+# ============================================================
+logging:
+  level:
+    com.ryuqq.adapter.in.rest: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG

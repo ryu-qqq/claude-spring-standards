@@ -1,9 +1,11 @@
 package com.ryuqq.adapter.in.rest.architecture.error;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +47,10 @@ class ErrorHandlingArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
+        classes =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: ErrorMapper는 @Component 어노테이션 필수 */
@@ -80,7 +85,7 @@ class ErrorHandlingArchTest {
                         .and()
                         .areNotInterfaces()
                         .should()
-                        .implement("com.ryuqq.adapter.in.rest.common.mapper.ErrorMapper")
+                        .implement(ADAPTER_IN_REST + ".common.mapper.ErrorMapper")
                         .because("ErrorMapper 구현체는 ErrorMapper 인터페이스를 구현해야 합니다");
 
         rule.allowEmptyShould(true).check(classes);
@@ -195,7 +200,7 @@ class ErrorHandlingArchTest {
                         .and()
                         .areNotInterfaces()
                         .and()
-                        .implement("com.ryuqq.adapter.in.rest.common.mapper.ErrorMapper")
+                        .implement(ADAPTER_IN_REST + ".common.mapper.ErrorMapper")
                         .should()
                         .haveSimpleNameEndingWith("ErrorMapper")
                         .because(

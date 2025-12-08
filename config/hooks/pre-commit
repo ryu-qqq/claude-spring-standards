@@ -26,7 +26,9 @@ else
 fi
 
 HOOKS_DIR="$(cd "$(dirname "$HOOK_SCRIPT")" && pwd)"
-PROJECT_ROOT="$(cd "$HOOKS_DIR/.." && pwd)"
+
+# config/hooks → config → project root
+PROJECT_ROOT="$(cd "$HOOKS_DIR/../.." && pwd)"
 
 # Colors
 RED='\033[0;31m'
@@ -107,8 +109,9 @@ cd "$PROJECT_ROOT"
 
 VALIDATION_FAILED=0
 
-# Run all ArchUnit tests (includes Zero-Tolerance rules)
-if ./gradlew test --tests "*ArchitectureTest" --tests "*ConventionTest" --quiet --no-daemon; then
+# Run all ArchUnit tests (모든 *ArchTest 클래스 포함)
+# 패턴: *ArchTest (HikariCPConfigArchTest, RedisConfigArchTest 등 모두 포함)
+if ./gradlew test --tests "*ArchTest" --quiet --no-daemon; then
     log_success "ArchUnit tests passed"
 else
     log_error "ArchUnit tests failed - architecture violations detected"

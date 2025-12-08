@@ -1,97 +1,49 @@
-# ===============================================
-# REST API Adapter Configuration
-# ===============================================
-# REST API 어댑터 전용 설정
-# 애플리케이션 런타임 설정은 bootstrap/bootstrap-web-api/application.yml 참조
+# ============================================================
+# REST API Adapter 공통 설정
+# ============================================================
+# 환경별 설정은 rest-api-{profile}.yml 참조
+# - rest-api-local.yml: 로컬 개발 환경
+# - rest-api-prod.yml: 운영 환경
 #
-# 설정 범위:
-# - Security: JWT, CORS, OAuth2
-# - OpenAPI: Swagger UI, API Docs
-# - Error: RFC 7807 Problem Details
+# ⚠️ 인증 아키텍처: Gateway Only
+# - JWT 검증: API Gateway에서 처리
+# - 각 서비스: Gateway가 전달하는 헤더(X-User-Id, X-User-Roles)만 읽음
+# - JWT secret/Public Key: 이 파일에서 관리하지 않음
 #
 # @since 1.0.0
-# ===============================================
+# ============================================================
 
-# ===============================================
+# ============================================================
 # Error Response Configuration (RFC 7807)
-# ===============================================
+# ============================================================
 # @see com.ryuqq.adapter.in.rest.common.controller.GlobalExceptionHandler
 api:
   error:
     # 에러 타입 문서 베이스 URL
-    # 프로덕션: https://api.example.com/problems
-    # 개발: about:blank (기본값)
     base-url: about:blank
-
-    # about:blank 사용 여부 (true: 문서 URL 무시, false: base-url 사용)
     use-about-blank: true
 
-# ===============================================
-# Security Configuration
-# ===============================================
-# @see com.ryuqq.adapter.in.rest.auth.config.SecurityProperties
+# ============================================================
+# Security Configuration (Gateway 위임 모델)
+# ============================================================
+# ⚠️ JWT 검증은 Gateway에서 처리
+# 이 서비스는 Gateway가 전달하는 인증 헤더만 읽음
 security:
-  # JWT 설정 (프로덕션에서 반드시 환경변수로 변경)
-  jwt:
-    secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-signing-must-be-changed-in-production}
-    access-token-expiration: 3600  # 1 hour (seconds)
-    refresh-token-expiration: 604800  # 7 days (seconds)
+  # Gateway에서 전달받는 인증 헤더 설정
+  gateway:
+    enabled: true
+    user-id-header: X-User-Id
+    user-roles-header: X-User-Roles
 
-  # Cookie 설정
+  # Cookie 설정 (로그아웃 등에서 사용)
   cookie:
     domain: ${COOKIE_DOMAIN:localhost}
-    secure: ${COOKIE_SECURE:false}  # 프로덕션에서는 true
-    same-site: lax  # CSRF 보호를 위해 lax 또는 strict
+    secure: ${COOKIE_SECURE:false}
+    same-site: lax
 
-  # CORS 설정
-  cors:
-    allowed-origins:
-      - http://localhost:3000
-      - http://localhost:8080
-    allowed-methods:
-      - GET
-      - POST
-      - PUT
-      - PATCH
-      - DELETE
-      - OPTIONS
-    allowed-headers:
-      - "*"
-    exposed-headers:
-      - Authorization
-      - Set-Cookie
-      - X-Request-Id
-    allow-credentials: true
-
-# ===============================================
-# OAuth2 Configuration (Spring Security)
-# ===============================================
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          kakao:
-            client-id: ${KAKAO_CLIENT_ID:your-kakao-client-id}
-            client-secret: ${KAKAO_CLIENT_SECRET:your-kakao-client-secret}
-            client-authentication-method: client_secret_post
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope:
-              - profile_nickname
-              - account_email
-            client-name: Kakao
-
-        provider:
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id
-
-# ===============================================
+# ============================================================
 # API Documentation (Springdoc OpenAPI)
-# ===============================================
+# ============================================================
 springdoc:
   api-docs:
     enabled: true
@@ -102,59 +54,14 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
-    # Deep Linking 지원
     display-request-duration: true
-    # Try it out 기본 활성화
     try-it-out-enabled: true
 
-  # 스캔 대상 패키지
   packages-to-scan:
     - com.ryuqq.adapter.in.rest
 
-  # 기본 Content-Type
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-  # Cache 비활성화 (개발 환경)
   cache:
     disabled: true
-
-# ===============================================
-# Profile-Specific Configurations
-# ===============================================
----
-# Production 환경
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-springdoc:
-  # 프로덕션에서 Swagger UI 비활성화
-  swagger-ui:
-    enabled: false
-  api-docs:
-    enabled: false
-
-security:
-  cookie:
-    secure: true  # HTTPS 필수
-    same-site: strict  # 더 엄격한 CSRF 보호
-
----
-# Staging 환경
-spring:
-  config:
-    activate:
-      on-profile: staging
-
-springdoc:
-  # Staging에서는 Swagger UI 활성화 (내부 테스트용)
-  swagger-ui:
-    enabled: true
-  api-docs:
-    enabled: true
-
-security:
-  cookie:
-    secure: true

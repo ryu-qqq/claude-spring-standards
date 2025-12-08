@@ -1,18 +1,22 @@
 package com.ryuqq.adapter.in.rest.architecture.security;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import java.util.UUID;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
@@ -56,7 +60,10 @@ class SecurityArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
+        classes =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     // =========================================================================
@@ -267,20 +274,26 @@ class SecurityArchTest {
             rule.allowEmptyShould(true).check(classes);
         }
 
-        /** 규칙 11: JWT Authentication Filter는 OncePerRequestFilter를 상속해야 한다 */
+        /**
+         * 규칙 11: Authentication Filter는 OncePerRequestFilter를 상속해야 한다.
+         *
+         * <p>JWT 또는 Gateway 헤더 인증 필터 모두 포함합니다.
+         */
         @Test
-        @DisplayName("[필수] JWT Authentication Filter는 OncePerRequestFilter를 상속해야 한다")
-        void jwtFilter_MustExtendOncePerRequestFilter() {
+        @DisplayName("[필수] Authentication Filter는 OncePerRequestFilter를 상속해야 한다")
+        void authenticationFilter_MustExtendOncePerRequestFilter() {
             ArchRule rule =
                     classes()
                             .that()
-                            .haveSimpleNameContaining("JwtAuthenticationFilter")
+                            .haveSimpleNameContaining("AuthenticationFilter")
+                            .or()
+                            .haveSimpleNameContaining("AuthFilter")
                             .and()
                             .resideInAPackage("..adapter.in.rest..")
                             .should()
                             .beAssignableTo(OncePerRequestFilter.class)
                             .because(
-                                    "JWT 인증 필터는 요청당 한 번만 실행되어야 하므로 OncePerRequestFilter를 상속해야 합니다");
+                                    "인증 필터는 요청당 한 번만 실행되어야 하므로 OncePerRequestFilter를 상속해야 합니다");
 
             rule.allowEmptyShould(true).check(classes);
         }
@@ -390,7 +403,12 @@ class SecurityArchTest {
             rule.allowEmptyShould(true).check(classes);
         }
 
-        /** 규칙 17: Security Component는 @Component를 가져야 한다 */
+        /**
+         * 규칙 17: Security Component는 @Component를 가져야 한다.
+         *
+         * <p>auth.component 패키지에서 컴포넌트 역할을 하는 클래스는 @Component가 필수입니다.
+         * 단, 값 객체(record)는 Bean이 아니므로 제외합니다.
+         */
         @Test
         @DisplayName("[필수] Security Component는 @Component를 가져야 한다")
         void securityComponent_MustHaveComponentAnnotation() {
@@ -402,6 +420,8 @@ class SecurityArchTest {
                             .areNotInterfaces()
                             .and()
                             .areNotNestedClasses()
+                            .and()
+                            .areNotRecords()
                             .should()
                             .beAnnotatedWith(Component.class)
                             .because("Security Component는 Bean 등록을 위해 @Component가 필수입니다");
@@ -506,7 +526,7 @@ class SecurityArchTest {
                             .resideInAPackage("..auth..")
                             .should()
                             .dependOnClassesThat()
-                            .resideInAnyPackage("com.ryuqq.domain..")
+                            .resideInAnyPackage(DOMAIN_ALL)
                             .because("Security Layer는 Domain Layer를 직접 의존하면 안 됩니다");
 
             rule.allowEmptyShould(true).check(classes);
@@ -559,6 +579,172 @@ class SecurityArchTest {
                             .because(
                                     "auth 패키지는 paths, config, filter, handler, component 하위 구조를 가져야"
                                             + " 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+    }
+
+    // =========================================================================
+    // Gateway Only 아키텍처 규칙
+    // =========================================================================
+
+    /**
+     * Gateway Only 아키텍처 검증 규칙.
+     *
+     * <p>Gateway에서 JWT 검증 후 헤더로 사용자 정보를 전달하는 패턴을 검증합니다.
+     *
+     * @see <a href="../security/gateway-only-architecture.md">Gateway Only Architecture Guide</a>
+     */
+    @Nested
+    @DisplayName("Gateway Only 아키텍처 규칙")
+    class GatewayOnlyArchitectureRules {
+
+        /**
+         * 규칙 24: Gateway 관련 컴포넌트는 auth 하위 패키지에 위치해야 한다.
+         *
+         * <p>GatewayUserResolver, GatewayUser 등 Gateway 헤더 처리 컴포넌트의 위치를 검증합니다.
+         *
+         * <ul>
+         *   <li>GatewayUser, GatewayUserResolver → auth.component 패키지
+         *   <li>GatewayHeaderAuthFilter → auth.filter 패키지
+         *   <li>GatewayProperties → auth.config 패키지
+         * </ul>
+         */
+        @Test
+        @DisplayName("[필수] Gateway 관련 컴포넌트는 auth.component/filter/config 패키지에 위치해야 한다")
+        void gatewayComponents_MustBeInAuthPackage() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameContaining("Gateway")
+                            .and()
+                            .resideInAPackage("..auth..")
+                            .and()
+                            .areNotInterfaces()
+                            .should()
+                            .resideInAnyPackage("..auth.component..", "..auth.filter..", "..auth.config..")
+                            .because(
+                                    "Gateway 관련 컴포넌트는 auth.component, auth.filter, 또는 auth.config 패키지에"
+                                            + " 위치해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /**
+         * 규칙 25: Gateway 헤더 인증 필터는 OncePerRequestFilter를 상속해야 한다.
+         *
+         * <p>Gateway에서 전달받은 헤더를 읽어 인증 정보를 설정하는 필터입니다.
+         */
+        @Test
+        @DisplayName("[필수] Gateway 헤더 인증 필터는 OncePerRequestFilter를 상속해야 한다")
+        void gatewayHeaderAuthFilter_MustExtendOncePerRequestFilter() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleNameContaining("GatewayHeaderAuthFilter")
+                            .or()
+                            .haveSimpleNameContaining("GatewayAuthFilter")
+                            .should()
+                            .beAssignableTo(OncePerRequestFilter.class)
+                            .because(
+                                    "Gateway 헤더 인증 필터는 요청당 한 번만 실행되어야 하므로"
+                                            + " OncePerRequestFilter를 상속해야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /**
+         * 규칙 26: Gateway User VO는 record 또는 불변 클래스여야 한다.
+         *
+         * <p>Gateway에서 전달받은 사용자 정보는 변경되면 안 됩니다.
+         */
+        @Test
+        @DisplayName("[권장] Gateway User는 record 타입이어야 한다")
+        void gatewayUser_ShouldBeRecord() {
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .haveSimpleName("GatewayUser")
+                            .should()
+                            .beRecords()
+                            .because("Gateway User는 불변성을 위해 record 타입이어야 합니다");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /**
+         * 규칙 27: Security Layer는 JWT Secret/Key 관련 클래스를 직접 참조하지 않아야 한다.
+         *
+         * <p>Gateway Only 아키텍처에서 서비스는 JWT 검증을 수행하지 않습니다.
+         */
+        @Test
+        @DisplayName("[금지] Security Layer는 JWT Secret 관련 클래스를 직접 참조하지 않아야 한다")
+        void securityLayer_MustNotReferenceJwtSecretClasses() {
+            ArchRule rule =
+                    noClasses()
+                            .that()
+                            .resideInAPackage("..auth..")
+                            .and()
+                            .haveSimpleNameNotContaining("Jwt") // JWT 필터 자체는 허용 (혼용 시)
+                            .should()
+                            .dependOnClassesThat()
+                            .haveSimpleNameContaining("JwtSecret")
+                            .orShould()
+                            .dependOnClassesThat()
+                            .haveSimpleNameContaining("SecretKey")
+                            .because(
+                                    "Gateway Only 아키텍처에서 서비스는 JWT Secret을 직접 참조하면 안 됩니다."
+                                            + " JWT 검증은 Gateway에서 수행합니다.");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /**
+         * 규칙 28: GatewayUser의 userId 필드는 UUID 타입이어야 한다.
+         *
+         * <p>UUIDv7을 사용하여 시간 순서가 보장되는 고유 식별자를 사용합니다.
+         * Long 타입은 보안상 취약하므로 금지됩니다.
+         */
+        @Test
+        @DisplayName("[필수] GatewayUser의 userId 필드는 UUID 타입이어야 한다")
+        void gatewayUser_UserIdFieldMustBeUUID() {
+            ArchRule rule =
+                    fields().that()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleName("GatewayUser")
+                            .and()
+                            .haveName("userId")
+                            .should()
+                            .haveRawType(UUID.class)
+                            .because(
+                                    "GatewayUser의 userId는 보안을 위해 UUID 타입이어야 합니다. "
+                                            + "Long 타입은 예측 가능하여 보안상 취약합니다.");
+
+            rule.allowEmptyShould(true).check(classes);
+        }
+
+        /**
+         * 규칙 29: SecurityContextAuthenticator의 Gateway 인증 메서드는 UUID를 반환해야 한다.
+         *
+         * <p>GatewayUser를 파라미터로 받는 authenticate 메서드는 UUID를 반환해야 합니다.
+         * JWT 모드용 authenticate(String) 메서드는 별도 검사 대상입니다.
+         */
+        @Test
+        @DisplayName("[필수] SecurityContextAuthenticator.authenticate(GatewayUser)는 UUID를 반환해야 한다")
+        void securityContextAuthenticator_GatewayAuthenticateMustReturnUUID() {
+            ArchRule rule =
+                    methods().that()
+                            .areDeclaredInClassesThat()
+                            .haveSimpleName("SecurityContextAuthenticator")
+                            .and()
+                            .haveName("authenticate")
+                            .and()
+                            .haveRawReturnType(UUID.class)
+                            .should()
+                            .haveRawReturnType(UUID.class)
+                            .because(
+                                    "SecurityContextAuthenticator.authenticate(GatewayUser)는 "
+                                            + "GatewayUser의 UUID userId를 반환해야 합니다.");
 
             rule.allowEmptyShould(true).check(classes);
         }

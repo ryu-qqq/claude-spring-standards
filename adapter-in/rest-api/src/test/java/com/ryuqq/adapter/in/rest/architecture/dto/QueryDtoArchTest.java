@@ -1,14 +1,16 @@
 package com.ryuqq.adapter.in.rest.architecture.dto;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
+
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 /**
  * Query DTO ArchUnit 검증 테스트 (완전 강제)
@@ -42,8 +44,10 @@ class QueryDtoArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter()
-            .importPackages("com.ryuqq.adapter.in.rest");
+        classes =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.ryuqq.adapter.out.persistence.architecture.config;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -9,6 +10,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,6 +45,7 @@ class DangerousConfigArchTest {
     private static final String BASE_PACKAGE = "com.ryuqq.adapter.out.persistence";
 
     private static JavaClasses allClasses;
+    private static boolean isFlywayAvailable;
 
     @BeforeAll
     static void setUp() {
@@ -50,6 +53,18 @@ class DangerousConfigArchTest {
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
                         .importPackages(BASE_PACKAGE);
+
+        // Flyway 의존성 존재 여부 확인
+        isFlywayAvailable = isClassAvailable("org.flywaydb.core.Flyway");
+    }
+
+    private static boolean isClassAvailable(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     // ========================================================================
@@ -63,36 +78,49 @@ class DangerousConfigArchTest {
         @Test
         @DisplayName("규칙 1-1: Flyway.clean() 직접 호출 금지 - 전체 데이터 삭제 위험")
         void flywayClean_MustNotBeCalled() {
+            assumeTrue(isFlywayAvailable, "Flyway 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     noClasses()
                             .that()
                             .resideInAPackage("..persistence..")
                             .should()
-                            .callMethod(org.flywaydb.core.Flyway.class, "clean")
+                            .dependOnClassesThat()
+                            .haveFullyQualifiedName("org.flywaydb.core.Flyway")
+                            .andShould()
+                            .callMethodWhere(
+                                    com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                                    "clean method",
+                                                    target -> "clean".equals(target.getName()))))
                             .because("Flyway.clean()은 모든 데이터를 삭제합니다. 절대 사용 금지!");
 
-            rule.check(allClasses);
+            rule.allowEmptyShould(true).check(allClasses);
         }
 
         @Test
         @DisplayName("규칙 1-2: FlywayMigrationStrategy 구현 금지 - YAML 설정 사용 권장")
         void flywayMigrationStrategy_MustNotBeImplemented() {
+            assumeTrue(isFlywayAvailable, "Flyway 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     noClasses()
                             .that()
                             .resideInAPackage("..persistence..")
                             .should()
-                            .implement(
-                                    org.springframework.boot.autoconfigure.flyway
-                                            .FlywayMigrationStrategy.class)
+                            .dependOnClassesThat()
+                            .haveFullyQualifiedName(
+                                    "org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy")
                             .because("FlywayMigrationStrategy 대신 YAML 설정을 사용하세요. clean() 호출 위험 방지");
 
-            rule.check(allClasses);
+            rule.allowEmptyShould(true).check(allClasses);
         }
 
         @Test
         @DisplayName("규칙 1-3: Flyway 직접 주입 금지 - 위험한 API 접근 차단")
         void flyway_MustNotBeInjected() {
+            assumeTrue(isFlywayAvailable, "Flyway 의존성이 없어 테스트를 건너뜁니다");
+
             ArchRule rule =
                     noClasses()
                             .that()
@@ -104,7 +132,7 @@ class DangerousConfigArchTest {
                             .haveFullyQualifiedName("org.flywaydb.core.Flyway")
                             .because("Flyway 직접 주입은 위험한 API(clean, repair 등) 접근을 허용합니다");
 
-            rule.check(allClasses);
+            rule.allowEmptyShould(true).check(allClasses);
         }
     }
 
@@ -143,10 +171,15 @@ class DangerousConfigArchTest {
         private static final Path RESOURCES_PATH = Paths.get("src/main/resources");
 
         @Test
-        @DisplayName("규칙 3-1: ddl-auto는 validate만 허용 - create/update/create-drop 금지")
-        void ddlAuto_MustBeValidate() throws IOException {
-            List<String> dangerousDdlAutoValues =
-                    List.of("create", "update", "create-drop", "none");
+        @DisplayName("규칙 3-1: ddl-auto는 validate/none만 허용 - create/update/create-drop 금지")
+        void ddlAuto_MustBeValidateOrNone() throws IOException {
+            // none: Hibernate가 스키마를 건드리지 않음 (Flyway가 관리할 때 안전)
+            // validate: 스키마 검증만 수행 (안전)
+            List<String> dangerousDdlAutoValues = List.of("create", "update", "create-drop");
+
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
 
             try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
                 paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
@@ -171,8 +204,8 @@ class DangerousConfigArchTest {
                                                         + "설정: spring.jpa.hibernate.ddl-auto="
                                                         + ddlAutoValue
                                                         + "\n"
-                                                        + "권장: ddl-auto: validate (Flyway가 스키마"
-                                                        + " 관리)");
+                                                        + "권장: ddl-auto: validate 또는 none (Flyway가"
+                                                        + " 스키마 관리)");
                                     }
                                 });
             }
@@ -181,6 +214,10 @@ class DangerousConfigArchTest {
         @Test
         @DisplayName("규칙 3-2: open-in-view는 false만 허용 - 커넥션 점유 방지")
         void openInView_MustBeFalse() throws IOException {
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
             try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
                 paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
                         .filter(p -> p.getFileName().toString().contains("persistence"))
@@ -189,7 +226,7 @@ class DangerousConfigArchTest {
                                     String osivValue =
                                             getYamlValue(yamlPath, "spring", "jpa", "open-in-view");
 
-                                    if (osivValue != null && "true".equalsIgnoreCase(osivValue)) {
+                                    if ("true".equalsIgnoreCase(osivValue)) {
                                         fail(
                                                 "⚠️ 위험한 설정 발견!\n"
                                                         + "파일: "
@@ -207,6 +244,10 @@ class DangerousConfigArchTest {
         @Test
         @DisplayName("규칙 3-3: flyway.clean-disabled는 true만 허용 - 데이터 보호")
         void flywayCleanDisabled_MustBeTrue() throws IOException {
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
             try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
                 paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
                         .filter(p -> p.getFileName().toString().contains("persistence"))
@@ -216,8 +257,7 @@ class DangerousConfigArchTest {
                                             getYamlValue(
                                                     yamlPath, "spring", "flyway", "clean-disabled");
 
-                                    if (cleanDisabledValue != null
-                                            && "false".equalsIgnoreCase(cleanDisabledValue)) {
+                                    if ("false".equalsIgnoreCase(cleanDisabledValue)) {
                                         fail(
                                                 "⚠️ 위험한 설정 발견!\n"
                                                         + "파일: "
@@ -335,6 +375,10 @@ class DangerousConfigArchTest {
         @Test
         @DisplayName("규칙 4-1: maximum-pool-size는 50 이하 권장")
         void maxPoolSize_MustBeReasonable() throws IOException {
+            if (!Files.exists(RESOURCES_PATH)) {
+                return; // resources 디렉토리가 없으면 테스트 스킵
+            }
+
             try (Stream<Path> paths = Files.walk(RESOURCES_PATH)) {
                 paths.filter(p -> p.toString().endsWith(".yml") || p.toString().endsWith(".yaml"))
                         .filter(p -> p.getFileName().toString().contains("persistence"))
@@ -349,19 +393,23 @@ class DangerousConfigArchTest {
                                                     "maximum-pool-size");
 
                                     if (maxPoolSize != null) {
-                                        int poolSize = Integer.parseInt(maxPoolSize);
-                                        if (poolSize > 50) {
-                                            fail(
-                                                    "⚠️ 과도한 커넥션 풀 설정!\n"
-                                                            + "파일: "
-                                                            + yamlPath
-                                                            + "\n"
-                                                            + "설정: maximum-pool-size="
-                                                            + poolSize
-                                                            + "\n"
-                                                            + "문제: DB 부하 증가, Context Switching 비용\n"
-                                                            + "권장: 50 이하 (공식: CPU cores * 2 +"
-                                                            + " spindle count)");
+                                        try {
+                                            int poolSize = Integer.parseInt(maxPoolSize);
+                                            if (poolSize > 50) {
+                                                fail(
+                                                        "⚠️ 과도한 커넥션 풀 설정!\n"
+                                                                + "파일: "
+                                                                + yamlPath
+                                                                + "\n"
+                                                                + "설정: maximum-pool-size="
+                                                                + poolSize
+                                                                + "\n"
+                                                                + "문제: DB 부하 증가, Context Switching 비용\n"
+                                                                + "권장: 50 이하 (공식: CPU cores * 2 +"
+                                                                + " spindle count)");
+                                            }
+                                        } catch (NumberFormatException e) {
+                                            // 환경 변수 형태(${...})인 경우 무시
                                         }
                                     }
                                 });

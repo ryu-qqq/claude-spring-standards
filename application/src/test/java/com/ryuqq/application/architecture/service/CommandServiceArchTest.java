@@ -3,11 +3,15 @@ package com.ryuqq.application.architecture.service;
 import static com.tngtech.archunit.core.domain.JavaModifier.FINAL;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchRule;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +23,21 @@ import org.springframework.stereotype.Service;
  * CommandService ArchUnit 검증 테스트 (Zero-Tolerance)
  *
  * <p>핵심 철학: CommandService는 UseCase 구현체로 조율만 수행, 트랜잭션/비즈니스 로직 금지
+ *
+ * <h3>CommandFactory 의존성 규칙:</h3>
+ *
+ * <ul>
+ *   <li>CommandService는 CommandFactory를 의존해야 합니다
+ *   <li>CommandFactory는 Command DTO → Domain Aggregate 변환을 담당합니다
+ *   <li>Service에서 직접 Domain 객체를 생성하는 것은 금지됩니다
+ * </ul>
+ *
+ * <h3>호출 흐름:</h3>
+ *
+ * <pre>
+ * Controller → CommandService → CommandFactory → Domain Aggregate
+ *                            └→ Manager → Persistence
+ * </pre>
  */
 @DisplayName("CommandService ArchUnit Tests (Zero-Tolerance)")
 @Tag("architecture")
@@ -27,17 +46,20 @@ class CommandServiceArchTest {
 
     private static JavaClasses classes;
     private static boolean hasCommandServiceClasses;
+    private static List<JavaClass> commandServiceClasses;
 
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter().importPackages("com.ryuqq.application");
 
-        hasCommandServiceClasses =
+        commandServiceClasses =
                 classes.stream()
-                        .anyMatch(
-                                javaClass ->
-                                        javaClass.getPackageName().contains("service.command")
-                                                && javaClass.getSimpleName().endsWith("Service"));
+                        .filter(javaClass -> javaClass.getPackageName().contains("service.command"))
+                        .filter(javaClass -> javaClass.getSimpleName().endsWith("Service"))
+                        .filter(javaClass -> !javaClass.isInterface())
+                        .collect(Collectors.toList());
+
+        hasCommandServiceClasses = !commandServiceClasses.isEmpty();
     }
 
     // ==================== 기본 구조 규칙 ====================
@@ -270,6 +292,61 @@ class CommandServiceArchTest {
                             .dependOnClassesThat()
                             .resideInAPackage("..adapter..")
                             .because("CommandService는 Adapter Layer를 의존하지 않아야 합니다");
+
+            rule.check(classes);
+        }
+    }
+
+    // ==================== Factory 의존성 규칙 ====================
+
+    @Nested
+    @DisplayName("Factory 의존성 규칙")
+    class FactoryDependencyRules {
+
+        @Test
+        @DisplayName("[필수] CommandService는 CommandFactory를 의존해야 한다")
+        void commandService_MustDependOnCommandFactory() {
+            assumeTrue(hasCommandServiceClasses, "CommandService 클래스가 없어 테스트를 스킵합니다");
+
+            for (JavaClass commandService : commandServiceClasses) {
+                boolean hasCommandFactory =
+                        commandService.getFields().stream()
+                                .anyMatch(
+                                        field ->
+                                                field.getRawType()
+                                                        .getSimpleName()
+                                                        .endsWith("CommandFactory"));
+
+                if (!hasCommandFactory) {
+                    fail(
+                            commandService.getSimpleName()
+                                    + "는 CommandFactory를 의존해야 합니다. "
+                                    + "Command → Domain Aggregate 변환은 Factory 책임입니다. "
+                                    + "Service에서 직접 Domain 객체를 생성하지 마세요.");
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("[필수] CommandService는 CommandFactory 또는 Manager를 통해서만 Domain을 다뤄야 한다")
+        void commandService_MustUseFactoryForDomainCreation() {
+            assumeTrue(hasCommandServiceClasses, "CommandService 클래스가 없어 테스트를 스킵합니다");
+
+            ArchRule rule =
+                    classes()
+                            .that()
+                            .resideInAPackage("..application..service.command..")
+                            .and()
+                            .haveSimpleNameEndingWith("Service")
+                            .should()
+                            .dependOnClassesThat()
+                            .haveSimpleNameEndingWith("CommandFactory")
+                            .orShould()
+                            .dependOnClassesThat()
+                            .haveSimpleNameEndingWith("Manager")
+                            .because(
+                                    "CommandService는 CommandFactory 또는 Manager를 통해서만 Domain을 다뤄야 합니다. "
+                                            + "직접적인 Domain 생성은 Factory 책임입니다.");
 
             rule.check(classes);
         }

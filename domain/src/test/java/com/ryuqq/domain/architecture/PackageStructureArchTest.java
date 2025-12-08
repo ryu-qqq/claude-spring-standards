@@ -147,6 +147,7 @@ class PackageStructureArchTest {
                         .doNotHaveSimpleName("DomainEvent")
                         .should()
                         .resideInAPackage("..domain..event..")
+                        .allowEmptyShould(true)
                         .because(
                                 "Domain Event는 domain.[bc].event 패키지에 위치해야 합니다\n"
                                     + "예시:\n"
@@ -172,6 +173,7 @@ class PackageStructureArchTest {
                         .resideInAPackage("..domain..")
                         .should()
                         .resideInAPackage("..domain..exception..")
+                        .allowEmptyShould(true)
                         .because(
                                 "Concrete Exception은 domain.[bc].exception 패키지에 위치해야 합니다\n"
                                         + "예시:\n"
@@ -278,6 +280,7 @@ class PackageStructureArchTest {
                                 "com.ryuqq.domain.(*)..", // 같은 BC는 허용
                                 "java..",
                                 "jakarta.annotation..")
+                        .allowEmptyShould(true)
                         .because(
                                 "Bounded Context는 다른 Bounded Context 내부에 직접 의존하지 않아야 합니다\n"
                                     + "통신 방법:\n"

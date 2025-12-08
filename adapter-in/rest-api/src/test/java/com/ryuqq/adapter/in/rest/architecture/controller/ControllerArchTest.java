@@ -1,9 +1,11 @@
 package com.ryuqq.adapter.in.rest.architecture.controller;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +44,10 @@ class ControllerArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.adapter.in.rest");
+        classes =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages(ADAPTER_IN_REST);
     }
 
     /** 규칙 1: @RestController 어노테이션 필수 */
@@ -55,10 +60,12 @@ class ControllerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RestController.class)
-                        .because("Controller는 @RestController 어노테이션이 필수입니다");
+                        .because("Controller는 @RestController 어노테이션이 필수입니다 (ApiDocsController 제외)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -73,10 +80,12 @@ class ControllerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
                         .should()
                         .beAnnotatedWith(
                                 org.springframework.web.bind.annotation.RequestMapping.class)
-                        .because("Controller는 @RequestMapping 어노테이션이 필수입니다");
+                        .because("Controller는 @RequestMapping 어노테이션이 필수입니다 (ApiDocsController 제외)");
 
         rule.allowEmptyShould(true).check(classes);
     }
@@ -225,10 +234,14 @@ class ControllerArchTest {
                         .resideInAPackage("..controller..")
                         .and()
                         .haveSimpleNameEndingWith("Controller")
+                        .and()
+                        .haveSimpleNameNotContaining("ApiDocs") // 문서 서빙용 Controller 제외
+                        .and()
+                        .haveSimpleNameNotContaining("GlobalExceptionHandler") // 예외 핸들러 제외
                         .should()
                         .dependOnClassesThat()
                         .resideInAPackage("..application..port.in..")
-                        .because("Controller는 UseCase 인터페이스에 의존해야 합니다");
+                        .because("Controller는 UseCase 인터페이스에 의존해야 합니다 (ApiDocsController, GlobalExceptionHandler 제외)");
 
         rule.allowEmptyShould(true).check(classes);
     }

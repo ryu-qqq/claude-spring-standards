@@ -1,5 +1,6 @@
 package com.ryuqq.adapter.in.rest.architecture.mapper;
 
+import static com.ryuqq.adapter.in.rest.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.base.DescribedPredicate;
@@ -45,8 +46,6 @@ import org.junit.jupiter.api.Test;
 @Tag("adapter-rest")
 class MapperArchTest {
 
-    private static final String BASE_PACKAGE = "com.ryuqq.adapter.in.rest";
-
     private static JavaClasses allClasses;
     private static JavaClasses mapperClasses;
 
@@ -55,7 +54,7 @@ class MapperArchTest {
         allClasses =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages(BASE_PACKAGE);
+                        .importPackages(ADAPTER_IN_REST);
 
         mapperClasses =
                 allClasses.that(

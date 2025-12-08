@@ -254,6 +254,45 @@ ln -sf ../../hooks/pre-commit .git/hooks/pre-commit
 
 ---
 
+## Claude Code 자동 린트 설정
+
+Claude Code 세션에서 Java 파일 편집 시 **자동으로 Spotless 포맷팅**이 적용됩니다.
+
+### 작동 방식
+
+```
+Claude가 Java 파일 편집 (Edit/Write/MultiEdit)
+    ↓
+PostToolUse Hook 실행
+    ↓
+.claude/hooks/post-tool-use-format.sh
+    ↓
+./gradlew spotlessApply --quiet
+    ↓
+파일 자동 포맷팅 완료
+```
+
+### 설정 파일
+
+- **Hook 설정**: `.claude/settings.local.json`
+- **포맷팅 스크립트**: `.claude/hooks/post-tool-use-format.sh`
+
+### 수동 포맷팅
+
+```bash
+# 전체 프로젝트 포맷팅
+./gradlew spotlessApply
+
+# 포맷팅 검증만 (수정 없음)
+./gradlew spotlessCheck
+```
+
+### 비활성화 방법
+
+`.claude/settings.local.json`에서 PostToolUse → Edit/Write/MultiEdit 항목 제거
+
+---
+
 ## Git Hook vs Claude Hook 비교
 
 > **중요**: 이것은 **Git Hooks**입니다. **Claude Code 동적 훅**과는 다릅니다.
@@ -300,6 +339,20 @@ Claude가 코드 생성
 ---
 
 ## 변경 이력
+
+### 2025-12-08 (v3.1.0) - Config 개선
+
+**Major Changes:**
+- ✅ PMD 7.x XPath 규칙 마이그레이션 완료
+- ✅ Pre-commit 테스트 패턴 수정 (`*ArchTest` 통합)
+- ✅ Spotless 안정 버전 전환 (7.0.0.BETA4 → 7.0.0)
+- ✅ Claude Code 자동 린트 Hook 추가
+
+**Fixed:**
+- PMD `ClassOrInterfaceDeclaration` → `ClassDeclaration` (PMD 7.x)
+- PMD `@PackageName` → `pmd-java:matchesSig()` 함수 사용
+- Pre-commit `*ArchitectureTest`, `*ConventionTest` → `*ArchTest`
+- PROJECT_ROOT 경로 계산 오류 수정
 
 ### 2025-12-05 (v3.0.0) - Remove Metrics Tracking
 

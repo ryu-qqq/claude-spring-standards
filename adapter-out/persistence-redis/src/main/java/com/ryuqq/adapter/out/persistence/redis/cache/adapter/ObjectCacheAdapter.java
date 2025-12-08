@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.adapter.out.persistence.redis.common.exception.CacheSerializationException;
 import com.ryuqq.application.common.port.out.CachePort;
+import com.ryuqq.domain.common.vo.CacheKey;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Optional;
@@ -32,12 +33,21 @@ import org.springframework.stereotype.Component;
  * <p><strong>사용 예시:</strong>
  *
  * <pre>{@code
+ * // CacheKey 구현
+ * public record OrderCacheKey(Long orderId) implements CacheKey {
+ *     @Override
+ *     public String value() {
+ *         return "cache:order:" + orderId;
+ *     }
+ * }
+ *
  * // 저장
+ * OrderCacheKey cacheKey = new OrderCacheKey(123L);
  * OrderDto order = new OrderDto(...);
- * cacheAdapter.set("cache::orders::123", order, Duration.ofMinutes(10));
+ * cacheAdapter.set(cacheKey, order, Duration.ofMinutes(10));
  *
  * // 조회
- * Optional<OrderDto> cached = cacheAdapter.get("cache::orders::123", OrderDto.class);
+ * Optional<OrderDto> cached = cacheAdapter.getAs(cacheKey, OrderDto.class);
  * }</pre>
  *
  * @author Development Team
@@ -64,7 +74,7 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * <p>기본 TTL(30분)로 캐시를 저장합니다.
      */
     @Override
-    public void set(String key, Object value) {
+    public void set(CacheKey key, Object value) {
         set(key, value, DEFAULT_TTL);
     }
 
@@ -74,18 +84,18 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * <p>객체를 JSON으로 직렬화하여 저장합니다.
      */
     @Override
-    public void set(String key, Object value, Duration ttl) {
-        redisTemplate.opsForValue().set(key, value, ttl);
+    public void set(CacheKey key, Object value, Duration ttl) {
+        redisTemplate.opsForValue().set(key.value(), value, ttl);
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>저장된 객체를 그대로 반환합니다. 타입 변환이 필요한 경우 {@link #get(String, Class)}를 사용하세요.
+     * <p>저장된 객체를 그대로 반환합니다. 타입 변환이 필요한 경우 {@link #get(CacheKey, Class)}를 사용하세요.
      */
     @Override
-    public Optional<Object> get(String key) {
-        Object value = redisTemplate.opsForValue().get(key);
+    public Optional<Object> get(CacheKey key) {
+        Object value = redisTemplate.opsForValue().get(key.value());
         return Optional.ofNullable(value);
     }
 
@@ -97,8 +107,8 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      * @throws CacheSerializationException JSON 역직렬화 실패 시
      */
     @Override
-    public Optional<Object> get(String key, Class<Object> clazz) {
-        Object value = redisTemplate.opsForValue().get(key);
+    public Optional<Object> get(CacheKey key, Class<Object> clazz) {
+        Object value = redisTemplate.opsForValue().get(key.value());
 
         if (value == null) {
             return Optional.empty();
@@ -109,8 +119,8 @@ public class ObjectCacheAdapter implements CachePort<Object> {
 
     /** {@inheritDoc} */
     @Override
-    public void evict(String key) {
-        redisTemplate.delete(key);
+    public void evict(CacheKey key) {
+        redisTemplate.delete(key.value());
     }
 
     /**
@@ -131,15 +141,15 @@ public class ObjectCacheAdapter implements CachePort<Object> {
 
     /** {@inheritDoc} */
     @Override
-    public boolean exists(String key) {
-        Boolean result = redisTemplate.hasKey(key);
+    public boolean exists(CacheKey key) {
+        Boolean result = redisTemplate.hasKey(key.value());
         return Boolean.TRUE.equals(result);
     }
 
     /** {@inheritDoc} */
     @Override
-    public Duration getTtl(String key) {
-        Long ttlSeconds = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    public Duration getTtl(CacheKey key) {
+        Long ttlSeconds = redisTemplate.getExpire(key.value(), TimeUnit.SECONDS);
 
         if (ttlSeconds == null || ttlSeconds < 0) {
             return null;
@@ -153,13 +163,13 @@ public class ObjectCacheAdapter implements CachePort<Object> {
      *
      * <p>CachePort의 제네릭 제약을 우회하기 위한 헬퍼 메서드입니다.
      *
-     * @param key 캐시 키
+     * @param key 캐시 키 (CacheKey 구현체)
      * @param clazz 대상 타입
      * @param <T> 대상 타입 파라미터
      * @return Optional<T>
      */
-    public <T> Optional<T> getAs(String key, Class<T> clazz) {
-        Object value = redisTemplate.opsForValue().get(key);
+    public <T> Optional<T> getAs(CacheKey key, Class<T> clazz) {
+        Object value = redisTemplate.opsForValue().get(key.value());
 
         if (value == null) {
             return Optional.empty();

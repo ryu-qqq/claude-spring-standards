@@ -1,6 +1,7 @@
 package com.ryuqq.application.architecture.port.out;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -64,16 +65,22 @@ import org.junit.jupiter.api.Test;
 class LockQueryPortArchTest {
 
     private static JavaClasses classes;
+    private static boolean hasLockQueryPortClasses;
 
     @BeforeAll
     static void setUp() {
         classes = new ClassFileImporter().importPackages("com.ryuqq.application");
+
+        hasLockQueryPortClasses = classes.stream()
+            .anyMatch(javaClass -> javaClass.getSimpleName().endsWith("LockQueryPort"));
     }
 
     /** 규칙 1: 인터페이스명 규칙 */
     @Test
     @DisplayName("[필수] LockQueryPort는 '*LockQueryPort' 접미사를 가져야 한다")
     void lockQueryPort_MustHaveCorrectSuffix() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 classes()
                         .that()
@@ -93,6 +100,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[필수] LockQueryPort는 ..application..port.out.query.. 패키지에 위치해야 한다")
     void lockQueryPort_MustBeInCorrectPackage() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 classes()
                         .that()
@@ -108,6 +117,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[필수] LockQueryPort는 Interface여야 한다")
     void lockQueryPort_MustBeInterface() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 classes()
                         .that()
@@ -123,6 +134,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[필수] LockQueryPort는 public이어야 한다")
     void lockQueryPort_MustBePublic() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 classes()
                         .that()
@@ -138,6 +151,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[패턴] LockQueryPort 메서드는 Lock 관련 네이밍 패턴을 따라야 한다")
     void lockQueryPort_MethodsMustFollowLockNamingPattern() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 methods()
                         .that()
@@ -157,6 +172,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[필수] LockQueryPort 메서드는 Optional을 반환해야 한다")
     void lockQueryPort_MethodsMustReturnOptional() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 methods()
                         .that()
@@ -175,6 +192,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[금지] LockQueryPort는 List/PageResponse를 반환하지 않아야 한다")
     void lockQueryPort_MustNotReturnListOrPage() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 noMethods()
                         .that()
@@ -195,6 +214,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[금지] LockQueryPort는 저장/수정/삭제 메서드를 가지지 않아야 한다")
     void lockQueryPort_MustNotHaveCommandMethods() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 noMethods()
                         .that()
@@ -211,6 +232,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[금지] LockQueryPort는 DTO를 반환하지 않아야 한다")
     void lockQueryPort_MustNotReturnDto() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 noMethods()
                         .that()
@@ -227,6 +250,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[금지] LockQueryPort는 Entity를 반환하지 않아야 한다")
     void lockQueryPort_MustNotReturnEntity() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 noMethods()
                         .that()
@@ -245,6 +270,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[금지] LockQueryPort는 원시 타입을 파라미터로 받지 않아야 한다")
     void lockQueryPort_MustNotAcceptPrimitiveTypes() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 noMethods()
                         .that()
@@ -267,6 +294,8 @@ class LockQueryPortArchTest {
     @Test
     @DisplayName("[필수] LockQueryPort는 Domain Layer만 의존해야 한다")
     void lockQueryPort_MustOnlyDependOnDomainLayer() {
+        assumeTrue(hasLockQueryPortClasses, "LockQueryPort 클래스가 없어 테스트를 스킵합니다");
+
         ArchRule rule =
                 classes()
                         .that()

@@ -504,6 +504,30 @@ class TransactionManagerArchTest {
                 }
             }
         }
+
+        @Test
+        @DisplayName("[금지] TransactionManager는 Factory를 의존하지 않아야 한다")
+        void transactionManager_MustNotDependOnFactory() {
+            assumeTrue(hasTransactionManagerClasses, "TransactionManager 클래스가 없어 테스트를 스킵합니다");
+
+            for (JavaClass txManager : transactionManagerClasses) {
+                boolean dependsOnFactory =
+                        txManager.getFields().stream()
+                                .anyMatch(
+                                        field ->
+                                                field.getRawType()
+                                                        .getSimpleName()
+                                                        .endsWith("Factory"));
+
+                if (dependsOnFactory) {
+                    fail(
+                            txManager.getSimpleName()
+                                    + "는 Factory를 의존하지 않아야 합니다. "
+                                    + "Factory는 Service 책임입니다. "
+                                    + "TransactionManager는 Out Port만 의존해야 합니다.");
+                }
+            }
+        }
     }
 
     // ========================================

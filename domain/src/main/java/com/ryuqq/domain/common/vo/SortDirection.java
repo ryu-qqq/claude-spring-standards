@@ -85,6 +85,18 @@ public enum SortDirection {
     }
 
     /**
+     * 화면 표시용 이름 반환
+     *
+     * @return 한글 표시 이름
+     */
+    public String displayName() {
+        return switch (this) {
+            case ASC -> "오름차순";
+            case DESC -> "내림차순";
+        };
+    }
+
+    /**
      * 문자열로부터 SortDirection 파싱 (대소문자 무관)
      *
      * @param value 문자열 ("asc", "ASC", "desc", "DESC")

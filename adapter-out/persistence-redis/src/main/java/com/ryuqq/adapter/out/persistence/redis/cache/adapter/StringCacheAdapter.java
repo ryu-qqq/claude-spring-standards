@@ -2,6 +2,7 @@ package com.ryuqq.adapter.out.persistence.redis.cache.adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.application.common.port.out.CachePort;
+import com.ryuqq.domain.common.vo.CacheKey;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Optional;
@@ -35,6 +36,22 @@ import org.springframework.stereotype.Component;
  *   <li>KEYS 명령어 사용 금지
  * </ul>
  *
+ * <p><strong>사용 예시:</strong>
+ *
+ * <pre>{@code
+ * // CacheKey 구현
+ * public record TokenCacheKey(String token) implements CacheKey {
+ *     @Override
+ *     public String value() {
+ *         return "cache:token:" + token;
+ *     }
+ * }
+ *
+ * // 사용
+ * TokenCacheKey cacheKey = new TokenCacheKey("abc123");
+ * cacheAdapter.set(cacheKey, "userId_456");
+ * }</pre>
+ *
  * @author Development Team
  * @since 1.0.0
  */
@@ -59,20 +76,20 @@ public class StringCacheAdapter implements CachePort<String> {
      * <p>기본 TTL(30분)로 캐시를 저장합니다.
      */
     @Override
-    public void set(String key, String value) {
+    public void set(CacheKey key, String value) {
         set(key, value, DEFAULT_TTL);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void set(String key, String value, Duration ttl) {
-        redisTemplate.opsForValue().set(key, value, ttl);
+    public void set(CacheKey key, String value, Duration ttl) {
+        redisTemplate.opsForValue().set(key.value(), value, ttl);
     }
 
     /** {@inheritDoc} */
     @Override
-    public Optional<String> get(String key) {
-        Object value = redisTemplate.opsForValue().get(key);
+    public Optional<String> get(CacheKey key) {
+        Object value = redisTemplate.opsForValue().get(key.value());
         if (value == null) {
             return Optional.empty();
         }
@@ -85,14 +102,14 @@ public class StringCacheAdapter implements CachePort<String> {
      * <p>JSON 문자열을 지정된 타입으로 역직렬화합니다.
      */
     @Override
-    public Optional<String> get(String key, Class<String> clazz) {
+    public Optional<String> get(CacheKey key, Class<String> clazz) {
         return get(key);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void evict(String key) {
-        redisTemplate.delete(key);
+    public void evict(CacheKey key) {
+        redisTemplate.delete(key.value());
     }
 
     /**
@@ -105,8 +122,8 @@ public class StringCacheAdapter implements CachePort<String> {
      * <p><strong>패턴 예시:</strong>
      *
      * <pre>
-     * cache::orders::*     → 모든 주문 캐시
-     * cache::users::123::* → 특정 사용자의 모든 캐시
+     * cache:orders:*     → 모든 주문 캐시
+     * cache:users:123:* → 특정 사용자의 모든 캐시
      * </pre>
      */
     @Override
@@ -120,15 +137,15 @@ public class StringCacheAdapter implements CachePort<String> {
 
     /** {@inheritDoc} */
     @Override
-    public boolean exists(String key) {
-        Boolean result = redisTemplate.hasKey(key);
+    public boolean exists(CacheKey key) {
+        Boolean result = redisTemplate.hasKey(key.value());
         return Boolean.TRUE.equals(result);
     }
 
     /** {@inheritDoc} */
     @Override
-    public Duration getTtl(String key) {
-        Long ttlSeconds = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    public Duration getTtl(CacheKey key) {
+        Long ttlSeconds = redisTemplate.getExpire(key.value(), TimeUnit.SECONDS);
 
         if (ttlSeconds == null || ttlSeconds < 0) {
             return null;

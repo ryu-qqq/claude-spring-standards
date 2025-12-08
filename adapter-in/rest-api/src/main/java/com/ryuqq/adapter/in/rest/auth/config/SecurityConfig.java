@@ -3,11 +3,14 @@ package com.ryuqq.adapter.in.rest.auth.config;
 import com.ryuqq.adapter.in.rest.auth.component.MdcContextHolder;
 import com.ryuqq.adapter.in.rest.auth.component.SecurityContextAuthenticator;
 import com.ryuqq.adapter.in.rest.auth.component.TokenCookieWriter;
+import com.ryuqq.adapter.in.rest.auth.filter.GatewayHeaderAuthFilter;
 import com.ryuqq.adapter.in.rest.auth.filter.JwtAuthenticationFilter;
 import com.ryuqq.adapter.in.rest.auth.handler.AuthenticationErrorHandler;
 import com.ryuqq.adapter.in.rest.auth.paths.SecurityPaths;
 import com.ryuqq.adapter.in.rest.auth.paths.SecurityPaths.PublicEndpoint;
 import com.ryuqq.application.common.port.out.TokenProviderPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,15 +28,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * Security Configuration
  *
- * <p>Spring Security + JWT 설정
+ * <p>Spring Security 설정 (Gateway 모드 / JWT 모드 분기)
  *
  * <p>인증 방식:
  *
  * <ul>
- *   <li>JWT 기반 Stateless 인증
- *   <li>Access Token: 쿠키 또는 Authorization 헤더
- *   <li>Refresh Token: 쿠키 기반 Silent Refresh
+ *   <li><b>Gateway 모드</b>: Gateway에서 JWT 검증 후 헤더(X-User-Id, X-User-Roles)로 사용자 정보 전달
+ *   <li><b>JWT 모드</b>: 서비스 자체에서 JWT 검증 (로컬 개발용)
  * </ul>
+ *
+ * <p>모드 전환 설정 (rest-api.yml):
+ *
+ * <pre>{@code
+ * security:
+ *   gateway:
+ *     enabled: true  # Gateway 모드 (운영 환경)
+ *     enabled: false # JWT 모드 (로컬 개발)
+ * }</pre>
  *
  * <p>에러 처리:
  *
@@ -55,11 +66,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * @see SecurityProperties
  * @see SecurityPaths
  * @see AuthenticationErrorHandler
+ * @see GatewayHeaderAuthFilter
  */
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final TokenProviderPort tokenProviderPort;
     private final TokenCookieWriter tokenCookieWriter;
@@ -67,6 +81,7 @@ public class SecurityConfig {
     private final MdcContextHolder mdcContextHolder;
     private final AuthenticationErrorHandler authenticationErrorHandler;
     private final SecurityProperties securityProperties;
+    private final GatewayHeaderAuthFilter gatewayHeaderAuthFilter;
 
     public SecurityConfig(
             TokenProviderPort tokenProviderPort,
@@ -74,17 +89,21 @@ public class SecurityConfig {
             SecurityContextAuthenticator securityContextAuthenticator,
             MdcContextHolder mdcContextHolder,
             AuthenticationErrorHandler authenticationErrorHandler,
-            SecurityProperties securityProperties) {
+            SecurityProperties securityProperties,
+            GatewayHeaderAuthFilter gatewayHeaderAuthFilter) {
         this.tokenProviderPort = tokenProviderPort;
         this.tokenCookieWriter = tokenCookieWriter;
         this.securityContextAuthenticator = securityContextAuthenticator;
         this.mdcContextHolder = mdcContextHolder;
         this.authenticationErrorHandler = authenticationErrorHandler;
         this.securityProperties = securityProperties;
+        this.gatewayHeaderAuthFilter = gatewayHeaderAuthFilter;
     }
 
     /**
      * Security Filter Chain 설정
+     *
+     * <p>Gateway 모드와 JWT 모드에 따라 다른 인증 필터를 적용합니다.
      *
      * @param http HttpSecurity
      * @return SecurityFilterChain
@@ -111,13 +130,30 @@ public class SecurityConfig {
                         exception ->
                                 exception
                                         .authenticationEntryPoint(authenticationErrorHandler)
-                                        .accessDeniedHandler(authenticationErrorHandler))
+                                        .accessDeniedHandler(authenticationErrorHandler));
 
-                // JWT 필터 추가
-                .addFilterBefore(
-                        jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        // Gateway 모드 vs JWT 모드에 따라 필터 선택
+        configureAuthenticationFilter(http);
 
         return http.build();
+    }
+
+    /**
+     * 인증 모드에 따른 필터 설정
+     *
+     * <p>Gateway 모드가 활성화되면 GatewayHeaderAuthFilter를 사용하고,
+     * 비활성화되면 JwtAuthenticationFilter를 사용합니다.
+     *
+     * @param http HttpSecurity
+     */
+    private void configureAuthenticationFilter(HttpSecurity http) {
+        if (securityProperties.isGatewayMode()) {
+            log.info("Security 인증 모드: Gateway (Gateway에서 JWT 검증 완료)");
+            http.addFilterBefore(gatewayHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        } else {
+            log.info("Security 인증 모드: JWT (서비스 자체 JWT 검증)");
+            http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        }
     }
 
     /**
@@ -164,7 +200,7 @@ public class SecurityConfig {
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        SecurityProperties.CorsProperties corsProps = securityProperties.getCors();
+        CorsProperties corsProps = securityProperties.getCors();
 
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsProps.getAllowedOrigins());
