@@ -19,16 +19,15 @@ if [ "$PLAN_COUNT" -gt 0 ] || [ "$DESIGN_COUNT" -gt 0 ]; then
     echo ""
 
     # plan 목록 표시
-    for f in .serena/memories/plan-*.md 2>/dev/null; do
-        if [ -f "$f" ]; then
-            FEATURE=$(basename "$f" | sed 's/plan-//' | sed 's/.md$//')
+    for f in .serena/memories/plan-*.md; do
+        [ -f "$f" ] || continue
+        FEATURE=$(basename "$f" | sed 's/plan-//' | sed 's/.md$//')
 
-            # design 존재 여부 확인
-            if [ -f ".serena/memories/design-${FEATURE}.md" ]; then
-                echo "  ✅ ${FEATURE} - 설계 완료, 구현 대기"
-            else
-                echo "  📝 ${FEATURE} - 분석 완료, 설계 대기"
-            fi
+        # design 존재 여부 확인
+        if [ -f ".serena/memories/design-${FEATURE}.md" ]; then
+            echo "  ✅ ${FEATURE} - 설계 완료, 구현 대기"
+        else
+            echo "  📝 ${FEATURE} - 분석 완료, 설계 대기"
         fi
     done
 
