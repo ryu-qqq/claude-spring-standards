@@ -1,5 +1,6 @@
 package com.ryuqq.adapter.out.persistence.redis.architecture.adapter.cache;
 
+import static com.ryuqq.adapter.out.persistence.redis.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.base.DescribedPredicate;
@@ -35,8 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 @DisplayName("CacheAdapter 아키텍처 규칙 검증")
 class CacheAdapterArchTest {
 
-    private static final String BASE_PACKAGE = "com.ryuqq.adapter.out.persistence.redis";
-
     private static JavaClasses allClasses;
     private static JavaClasses cacheAdapterClasses;
 
@@ -45,7 +44,7 @@ class CacheAdapterArchTest {
         allClasses =
                 new ClassFileImporter()
                         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                        .importPackages(BASE_PACKAGE);
+                        .importPackages(REDIS);
 
         cacheAdapterClasses =
                 allClasses.that(
@@ -336,7 +335,7 @@ class CacheAdapterArchTest {
                             .resideInAPackage("..cache.adapter..")
                             .should()
                             .dependOnClassesThat()
-                            .resideInAPackage("..domain..")
+                            .resideInAPackage(DOMAIN_ALL)
                             .allowEmptyShould(true)
                             .because("Cache Adapter는 비즈니스 로직을 포함하지 않아야 합니다");
 

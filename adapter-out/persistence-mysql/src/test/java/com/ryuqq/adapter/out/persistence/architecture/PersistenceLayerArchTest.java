@@ -1,5 +1,6 @@
 package com.ryuqq.adapter.out.persistence.architecture;
 
+import static com.ryuqq.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -39,7 +40,7 @@ class PersistenceLayerArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: Package 구조 검증 */
@@ -51,7 +52,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("Adapter")
                         .should()
-                        .resideInAPackage("..adapter..")
+                        .resideInAPackage(ADAPTER_PATTERN)
                         .because("Adapter 클래스는 adapter 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -65,7 +66,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("JpaEntity")
                         .should()
-                        .resideInAPackage("..entity..")
+                        .resideInAPackage(ENTITY_PATTERN)
                         .because("JPA Entity 클래스는 entity 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -79,7 +80,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameContaining("Repository")
                         .should()
-                        .resideInAPackage("..repository..")
+                        .resideInAPackage(REPOSITORY_PATTERN)
                         .because("Repository 인터페이스/클래스는 repository 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -93,7 +94,7 @@ class PersistenceLayerArchTest {
                         .that()
                         .haveSimpleNameEndingWith("Mapper")
                         .should()
-                        .resideInAPackage("..mapper..")
+                        .resideInAPackage(MAPPER_PATTERN)
                         .because("Mapper 클래스는 mapper 패키지에 위치해야 합니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -205,7 +206,7 @@ class PersistenceLayerArchTest {
                         .haveSimpleNameEndingWith("JpaEntity")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..application..")
+                        .resideInAnyPackage(APPLICATION_ALL)
                         .because("JPA Entity는 Application Layer에 의존하면 안 됩니다");
 
         rule.allowEmptyShould(true).check(allClasses);
@@ -217,7 +218,7 @@ class PersistenceLayerArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage("..domain..")
+                        .resideInAnyPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .haveSimpleNameEndingWith("JpaEntity")
@@ -233,10 +234,10 @@ class PersistenceLayerArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage("..adapter.out.persistence..")
+                        .resideInAnyPackage(PERSISTENCE_ALL)
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("..application..")
+                        .resideInAnyPackage(APPLICATION_ALL)
                         .because(
                                 "Persistence Layer는 Application Layer를 직접 의존하면 안 됩니다 (Port를 통해서만"
                                         + " 접근)");
@@ -251,12 +252,12 @@ class PersistenceLayerArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAnyPackage("..repository..", "..entity..", "..mapper..")
+                        .resideInAnyPackage(REPOSITORY_PATTERN, ENTITY_PATTERN, MAPPER_PATTERN)
                         .and()
-                        .resideOutsideOfPackages("..architecture..") // 테스트 제외
+                        .resideOutsideOfPackages(ARCHITECTURE_PATTERN) // 테스트 제외
                         .should()
                         .dependOnClassesThat()
-                        .resideInAnyPackage("com.ryuqq.domain..")
+                        .resideInAnyPackage(DOMAIN_ALL)
                         .because(
                                 "Repository/Entity/Mapper는 Domain Layer를 직접 의존하면 안 됩니다 (Adapter만"
                                         + " Domain 접근 가능)");
@@ -294,7 +295,7 @@ class PersistenceLayerArchTest {
         ArchRule rule =
                 classes()
                         .that()
-                        .resideInAPackage("..repository..")
+                        .resideInAPackage(REPOSITORY_PATTERN)
                         .and()
                         .haveSimpleNameNotContaining("Test")
                         .should()

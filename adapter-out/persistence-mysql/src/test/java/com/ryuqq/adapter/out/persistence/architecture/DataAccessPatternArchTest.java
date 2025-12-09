@@ -1,5 +1,6 @@
 package com.ryuqq.adapter.out.persistence.architecture;
 
+import static com.ryuqq.adapter.out.persistence.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -46,7 +47,7 @@ class DataAccessPatternArchTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter().importPackages("com.ryuqq.adapter.out.persistence");
+        allClasses = new ClassFileImporter().importPackages(PERSISTENCE);
     }
 
     /** 규칙 1: QueryDslRepository는 JPAQueryFactory 필드 필수 */
@@ -284,7 +285,7 @@ class DataAccessPatternArchTest {
                         .that()
                         .haveSimpleNameEndingWith("Config")
                         .and()
-                        .resideInAPackage("..config..")
+                        .resideInAPackage(CONFIG_PATTERN)
                         .should()
                         .beAnnotatedWith(org.springframework.context.annotation.Configuration.class)
                         .because("Config 클래스는 @Configuration 어노테이션이 필수입니다");

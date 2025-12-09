@@ -1,5 +1,6 @@
 package com.ryuqq.domain.architecture;
 
+import static com.ryuqq.domain.architecture.ArchUnitPackageConstants.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -59,7 +60,7 @@ class DomainPurityArchTest {
 
     @BeforeAll
     static void setUp() {
-        classes = new ClassFileImporter().importPackages("com.ryuqq.domain");
+        classes = new ClassFileImporter().importPackages(DOMAIN);
     }
 
     // ==================== 시간 타입 규칙 (Zero-Tolerance) ====================
@@ -77,7 +78,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .haveFullyQualifiedName("java.time.LocalDateTime")
@@ -125,7 +126,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("lombok.Data")
                         .orShould()
@@ -176,7 +177,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("jakarta.persistence.Entity")
                         .orShould()
@@ -235,7 +236,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("org.springframework.stereotype.Component")
                         .orShould()
@@ -286,7 +287,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .beAnnotatedWith("jakarta.validation.constraints.NotNull")
                         .orShould()
@@ -347,7 +348,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
@@ -373,7 +374,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.google.common..")
@@ -394,7 +395,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("io.vavr..")
@@ -417,7 +418,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.fasterxml.jackson..")
@@ -438,7 +439,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("com.google.gson..")
@@ -461,7 +462,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.slf4j..")
@@ -482,7 +483,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("ch.qos.logback..")
@@ -503,7 +504,7 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage("org.apache.logging.log4j..")
@@ -526,14 +527,14 @@ class DomainPurityArchTest {
         ArchRule rule =
                 noClasses()
                         .that()
-                        .resideInAPackage("com.ryuqq.domain..")
+                        .resideInAPackage(DOMAIN_ALL)
                         .should()
                         .dependOnClassesThat()
                         .resideInAnyPackage(
-                                "com.ryuqq.application..",
-                                "com.ryuqq.adapter..",
-                                "com.ryuqq.bootstrap..",
-                                "com.ryuqq.persistence..")
+                                APPLICATION_ALL,
+                                ADAPTER_ALL,
+                                BOOTSTRAP_ALL,
+                                PERSISTENCE_ALL)
                         .because(
                                 "Domain Layer는 Application/Adapter 레이어에 의존하지 않아야 합니다 (헥사고날 아키텍처)\n"
                                         + "이유:\n"

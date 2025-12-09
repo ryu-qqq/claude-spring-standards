@@ -21,7 +21,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.ryuqq.application.common.port.out.LockKey;
+import com.ryuqq.domain.common.vo.LockKey;
 
 /**
  * Lock Adapter 테스트 지원 추상 클래스
