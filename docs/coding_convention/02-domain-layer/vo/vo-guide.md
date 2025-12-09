@@ -26,11 +26,11 @@
 | `of(Long value)` | 값 | ❌ 금지 | 기존 ID 참조 |
 | `isNew()` | boolean | - | null 여부 확인 |
 
-### ID VO - UUID 타입 (UUIDv7)
+### ID VO - UUID 타입
 
 | 메서드 | 반환값 | null 허용 | 용도 |
 |--------|--------|-----------|------|
-| `forNew()` | UUIDv7 | ❌ 금지 | 신규 생성 (Application이 ID 생성) |
+| `forNew()` | UUID | ❌ 금지 | 신규 생성 (Application이 ID 생성) |
 | `of(String value)` | 값 | ❌ 금지 | 기존 UUID 파싱 |
 
 ### 일반 VO (Money, Email 등)
@@ -119,32 +119,32 @@ public record OrderId(Long value) {
 
 ---
 
-### 3-2) ID VO - UUID 타입 (UUIDv7, Application 생성)
+### 3-2) ID VO - UUID 타입 (Application 생성)
 
 **특징**:
 - Record로 구현
-- **String 타입 래핑 (UUIDv7 형식)**
-- `forNew()` 제공 (**UUIDv7 자동 생성** - null 불가)
+- **String 타입 래핑 (UUID 형식)**
+- `forNew()` 제공 (**UUID 자동 생성** - null 불가, 순수 Java UUID 사용)
 - `of(String value)` 제공 (기존 UUID 파싱)
 - `isNew()` 없음 (항상 값 존재)
-- Compact Constructor에서 UUIDv7 형식 검증
+- Compact Constructor에서 UUID 형식 검증
 
 **사용 시점**: 외부 노출 ID (보안), 분산 환경, 추측 불가능한 ID 필요 시
 
-**의존성**: `com.github.f4b6a3:uuid-creator:6.0.0` (domain-guide.md 허용 예외 참조)
+**의존성**: 없음 (순수 Java로 구현)
 
 ```java
-import com.github.f4b6a3.uuid.UuidCreator;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
- * User ID Value Object (UUIDv7 - Application Generated)
+ * User ID Value Object (UUID - Application Generated)
  *
  * <p><strong>특징</strong>:</p>
  * <ul>
- *   <li>UUIDv7: 시간 기반 정렬 가능 (첫 48bit = Unix timestamp ms)</li>
  *   <li>Application에서 생성 (DB 의존 없음)</li>
  *   <li>외부 노출 안전 (Long보다 추측 불가)</li>
+ *   <li>순수 Java UUID 사용 (외부 라이브러리 없음)</li>
  * </ul>
  *
  * <p><strong>MySQL 저장</strong>: BINARY(16) 권장 (36바이트 → 16바이트 절약)</p>
@@ -154,32 +154,32 @@ import java.util.regex.Pattern;
  */
 public record UserId(String value) {
 
-    // UUIDv7 형식: 버전 7 (7xxx), 변형 8/9/a/b
-    private static final Pattern UUIDV7_PATTERN =
-        Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
+    // UUID 형식 검증 패턴
+    private static final Pattern UUID_PATTERN =
+        Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
 
     /**
      * Compact Constructor (검증 로직)
      *
-     * <p>UUIDv7 형식 검증 - null 절대 금지</p>
+     * <p>UUID 형식 검증 - null 절대 금지</p>
      */
     public UserId {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("UserId는 null이거나 빈 문자열일 수 없습니다");
         }
         value = value.toLowerCase().trim();
-        if (!UUIDV7_PATTERN.matcher(value).matches()) {
-            throw new IllegalArgumentException("유효하지 않은 UUIDv7 형식입니다: " + value);
+        if (!UUID_PATTERN.matcher(value).matches()) {
+            throw new IllegalArgumentException("유효하지 않은 UUID 형식입니다: " + value);
         }
     }
 
     /**
-     * 신규 생성 - UUIDv7 자동 생성 (null 불가)
+     * 신규 생성 - UUID 자동 생성 (null 불가)
      *
-     * @return UserId (UUIDv7 값)
+     * @return UserId (UUID 값)
      */
     public static UserId forNew() {
-        return new UserId(UuidCreator.getTimeOrderedEpoch().toString());
+        return new UserId(UUID.randomUUID().toString());
     }
 
     /**
@@ -187,7 +187,7 @@ public record UserId(String value) {
      *
      * @param value UUID 문자열
      * @return UserId
-     * @throws IllegalArgumentException UUIDv7 형식이 아닌 경우
+     * @throws IllegalArgumentException UUID 형식이 아닌 경우
      */
     public static UserId of(String value) {
         return new UserId(value);
@@ -199,16 +199,16 @@ public record UserId(String value) {
 
 ### ID VO 비교 요약
 
-| 항목 | Long ID (Auto Increment) | UUID ID (UUIDv7) |
+| 항목 | Long ID (Auto Increment) | UUID ID |
 |------|--------------------------|------------------|
-| **타입** | `Long` | `String` (UUIDv7) |
-| **생성 주체** | DB (AUTO_INCREMENT) | Application (uuid-creator) |
-| **`forNew()`** | `null` 반환 | UUIDv7 생성 반환 |
+| **타입** | `Long` | `String` (UUID) |
+| **생성 주체** | DB (AUTO_INCREMENT) | Application (Java UUID) |
+| **`forNew()`** | `null` 반환 | UUID 생성 반환 |
 | **`isNew()`** | ✅ 있음 | ❌ 없음 (항상 값 존재) |
 | **null 허용** | ✅ 허용 (DB 할당 전) | ❌ 금지 |
 | **MySQL 저장** | `BIGINT` (8바이트) | `BINARY(16)` (16바이트) |
 | **외부 노출** | ❌ 비권장 (추측 가능) | ✅ 안전 (추측 불가) |
-| **정렬** | 자연 정렬 | 시간순 정렬 (UUIDv7) |
+| **정렬** | 자연 정렬 | 랜덤 (정렬 불가) |
 
 ### MySQL 인덱스 전략
 
@@ -219,9 +219,9 @@ CREATE TABLE orders (
     ...
 );
 
--- UUID ID (UUIDv7) - BINARY(16) 저장
+-- UUID ID - BINARY(16) 저장
 CREATE TABLE users (
-    id BINARY(16) PRIMARY KEY,  -- UUIDv7: 시간순 정렬 보장
+    id BINARY(16) PRIMARY KEY,  -- UUID 저장
     ...
 );
 
@@ -704,7 +704,7 @@ Long value = id.value();  // ✅ value() 사용 (getValue() 아님!)
 | VO 유형 | 특징 | 예시 |
 |---------|------|------|
 | **ID VO (Long)** | DB Auto Increment, forNew()=null, isNew() 있음 | OrderId, ProductId |
-| **ID VO (UUID)** | UUIDv7 Application 생성, forNew()=UUID, null 금지 | UserId, TraceId |
+| **ID VO (UUID)** | UUID Application 생성, forNew()=UUID, null 금지 | UserId, TraceId |
 | **Simple VO (단일 필드)** | 원시 타입 1개 래핑 | Money, Email, PhoneNumber |
 | **Multi-field VO** | 여러 원시 타입 조합 | Address (zipCode, street, detail) |
 | **Composite VO** | VO 안에 다른 VO들 포함 | FullAddress (ZipCode, Street, City) |
@@ -826,11 +826,11 @@ Value Object 작성 후 다음을 확인:
 
 ### ID VO - UUID 타입 (UserId, TraceId 등)
 - [ ] `record` 키워드 사용
-- [ ] Compact Constructor에 UUIDv7 형식 검증 (**null 금지**)
-- [ ] `forNew()` 메서드 있음 (**UUIDv7 자동 생성**)
+- [ ] Compact Constructor에 UUID 형식 검증 (**null 금지**)
+- [ ] `forNew()` 메서드 있음 (**UUID 자동 생성** - Java UUID 사용)
 - [ ] `of(String value)` 메서드 있음 (기존 UUID 파싱)
 - [ ] `isNew()` 없음 (항상 값 존재)
-- [ ] 의존성: `uuid-creator` 라이브러리만 허용
+- [ ] 외부 의존성 제로 (순수 Java UUID만 사용)
 
 ### Simple VO (Money, Email 등)
 - [ ] `record` 키워드 사용

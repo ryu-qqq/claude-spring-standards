@@ -31,29 +31,30 @@
 * **기술 의존성**: JPA 어노테이션(`@Entity`, `@Table`), Spring 어노테이션(`@Component` 등)
 * **외부 판단 로직**: `if (order.getStatus() == PAID)` 같이 외부에서 상태 판단
 
-### 허용 예외 (순수 유틸리티 라이브러리)
+### 허용 범위
 
-| 라이브러리 | 패키지 | 용도 | 허용 이유 |
-|-----------|--------|------|-----------|
-| **uuid-creator** | `com.github.f4b6a3.uuid` | UUIDv7 생성 | 순수 Java 유틸리티, 프레임워크 아님, RFC 9562 준수 |
+| 허용 | 설명 |
+|------|------|
+| `java.*` | Java Standard Library |
+| `javax.annotation.*` | 표준 어노테이션 (@Nullable 등) |
 
 ```groovy
 // domain 모듈 build.gradle
 dependencies {
-    // ✅ 허용: 순수 Java 유틸리티 (프레임워크 아님)
-    implementation 'com.github.f4b6a3:uuid-creator:6.0.0'
+    // ✅ Domain Layer는 외부 의존성 없음 (순수 Java만 허용)
+    // Java Standard Library만 사용
 
-    // ❌ 금지: 프레임워크 의존성
+    // ❌ 금지: 모든 외부 라이브러리
     // implementation 'org.projectlombok:lombok'
     // implementation 'org.springframework:spring-context'
+    // implementation 'com.github.f4b6a3:uuid-creator'
 }
 ```
 
 **허용 기준**:
-* 순수 Java 유틸리티 (프레임워크 아님)
-* 도메인 로직에 침투하지 않음
-* 테스트에 영향 없음
-* 표준 스펙 구현 (RFC 등)
+* Java Standard Library (`java.*`)만 사용
+* 모든 외부 라이브러리 금지 (uuid-creator 포함)
+* Framework Agnostic 유지
 
 ---
 

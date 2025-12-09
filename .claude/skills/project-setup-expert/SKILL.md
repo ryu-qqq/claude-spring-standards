@@ -176,18 +176,12 @@ springDependencyManagement = "1.1.5"
 # ========================================
 querydsl = "5.1.0"
 flyway = "10.10.0"
-postgresql = "42.7.3"
 mysql = "8.3.0"
 
 # ========================================
 # Redis
 # ========================================
 redisson = "3.27.0"
-
-# ========================================
-# UUID
-# ========================================
-uuidCreator = "6.0.0"
 
 # ========================================
 # Testing
@@ -230,17 +224,11 @@ querydsl-apt-jakarta = { module = "com.querydsl:querydsl-apt", version.ref = "qu
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
 mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
-postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 # ========================================
 # Redis
 # ========================================
 redisson-spring-boot-starter = { module = "org.redisson:redisson-spring-boot-starter", version.ref = "redisson" }
-
-# ========================================
-# UUID
-# ========================================
-uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuidCreator" }
 
 # ========================================
 # Testing
@@ -251,7 +239,6 @@ mockito-core = { module = "org.mockito:mockito-core" }
 archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
-testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
 # ========================================
 # Jakarta

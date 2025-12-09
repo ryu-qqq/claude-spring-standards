@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
  *
  * <p><strong>목적</strong>: Domain Layer 전체의 순수성을 종합적으로 검증합니다.
  *
- * <p><strong>검증 규칙 (15개)</strong>:
+ * <p><strong>검증 규칙 (16개)</strong>:
  *
  * <ul>
  *   <li>시간 타입 규칙: LocalDateTime 금지, Instant.now() 직접 호출 금지 (Clock 주입 필수)
@@ -30,10 +30,10 @@ import org.junit.jupiter.api.Test;
  *   <li>Pure Java만 허용 (java.*, 일부 jakarta.annotation 제외)
  * </ul>
  *
- * <p><strong>허용 예외</strong>:
+ * <p><strong>허용 범위</strong>:
  *
  * <ul>
- *   <li>{@code com.github.f4b6a3.uuid} - UUIDv7 생성 (uuid-creator 라이브러리)
+ *   <li>{@code java.*} - Java Standard Library만 허용
  *   <li>{@code java.time.Instant} - 시간 타입 (Clock.instant() 통해 획득)
  *   <li>{@code java.time.Clock} - 테스트 가능한 시간 주입
  * </ul>
