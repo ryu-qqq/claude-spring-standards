@@ -3,11 +3,18 @@
 # =====================================================
 # User Prompt Submit Hook (Enhanced)
 # Purpose:
-#   1. 진행 중인 작업 표시
-#   2. 커맨드 없이 작업 시 경고 + 가이드 주입
+#   1. 진행 중인 작업 표시 (세션 시작 시)
+#   2. 커맨드 없이 구현 요청 시 가이드 주입
+#
+# Note: stdout 출력은 Claude에게 system-reminder로 전달됨
 # =====================================================
 
 USER_PROMPT="$1"
+
+# 프롬프트가 비어있으면 종료
+if [ -z "$USER_PROMPT" ]; then
+    exit 0
+fi
 
 # ==================== 진행 중 작업 표시 ====================
 
@@ -20,6 +27,7 @@ if [ "$PROMPT_LENGTH" -lt 50 ]; then
         echo "🔄 진행 중인 작업:"
 
         for f in .serena/memories/plan-*.md; do
+            [ -f "$f" ] || continue
             FEATURE=$(basename "$f" | sed 's/plan-//' | sed 's/.md$//')
 
             # design 존재 여부 확인
@@ -32,15 +40,13 @@ if [ "$PROMPT_LENGTH" -lt 50 ]; then
 
         echo ""
         echo "💡 이어서 작업하려면: \"{feature} 작업 이어서 해줘\""
-        echo ""
     fi
 fi
 
 # ==================== 커맨드 감지 ====================
 
-# 정식 워크플로우 커맨드 사용 중이면 통과
-if echo "$USER_PROMPT" | grep -qE "^/(plan|impl|design|verify|status|complete|jira-task|jira-register|jira-status|kb-)"; then
-    echo "$USER_PROMPT"
+# 정식 워크플로우 커맨드 사용 중이면 조용히 통과
+if echo "$USER_PROMPT" | grep -qE "^/(plan|impl|design|verify|status|complete|jira-task|jira-register|jira-status|kb-|refactor-plan)"; then
     exit 0
 fi
 
@@ -100,7 +106,6 @@ EOF
 - Tell Don't Ask (상태 묻지 말고 행동 요청)
 - VO는 record 사용
 - 참조: docs/coding_convention/02-domain-layer/
-
 EOF
     elif [ "$DETECTED_LAYER" = "application" ]; then
         cat << 'EOF'
@@ -110,7 +115,6 @@ EOF
 - DTO는 record 사용
 - Assembler로 변환
 - 참조: docs/coding_convention/03-application-layer/
-
 EOF
     elif [ "$DETECTED_LAYER" = "persistence" ]; then
         cat << 'EOF'
@@ -120,7 +124,6 @@ EOF
 - Lombok 금지
 - Mapper 분리
 - 참조: docs/coding_convention/04-persistence-layer/
-
 EOF
     elif [ "$DETECTED_LAYER" = "rest-api" ]; then
         cat << 'EOF'
@@ -130,10 +133,9 @@ EOF
 - @Valid 필수
 - TestRestTemplate 사용 (MockMvc 금지)
 - 참조: docs/coding_convention/01-adapter-in-layer/
-
 EOF
     fi
 fi
 
-# 원본 프롬프트 출력
-echo "$USER_PROMPT"
+# 성공 종료 (출력 없이)
+exit 0

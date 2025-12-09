@@ -350,8 +350,10 @@ class DistributedLockAdapterArchTest {
         }
 
         @Test
-        @DisplayName("규칙 4-2: 비즈니스 로직 포함이 금지됩니다")
+        @DisplayName("규칙 4-2: 비즈니스 로직 포함이 금지됩니다 (Domain VO는 예외)")
         void lockAdapter_MustNotContainBusinessLogic() {
+            // Domain의 VO(LockKey 등)는 Port 구현을 위해 허용
+            // Aggregate, Entity, Service 등 비즈니스 로직 클래스만 금지
             ArchRule rule =
                     noClasses()
                             .that()
@@ -359,10 +361,18 @@ class DistributedLockAdapterArchTest {
                             .and()
                             .resideInAPackage("..lock.adapter..")
                             .should()
-                            .dependOnClassesThat()
-                            .resideInAPackage("..domain..")
+                            .dependOnClassesThat(
+                                    DescribedPredicate.describe(
+                                            "Domain Layer classes excluding VO/Enum",
+                                            javaClass ->
+                                                    javaClass.getPackageName().contains(".domain.")
+                                                            && !javaClass.getPackageName().contains(".vo")
+                                                            && !javaClass.isEnum()
+                                                            && !javaClass.getSimpleName().endsWith("Key")))
                             .allowEmptyShould(true)
-                            .because("Lock Adapter는 비즈니스 로직을 포함하지 않아야 합니다");
+                            .because(
+                                    "Lock Adapter는 비즈니스 로직을 포함하지 않아야 합니다 (Domain VO는 Port 구현을 위해"
+                                            + " 허용)");
 
             rule.check(lockAdapterClasses);
         }

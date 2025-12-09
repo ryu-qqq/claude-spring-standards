@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
  *   <li>규칙 6: Repository는 Domain 반환 금지 (DTO만 반환)
  *   <li>규칙 7: Test Fixtures는 fixture() 메서드 패턴 사용
  *   <li>규칙 8: Test Fixtures는 Builder 패턴 금지
+ *   <li>규칙 10: QueryDslRepository는 허용된 메서드 패턴만 사용 (findBy*, existsBy*, search*, count*)
+ *   <li>규칙 10-2: QueryDslRepository는 findAll() 사용 금지 (OOM 위험)
  * </ul>
  *
  * <p><strong>참고:</strong>
@@ -37,7 +39,7 @@ import org.junit.jupiter.api.Test;
  * </ul>
  *
  * @author Development Team
- * @since 1.0.0
+ * @since 1.0.0 (3.0.0 유연한 메서드 패턴 적용)
  */
 @DisplayName("Data Access 패턴 일관성 검증 (Zero-Tolerance)")
 @Tag("architecture")
@@ -230,10 +232,10 @@ class DataAccessPatternArchTest {
         rule.allowEmptyShould(true).check(allClasses);
     }
 
-    /** 규칙 10: QueryDslRepository는 정확히 4개 표준 메서드만 허용 */
+    /** 규칙 10: QueryDslRepository는 허용된 메서드 패턴만 사용 (findBy*, existsBy*, search*, count*) */
     @Test
-    @DisplayName("[필수] QueryDslRepository는 표준 메서드만 허용한다")
-    void queryDslRepository_MustOnlyHaveStandardMethods() {
+    @DisplayName("[필수] QueryDslRepository는 허용된 메서드 패턴만 사용한다")
+    void queryDslRepository_MustUseAllowedMethodPatterns() {
         ArchRule rule =
                 methods()
                         .that()
@@ -244,16 +246,34 @@ class DataAccessPatternArchTest {
                         .and()
                         .areNotStatic()
                         .should()
-                        .haveName("findById")
+                        .haveNameStartingWith("findBy")
                         .orShould()
-                        .haveName("existsById")
+                        .haveNameStartingWith("existsBy")
                         .orShould()
-                        .haveName("findByCriteria")
+                        .haveNameStartingWith("search")
                         .orShould()
-                        .haveName("countByCriteria")
+                        .haveNameStartingWith("count")
                         .because(
-                                "QueryDslRepository는 4개 표준 메서드만 허용합니다 (findById, existsById,"
-                                        + " findByCriteria, countByCriteria)");
+                                "QueryDslRepository는 허용된 메서드 패턴만 사용합니다 (findBy*, existsBy*,"
+                                        + " search*, count*)");
+
+        rule.allowEmptyShould(true).check(allClasses);
+    }
+
+    /** 규칙 10-2: QueryDslRepository는 findAll() 메서드 사용 금지 (OOM 위험) */
+    @Test
+    @DisplayName("[금지] QueryDslRepository는 findAll() 사용이 금지된다")
+    void queryDslRepository_MustNotUseFindAll() {
+        ArchRule rule =
+                noMethods()
+                        .that()
+                        .areDeclaredInClassesThat()
+                        .haveSimpleNameEndingWith("QueryDslRepository")
+                        .and()
+                        .arePublic()
+                        .should()
+                        .haveName("findAll")
+                        .because("QueryDslRepository는 findAll() 사용이 금지됩니다 (OOM 위험, search* 사용)");
 
         rule.allowEmptyShould(true).check(allClasses);
     }

@@ -364,6 +364,11 @@ class CommandAdapterArchTest {
         @Test
         @DisplayName("규칙 3-5: @Override 어노테이션이 필수입니다")
         void commandAdapter_PersistMethodMustHaveOverrideAnnotation() {
+            // CommandAdapter 클래스가 없으면 스킵
+            if (commandAdapterClasses.isEmpty()) {
+                return;
+            }
+
             ArchRule rule =
                     methods()
                             .that()
@@ -373,10 +378,9 @@ class CommandAdapterArchTest {
                             .haveName("persist")
                             .should()
                             .beAnnotatedWith(Override.class)
-                            .allowEmptyShould(true)
                             .because("persist() 메서드는 Port 인터페이스 구현이므로 @Override가 필수입니다");
 
-            rule.check(commandAdapterClasses);
+            rule.check(allClasses);
         }
 
         @Test

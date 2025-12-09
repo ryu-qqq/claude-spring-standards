@@ -51,6 +51,6 @@ docs/coding_convention/** @ryu-qqq
 # ====================
 # 빌드 및 의존성 설정
 
-settings.gradle.kts @ryu-qqq
-build.gradle.kts @ryu-qqq
+settings.gradle @ryu-qqq
+build.gradle @ryu-qqq
 gradle/libs.versions.toml @ryu-qqq

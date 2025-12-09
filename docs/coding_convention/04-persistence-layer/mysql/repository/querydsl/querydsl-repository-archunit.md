@@ -1,6 +1,6 @@
 # QueryDSL Repository ArchUnit 가이드
 
-> **목적**: QueryDSL Repository 아키텍처 규칙 자동 검증 (9개 규칙)
+> **목적**: QueryDSL Repository 아키텍처 규칙 자동 검증 (유연한 메서드 패턴)
 
 ---
 
@@ -13,7 +13,9 @@
 - ✅ @Repository 어노테이션
 - ✅ JPAQueryFactory 필드 보유
 - ✅ QType static final 필드 보유
-- ✅ **4개 메서드만 허용** (findById, existsById, findByCriteria, countByCriteria)
+- ✅ **필수 메서드 (2개)**: findById, existsById
+- ✅ **허용 메서드 패턴**: findBy*, existsBy*, search*, count*
+- ✅ **금지 메서드**: findAll (OOM 위험)
 - ✅ **Join 절대 금지** (join, leftJoin, rightJoin, fetchJoin 모두 금지)
 - ✅ @Transactional 어노테이션 없음
 - ✅ Mapper 의존성 없음
@@ -24,7 +26,7 @@
 | 그룹 | 규칙 수 | 내용 |
 |-----|--------|------|
 | 1. 클래스 구조 규칙 | 4개 | 클래스 타입, @Repository, JPAQueryFactory, QType |
-| 2. 메서드 규칙 | 2개 | 4개 표준 메서드, Join 금지 |
+| 2. 메서드 규칙 | 3개 | 필수 메서드 2개, 허용 패턴, findAll 금지 |
 | 3. 금지 사항 규칙 | 2개 | @Transactional, Mapper 의존성 금지 |
 | 4. 네이밍 규칙 | 1개 | *QueryDslRepository 접미사 |
 
@@ -155,7 +157,7 @@ class QueryDslRepositoryArchTest {
     }
 
     // ========================================================================
-    // 2. 메서드 규칙 (2개)
+    // 2. 메서드 규칙 (3개)
     // ========================================================================
 
     @Nested
@@ -163,8 +165,8 @@ class QueryDslRepositoryArchTest {
     class MethodRules {
 
         @Test
-        @DisplayName("규칙 2-1: 4개 표준 메서드만 허용됩니다")
-        void queryDslRepository_MustHaveOnlyStandardMethods() {
+        @DisplayName("규칙 2-1: 허용된 메서드 패턴만 사용해야 합니다 (findBy*, existsBy*, search*, count*)")
+        void queryDslRepository_MustUseAllowedMethodPatterns() {
             ArchRule rule = methods()
                 .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryDslRepository")
                 .and().areDeclaredInClassesThat().resideInAPackage("..repository..")
@@ -173,18 +175,32 @@ class QueryDslRepositoryArchTest {
                 .and().doNotHaveName("equals")
                 .and().doNotHaveName("hashCode")
                 .and().doNotHaveName("toString")
-                .should().haveName("findById")
-                .orShould().haveName("existsById")
-                .orShould().haveName("findByCriteria")
-                .orShould().haveName("countByCriteria")
+                .should().haveNameStartingWith("findBy")
+                .orShould().haveNameStartingWith("existsBy")
+                .orShould().haveNameStartingWith("search")
+                .orShould().haveNameStartingWith("count")
                 .allowEmptyShould(true)
-                .because("QueryDSL Repository는 4개 표준 메서드만 허용됩니다 (findById, existsById, findByCriteria, countByCriteria)");
+                .because("QueryDSL Repository는 허용된 메서드 패턴만 사용해야 합니다 (findBy*, existsBy*, search*, count*)");
 
             rule.check(allClasses);
         }
 
         @Test
-        @DisplayName("규칙 2-2: Join 사용이 금지됩니다 (수동 검증 필요)")
+        @DisplayName("규칙 2-2: findAll() 메서드 사용이 금지됩니다 (OOM 위험)")
+        void queryDslRepository_MustNotUseFindAll() {
+            ArchRule rule = noMethods()
+                .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("QueryDslRepository")
+                .and().areDeclaredInClassesThat().resideInAPackage("..repository..")
+                .and().arePublic()
+                .should().haveName("findAll")
+                .allowEmptyShould(true)
+                .because("QueryDSL Repository는 findAll() 사용이 금지됩니다 (OOM 위험, search* 사용)");
+
+            rule.check(allClasses);
+        }
+
+        @Test
+        @DisplayName("규칙 2-3: Join 사용이 금지됩니다 (수동 검증 필요)")
         void queryDslRepository_MustNotUseJoin() {
             // ⚠️ 주의: ArchUnit으로 Join 사용을 완벽히 검증하기 어려움
             // 코드 리뷰 및 수동 검증 필요
@@ -508,5 +524,5 @@ ArchUnit 테스트 작성 시:
 ---
 
 **작성자**: Development Team
-**최종 수정일**: 2025-12-04
-**버전**: 2.0.0
+**최종 수정일**: 2025-12-09
+**버전**: 3.0.0 (유연한 메서드 패턴 적용)

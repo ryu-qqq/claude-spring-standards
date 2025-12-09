@@ -557,30 +557,40 @@ class SecurityArchTest {
     @DisplayName("패키지 구조 규칙")
     class PackageStructureRules {
 
-        /** 규칙 23: auth 패키지는 표준 하위 구조를 가져야 한다 */
-        @Test
-        @DisplayName("[필수] auth 패키지는 표준 하위 구조를 가져야 한다")
-        void authPackage_MustHaveStandardSubStructure() {
-            ArchRule rule =
-                    classes()
-                            .that()
-                            .resideInAPackage("..auth..")
-                            .and()
-                            .resideOutsideOfPackage("..architecture..")
-                            .and()
-                            .haveSimpleNameNotEndingWith("Test")
-                            .should()
-                            .resideInAnyPackage(
-                                    "..auth.paths..",
-                                    "..auth.config..",
-                                    "..auth.filter..",
-                                    "..auth.handler..",
-                                    "..auth.component..")
-                            .because(
-                                    "auth 패키지는 paths, config, filter, handler, component 하위 구조를 가져야"
-                                            + " 합니다");
-
-            rule.allowEmptyShould(true).check(classes);
+        /**
+         * 규칙 23: auth 패키지 하위 구조 (선택적)
+         *
+         * <p>auth 패키지의 표준 하위 구조는 권장 사항입니다.
+         * 소셜 로그인, OAuth2, 토큰 발급 등 다양한 인증 시나리오에서
+         * controller, service, dto, mapper, client 등 추가 패키지가 필요할 수 있습니다.
+         *
+         * <p><strong>권장 구조:</strong>
+         * <ul>
+         *   <li>auth.paths - API 경로 상수</li>
+         *   <li>auth.config - Security 설정</li>
+         *   <li>auth.filter - 인증 필터</li>
+         *   <li>auth.handler - 인증/인가 핸들러</li>
+         *   <li>auth.component - 토큰 프로바이더 등 컴포넌트</li>
+         * </ul>
+         *
+         * <p><strong>확장 가능 구조 (필요 시):</strong>
+         * <ul>
+         *   <li>auth.controller - 로그인/로그아웃 API</li>
+         *   <li>auth.service - 인증 서비스</li>
+         *   <li>auth.dto - 인증 관련 DTO</li>
+         *   <li>auth.mapper - DTO 변환</li>
+         *   <li>auth.client - 외부 인증 서버 클라이언트</li>
+         *   <li>auth.oauth2 - OAuth2/소셜 로그인</li>
+         * </ul>
+         *
+         * <p>강제 규칙에서 권장 사항으로 변경됨 (v1.1.0)
+         */
+        // @Test - 선택적 규칙으로 변경되어 테스트에서 제외
+        // @DisplayName("[권장] auth 패키지는 표준 하위 구조를 권장합니다")
+        void authPackage_ShouldHaveStandardSubStructure() {
+            // 다양한 인증 시나리오를 지원하기 위해 패키지 구조 강제 제거
+            // controller, service, dto, mapper, client, oauth2 등 필요에 따라 자유롭게 구성
+            // 이 규칙은 강제하지 않고 가이드 문서로 대체
         }
     }
 

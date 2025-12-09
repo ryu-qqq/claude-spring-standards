@@ -1,24 +1,32 @@
 # QueryDSL Repository 가이드
 
-> **목적**: QueryDSL 기반 Repository 클래스 컨벤션 (Query 전용, 4개 메서드 표준화)
+> **목적**: QueryDSL 기반 Repository 클래스 컨벤션 (Query 전용, 유연한 메서드 패턴)
 
 ---
 
 ## 1️⃣ 핵심 원칙
 
-### QueryDSL Repository는 4개 메서드만 제공
+### QueryDSL Repository 메서드 패턴
 
-**표준 메서드**:
-1. `findById(Long id)` - 단건 조회
-2. `existsById(Long id)` - 존재 여부 확인
-3. `findByCriteria(Criteria criteria)` - 목록 조회 (Criteria 기반 동적 쿼리)
-4. `countByCriteria(Criteria criteria)` - 개수 조회
+**필수 메서드 (2개)**:
+1. `findById(Long id)` - 단건 조회 → `Optional<Entity>` 반환
+2. `existsById(Long id)` - 존재 여부 확인 → `boolean` 반환
+
+**허용 메서드 패턴**:
+| 패턴 | 반환 타입 | 설명 | 예시 |
+|------|----------|------|------|
+| `findBy*` | `Optional` or `List` | 조건별 조회 | `findByEmail`, `findByStatus` |
+| `existsBy*` | `boolean` | 조건별 존재 확인 | `existsByEmail` |
+| `search*` | `List` | 복잡한 조건 조회 (Criteria) | `searchOrders`, `searchProducts` |
+| `count*` | `long` | 개수 조회 | `countByStatus`, `countByCriteria` |
+
+**금지 메서드**:
+- ❌ `findAll()` - OOM 위험, search* 사용
 
 **규칙**:
 - ✅ `@Repository` 클래스로 구현
 - ✅ `JPAQueryFactory` 생성자 주입
 - ✅ QType을 static final 상수로 선언
-- ✅ **4개 메서드만 제공** (추가 메서드 금지)
 - ✅ **Join 절대 금지** (성능보다 정확성과 빠른 개발 우선)
 - ✅ 동적 쿼리 (BooleanExpression)
 - ❌ 비즈니스 로직 작성 금지
@@ -27,8 +35,8 @@
 - ❌ **Join 사용 금지** (fetch join, left join, inner join 모두 금지)
 
 **이유**:
-- QueryDSL Repository는 **Query 작업 (find, exists, count)만** 담당
-- **4개 메서드로 표준화**하여 일관성 있는 API 제공
+- QueryDSL Repository는 **Query 작업 (find, exists, count, search)만** 담당
+- **유연한 메서드 패턴**으로 Application Layer QueryPort와 일관성 유지
 - **Join 금지**로 복잡도 제거, N+1 문제는 Adapter에서 해결
 - 타입 안전 쿼리로 컴파일 시점 검증
 - 복잡한 동적 쿼리를 간결하게 표현
@@ -56,25 +64,24 @@ import java.util.Optional;
  *
  * <p>QueryDSL 기반 조회 쿼리를 처리하는 전용 Repository입니다.</p>
  *
- * <p><strong>표준 메서드 (4개):</strong></p>
+ * <p><strong>필수 메서드 (2개):</strong></p>
  * <ul>
- *   <li>findById(Long id): 단건 조회</li>
- *   <li>existsById(Long id): 존재 여부 확인</li>
- *   <li>findByCriteria(Criteria): 목록 조회 (동적 쿼리)</li>
- *   <li>countByCriteria(Criteria): 개수 조회 (동적 쿼리)</li>
+ *   <li>findById(Long id): 단건 조회 → Optional 반환</li>
+ *   <li>existsById(Long id): 존재 여부 확인 → boolean 반환</li>
  * </ul>
  *
- * <p><strong>책임:</strong></p>
+ * <p><strong>허용 메서드 패턴:</strong></p>
  * <ul>
- *   <li>동적 쿼리 구성 (BooleanExpression)</li>
- *   <li>정렬 조건 구성 (OrderSpecifier)</li>
- *   <li>Offset/Cursor 페이징</li>
+ *   <li>findBy* → Optional 또는 List 반환</li>
+ *   <li>existsBy* → boolean 반환</li>
+ *   <li>search* → List 반환 (복잡한 조건 조회)</li>
+ *   <li>count* → long 반환</li>
  * </ul>
  *
  * <p><strong>금지 사항:</strong></p>
  * <ul>
+ *   <li>❌ findAll 금지 (OOM 위험)</li>
  *   <li>❌ Join 절대 금지 (fetch join, left join, inner join)</li>
- *   <li>❌ 추가 메서드 금지 (4개 메서드만 허용)</li>
  *   <li>❌ 비즈니스 로직 금지</li>
  *   <li>❌ Mapper 호출 금지</li>
  * </ul>
@@ -231,7 +238,7 @@ public class OrderQueryDslRepository {
 ### ✅ 올바른 예시
 
 ```java
-// ✅ 4개 메서드만 제공
+// ✅ 유연한 메서드 패턴
 @Repository
 public class OrderQueryDslRepository {
     private final JPAQueryFactory queryFactory;
@@ -241,7 +248,7 @@ public class OrderQueryDslRepository {
         this.queryFactory = queryFactory;
     }
 
-    // ✅ 1. 단건 조회
+    // ✅ 필수 1. 단건 조회
     public Optional<OrderJpaEntity> findById(Long id) {
         return Optional.ofNullable(
             queryFactory.selectFrom(qOrder)
@@ -250,7 +257,7 @@ public class OrderQueryDslRepository {
         );
     }
 
-    // ✅ 2. 존재 여부 확인
+    // ✅ 필수 2. 존재 여부 확인
     public boolean existsById(Long id) {
         Integer count = queryFactory
             .selectOne()
@@ -261,21 +268,44 @@ public class OrderQueryDslRepository {
         return count != null;
     }
 
-    // ✅ 3. 목록 조회 (동적 쿼리, Join 없음)
-    public List<OrderJpaEntity> findByCriteria(SearchOrderQuery criteria) {
+    // ✅ 허용 패턴: findBy* (조건별 조회)
+    public Optional<OrderJpaEntity> findByOrderNumber(String orderNumber) {
+        return Optional.ofNullable(
+            queryFactory.selectFrom(qOrder)
+                .where(qOrder.orderNumber.eq(orderNumber))
+                .fetchOne()
+        );
+    }
+
+    // ✅ 허용 패턴: findBy* (목록 조회)
+    public List<OrderJpaEntity> findByStatus(OrderStatus status) {
+        return queryFactory.selectFrom(qOrder)
+            .where(qOrder.status.eq(status))
+            .fetch();
+    }
+
+    // ✅ 허용 패턴: existsBy* (조건별 존재 확인)
+    public boolean existsByOrderNumber(String orderNumber) {
+        Integer count = queryFactory.selectOne()
+            .from(qOrder)
+            .where(qOrder.orderNumber.eq(orderNumber))
+            .fetchFirst();
+        return count != null;
+    }
+
+    // ✅ 허용 패턴: search* (복잡한 조건 조회)
+    public List<OrderJpaEntity> searchOrders(SearchOrderQuery criteria) {
         return queryFactory.selectFrom(qOrder)
             .where(buildConditions(criteria))
             .fetch();
     }
 
-    // ✅ 4. 개수 조회
-    public long countByCriteria(SearchOrderQuery criteria) {
-        Long count = queryFactory
-            .select(qOrder.count())
+    // ✅ 허용 패턴: count* (개수 조회)
+    public long countByStatus(OrderStatus status) {
+        Long count = queryFactory.select(qOrder.count())
             .from(qOrder)
-            .where(buildConditions(criteria))
+            .where(qOrder.status.eq(status))
             .fetchOne();
-
         return count != null ? count : 0L;
     }
 
@@ -300,21 +330,11 @@ public class OrderQueryDslRepository {
     }
 }
 
-// ❌ 추가 메서드 금지
+// ❌ findAll 금지 (OOM 위험)
 @Repository
 public class OrderQueryDslRepository {
-    // 4개 메서드 외 추가 메서드 금지
-    public List<OrderJpaEntity> findByStatus(OrderStatus status) {  // ❌
-        return queryFactory.selectFrom(qOrder)
-            .where(qOrder.status.eq(status))
-            .fetch();
-    }
-
-    // ✅ findByCriteria()로 통합 처리
-    public List<OrderJpaEntity> findByCriteria(SearchOrderQuery criteria) {
-        return queryFactory.selectFrom(qOrder)
-            .where(buildConditions(criteria))  // status 조건 포함
-            .fetch();
+    public List<OrderJpaEntity> findAll() {  // ❌ OOM 위험!
+        return queryFactory.selectFrom(qOrder).fetch();
     }
 }
 
@@ -719,18 +739,21 @@ QueryDSL Repository 작성 시:
   - [ ] `@Repository` 어노테이션
   - [ ] `JPAQueryFactory` 생성자 주입
   - [ ] QType을 static final 상수로 선언
-- [ ] **표준 메서드 (4개만)**
-  - [ ] findById(Long id)
-  - [ ] existsById(Long id)
-  - [ ] findByCriteria(Criteria criteria)
-  - [ ] countByCriteria(Criteria criteria)
+- [ ] **필수 메서드 (2개)**
+  - [ ] findById(Long id) → Optional 반환
+  - [ ] existsById(Long id) → boolean 반환
+- [ ] **허용 메서드 패턴**
+  - [ ] findBy* → Optional 또는 List 반환
+  - [ ] existsBy* → boolean 반환
+  - [ ] search* → List 반환 (복잡한 조건 조회)
+  - [ ] count* → long 반환
 - [ ] **쿼리 구성**
   - [ ] 동적 쿼리: private BooleanExpression 메서드
   - [ ] 정렬 조건: private OrderSpecifier 메서드
   - [ ] Offset/Cursor 페이징 지원
 - [ ] **금지 사항**
+  - [ ] findAll 금지 (OOM 위험)
   - [ ] Join 절대 금지 (fetch join, left join, inner join)
-  - [ ] 추가 메서드 금지 (4개만 허용)
   - [ ] 비즈니스 로직 없음
   - [ ] Mapper 호출 없음
   - [ ] @Transactional 없음
@@ -750,4 +773,4 @@ QueryDSL Repository 작성 시:
 
 **작성자**: Development Team
 **최종 수정일**: 2025-11-13
-**버전**: 2.0.0 (4개 메서드 표준화 + Join 금지)
+**버전**: 3.0.0 (유연한 메서드 패턴 + Join 금지)
