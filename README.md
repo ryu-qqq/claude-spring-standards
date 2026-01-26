@@ -1,14 +1,14 @@
 # ConventionHub
 
-> AI가 생성하는 코드도 **우리 팀의 컨벤션**을 100% 따르게 만드세요.
+> 팀의 코딩 컨벤션을 **한 곳에서 관리**하고, AI가 **필요할 때만 조회**하게 만드세요.
 
-**ConventionHub**는 AI 코드 생성 도구(Claude Code, Cursor 등)가 **팀이 정의한 코딩 규칙**을 MCP(Model Context Protocol)로 조회하고 준수하도록 만드는 **오픈소스 플랫폼**입니다.
+**ConventionHub**는 AI 코드 생성 도구(Claude Code, Cursor 등)가 **팀이 정의한 코딩 규칙**을 MCP(Model Context Protocol)로 조회하도록 만드는 **오픈소스 플랫폼**입니다.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## ⚡ Quick Start (5분)
+## Quick Start (5분)
 
 ### 1. Docker로 실행
 
@@ -19,9 +19,9 @@ docker compose up -d
 ```
 
 자동으로 실행됩니다:
-- ✅ MySQL + 예시 규칙 데이터 (164개 규칙, 100개 템플릿)
-- ✅ Spring Boot API 서버 (port 8080)
-- ✅ MCP 서버
+- MySQL + 예시 규칙 데이터 (164개 규칙, 100개 템플릿)
+- Spring Boot API 서버 (port 8080)
+- MCP 서버
 
 ### 2. Claude Code 설정
 
@@ -49,41 +49,103 @@ docker compose up -d
 Claude가 자동으로:
 1. planning_context() 호출 → 프로젝트 구조 파악
 2. module_context() 호출 → 템플릿 + 규칙 조회
-3. 팀 컨벤션 100% 준수하는 코드 생성
+3. 조회된 컨벤션 기반으로 코드 생성
 ```
 
 ---
 
-## 🎯 왜 필요한가요?
+## 왜 필요한가요?
 
-AI 코드 생성 도구는 강력하지만, **팀마다 다른 코딩 컨벤션을 모릅니다**.
-
-```
-❌ 문제
-├── AI가 우리 팀 규칙과 다른 코드를 생성
-├── 리뷰어가 매번 컨벤션 위반을 지적
-├── 팀원마다 AI에게 규칙을 다르게 설명
-└── .claude/CLAUDE.md에 규칙 전부 넣으면 토큰 낭비
-```
+### 문제: 규칙이 분산되어 관리 불가
 
 ```
-✅ ConventionHub 해결책
-├── 팀의 코딩 규칙을 DB에 등록 (Single Source of Truth)
-├── AI가 코드 생성 전에 MCP로 필요한 규칙만 조회
-├── 모든 AI 도구가 동일한 규칙을 100% 준수
-└── 토큰 사용량 70%+ 절감 (필요한 규칙만 로딩)
+팀원 A: .claude/CLAUDE.md에 규칙 50개
+팀원 B: .cursor/rules에 규칙 40개 (다른 버전)
+팀원 C: 규칙 업데이트 안 함
+새 팀원 D: 어디서 규칙 복사해야 하지?
+
+→ 규칙 변경 시 모든 팀원이 수동으로 각자 파일 수정
+→ 버전 불일치, 누락, 혼란
 ```
 
-### 토큰 효율성
+### 해결: Single Source of Truth
 
-| 방식 | 토큰 사용 | 장점 |
-|------|----------|------|
-| **Static** (.claude/에 전체 규칙) | ~15,000 tokens | 단순 |
-| **Dynamic** (MCP로 필요한 규칙만) | ~3,000 tokens | **80% 절감** |
+```
+┌─────────────────────────────────────────────────────────┐
+│                    ConventionHub DB                      │
+│              (팀 규칙의 Single Source of Truth)           │
+└─────────────────────────┬───────────────────────────────┘
+                          │ MCP 조회
+        ┌─────────────────┼─────────────────┐
+        ▼                 ▼                 ▼
+   팀원 A              팀원 B             팀원 C
+  (Claude)            (Cursor)          (Copilot)
+
+→ 규칙 변경 = DB만 수정 → 팀 전체 즉시 적용
+→ 모든 AI 도구가 동일한 규칙 참조
+```
+
+### 핵심 가치: Lazy Loading
+
+AI가 **전체 규칙을 미리 로딩하지 않고**, 작업에 필요한 규칙만 그때그때 조회합니다.
+
+```
+Static 방식 (.claude/CLAUDE.md)
+├── 세션 시작 시 전체 규칙 로딩
+├── 사용하지 않는 규칙도 컨텍스트 차지
+└── 규칙이 많아질수록 토큰 낭비
+
+Dynamic 방식 (MCP)
+├── 필요할 때만 규칙 조회 (Lazy Loading)
+├── Aggregate 만들 때 → Aggregate 규칙만
+└── Controller 만들 때 → Controller 규칙만
+```
 
 ---
 
-## 📦 포함된 예시 데이터
+## 점진적 개선 워크플로우
+
+ConventionHub의 진짜 가치는 **팀의 컨벤션이 점진적으로 개선**되는 것입니다.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    학습 루프                              │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  1. AI가 코드 생성                                        │
+│         ↓                                                │
+│  2. 코드 리뷰에서 컨벤션 위반 발견                          │
+│         ↓                                                │
+│  3. 새 규칙을 DB에 등록 (feedback → approve)              │
+│         ↓                                                │
+│  4. 다음부터 AI가 해당 규칙 조회 → 같은 실수 방지           │
+│         ↓                                                │
+│  (반복) → 팀 컨벤션이 점점 정교해짐                        │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### AI 피드백 예시
+
+```python
+# AI가 코드 리뷰 중 반복되는 패턴 발견 시 규칙 제안
+feedback(payload={
+    "feedback_type": "NEW_RULE",
+    "suggested_rule": {
+        "code": "DOM-AGG-030",
+        "name": "컬렉션 필드는 불변으로 반환",
+        "severity": "MAJOR"
+    },
+    "reason": "3번의 PR에서 동일한 리뷰 코멘트 발생"
+})
+
+# Human이 검토 후 승인
+approve(feedback_id=123)
+```
+
+---
+
+## 포함된 예시 데이터
 
 Spring Boot + Hexagonal Architecture 기반 **실무 규칙**이 포함되어 있습니다:
 
@@ -99,7 +161,7 @@ Spring Boot + Hexagonal Architecture 기반 **실무 규칙**이 포함되어 �
 
 ---
 
-## 🏗️ 아키텍처
+## 아키텍처
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -126,7 +188,7 @@ Spring Boot + Hexagonal Architecture 기반 **실무 규칙**이 포함되어 �
 
 ---
 
-## 🔧 MCP Tools
+## MCP Tools
 
 AI 도구가 사용하는 핵심 도구들:
 
@@ -155,7 +217,7 @@ AI 도구가 사용하는 핵심 도구들:
 
 | Tool | 용도 |
 |------|------|
-| `list_rules` | 규칙 인덱스 조회 (경량, 캐싱용) |
+| `list_rules` | 규칙 인덱스 조회 (경량) |
 | `get_rule` | 규칙 상세 + 예시 조회 |
 | `list_tech_stacks` | 기술 스택 구조 조회 |
 | `get_config_files` | 설정 파일 템플릿 조회 |
@@ -164,34 +226,34 @@ AI 도구가 사용하는 핵심 도구들:
 
 ---
 
-## 🗂️ 데이터 모델
+## 데이터 모델
 
 팀이 정의하는 규칙의 계층 구조:
 
 ```
-🏗️ TechStack (기술 스택)
+TechStack (기술 스택)
 │   예: "Spring Boot 3.5 + Java 21"
 │
-└── 📐 Architecture (아키텍처)
+└── Architecture (아키텍처)
     │   예: "Hexagonal"
     │
-    └── 📦 Layer (레이어)
+    └── Layer (레이어)
         │   예: "DOMAIN", "APPLICATION"
         │
-        ├── 📋 Convention (컨벤션 그룹)
-        │   └── 📜 CodingRule (코딩 규칙)
-        │       ├── 💡 RuleExample (GOOD/BAD 예시)
-        │       ├── ✅ ChecklistItem (체크리스트)
-        │       └── 🚨 ZeroTolerancePattern
+        ├── Convention (컨벤션 그룹)
+        │   └── CodingRule (코딩 규칙)
+        │       ├── RuleExample (GOOD/BAD 예시)
+        │       ├── ChecklistItem (체크리스트)
+        │       └── ZeroTolerancePattern
         │
-        └── 🗂️ Module (Gradle 모듈)
-            ├── 📁 PackageStructure (패키지 구조)
-            └── 🧩 ClassTemplate (클래스 템플릿)
+        └── Module (Gradle 모듈)
+            ├── PackageStructure (패키지 구조)
+            └── ClassTemplate (클래스 템플릿)
 ```
 
 ---
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 claude-spring-standards/
@@ -211,7 +273,7 @@ claude-spring-standards/
 
 ---
 
-## 🛠️ 개발 환경 설정
+## 개발 환경 설정
 
 ### 로컬 개발 (Docker 없이)
 
@@ -237,7 +299,7 @@ python -m src.main
 
 ---
 
-## 📝 팀 규칙 커스터마이징
+## 팀 규칙 커스터마이징
 
 ### 방법 1: SQL 직접 수정
 
@@ -246,7 +308,6 @@ python -m src.main
 ### 방법 2: API로 등록
 
 ```bash
-# 새 규칙 추가
 curl -X POST http://localhost:8080/api/v1/templates/coding-rules \
   -H "Content-Type: application/json" \
   -d '{
@@ -258,15 +319,15 @@ curl -X POST http://localhost:8080/api/v1/templates/coding-rules \
   }'
 ```
 
-### 방법 3: AI 피드백
+### 방법 3: AI 피드백 (권장)
 
 ```python
-# AI가 코드 리뷰 중 새 규칙 제안
+# AI가 반복되는 리뷰 패턴 발견 시 규칙 제안
 feedback(payload={
     "feedback_type": "NEW_RULE",
     "suggested_rule": {
-        "code": "AGG-010",
-        "name": "불변 컬렉션 사용",
+        "code": "MY-RULE-002",
+        "name": "발견된 패턴",
         "severity": "MAJOR"
     },
     "reason": "코드 리뷰 중 발견된 패턴"
@@ -275,7 +336,7 @@ feedback(payload={
 
 ---
 
-## 🔗 API 문서
+## API 문서
 
 | Method | Endpoint | 설명 |
 |--------|----------|------|
@@ -288,7 +349,7 @@ feedback(payload={
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -298,13 +359,13 @@ feedback(payload={
 
 ---
 
-## 📄 License
+## License
 
 MIT License - 자유롭게 사용, 수정, 배포하세요.
 
 ---
 
-## 🙏 Credits
+## Credits
 
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) by Anthropic
 - [FastMCP](https://github.com/jlowin/fastmcp) for Python MCP implementation
