@@ -94,19 +94,9 @@ AI (Claude, Cursor, Copilot)
 
 | 문서 | URL |
 |------|-----|
-| **Swagger UI** | http://localhost:8080/swagger-ui.html |
-| **OpenAPI Spec** | http://localhost:8080/v3/api-docs |
-| **REST Docs** | `adapter-in/rest-api/docs/v1/` |
-
-### 주요 Endpoints
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/api/v1/templates/mcp/planning-context` | Planning Context |
-| GET | `/api/v1/templates/mcp/module-context` | Module Context |
-| GET | `/api/v1/templates/mcp/validation-context` | Validation Context |
-| GET | `/api/v1/templates/coding-rules` | 규칙 목록 |
-| POST | `/api/v1/templates/coding-rules` | 규칙 생성 |
+| Swagger UI | `/api/v1/templates/swagger-ui.html` |
+| OpenAPI Spec | `/api/v1/templates/api-docs` |
+| REST Docs | `/api/v1/templates/docs/` |
 
 ---
 
