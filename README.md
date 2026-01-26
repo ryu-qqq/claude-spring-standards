@@ -101,9 +101,6 @@ MCP 방식 (ConventionHub)
 └── 모든 AI 도구가 동일한 규칙 조회
 ```
 
-> 참고: Claude Code의 Skills도 Lazy Loading을 지원합니다.
-> ConventionHub의 차별점은 **팀 전체가 동일한 규칙을 공유**하는 것입니다.
-
 ---
 
 ## 점진적 개선 워크플로우
