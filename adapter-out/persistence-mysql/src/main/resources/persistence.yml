@@ -1,0 +1,49 @@
+# ============================================================
+# Persistence Layer 공통 설정
+# ============================================================
+# 환경별 설정은 persistence-{profile}.yml 참조
+# - persistence-local.yml: 로컬 개발 환경
+# - persistence-prod.yml: 운영 환경
+# ============================================================
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # ⚠️ OSIV 비활성화 (필수!)
+    # - 커넥션 점유 시간 최소화
+    # - Lazy Loading은 Transaction 내에서만
+    open-in-view: false
+
+    hibernate:
+      # ⚠️ Flyway가 스키마 관리, Hibernate는 검증만
+      ddl-auto: validate
+
+    properties:
+      hibernate:
+        # Batch Processing
+        jdbc:
+          batch_size: 50
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+
+        # Query Plan Cache
+        query:
+          plan_cache_max_size: 2048
+          in_clause_parameter_padding: true
+
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    # V1, V2 이미 적용된 상태이므로 baseline은 2로 시작
+    baseline-version: 2
+    validate-on-migrate: true
+    out-of-order: false
+    # ⚠️ clean 명령어 비활성화 (데이터 보호)
+    clean-disabled: true

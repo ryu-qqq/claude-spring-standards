@@ -1,0 +1,97 @@
+=== Tech Stack 개요
+
+기술 스택을 관리하는 API입니다. Spring Boot, Java, Gradle 등의 기술 스택 정보와 버전을 등록/조회/수정/삭제할 수 있습니다.
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/tech-stack-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/tech-stack-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/tech-stack-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/tech-stack-get-all/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/tech-stack-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/tech-stack-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/tech-stack-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/tech-stack-get-by-id/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/tech-stack-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/tech-stack-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/tech-stack-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/tech-stack-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/tech-stack-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/tech-stack-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/tech-stack-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/tech-stack-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/tech-stack-update/response-fields.adoc[]
+
+==== 삭제
+
+===== Path Parameters
+
+include::{snippets}/tech-stack-delete/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/tech-stack-delete/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/tech-stack-delete/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/tech-stack-delete/response-fields.adoc[]

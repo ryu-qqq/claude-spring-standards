@@ -1,0 +1,155 @@
+=== Coding Rule 개요
+
+코딩 규칙을 관리하는 API입니다. 레이어별 코딩 컨벤션, Zero-Tolerance 규칙 등을 등록/조회/수정/삭제할 수 있습니다.
+
+==== 인덱스 조회 (경량)
+
+규칙의 핵심 정보(code, name, severity, category)만 조회합니다.
+캐싱 효율성을 위해 경량화된 응답을 제공합니다.
+상세 정보가 필요하면 단건 조회 API를 사용하세요.
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-index/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/coding-rule-index/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-index/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-index/response-fields.adoc[]
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/coding-rule-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-get-all/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/coding-rule-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-get-by-id/response-fields.adoc[]
+
+==== 컨벤션별 조회
+
+===== Path Parameters
+
+include::{snippets}/coding-rule-get-by-convention/path-parameters.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/coding-rule-get-by-convention/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-get-by-convention/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-get-by-convention/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-get-by-convention/response-fields.adoc[]
+
+==== Zero-Tolerance 규칙 조회
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-get-zero-tolerance/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-get-zero-tolerance/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-get-zero-tolerance/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/coding-rule-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/coding-rule-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/coding-rule-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-update/response-fields.adoc[]
+
+==== 삭제
+
+===== Path Parameters
+
+include::{snippets}/coding-rule-delete/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/coding-rule-delete/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/coding-rule-delete/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/coding-rule-delete/response-fields.adoc[]

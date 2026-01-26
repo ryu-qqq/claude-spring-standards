@@ -1,0 +1,44 @@
+# Persistence Layer Slice Test Configuration
+# H2 인메모리 DB를 사용하는 @DataJpaTest 전용 설정
+
+spring:
+  # ========================================
+  # DataSource (H2 MySQL 호환 모드)
+  # ========================================
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+
+  # ========================================
+  # JPA/Hibernate
+  # ========================================
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop  # H2에서는 Hibernate가 스키마 생성
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect  # H2 DDL 호환성 우선
+    show-sql: true
+
+  # ========================================
+  # Flyway 비활성화 (H2에서는 사용 안 함)
+  # @DataJpaTest는 H2를 사용하므로 Flyway 비활성화
+  # 실제 MySQL 통합 테스트는 integration-test 모듈에서 수행
+  # ========================================
+  flyway:
+    enabled: false
+
+# ========================================
+# 로깅
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.ryuqq: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

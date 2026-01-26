@@ -1,0 +1,97 @@
+=== Package Structure 개요
+
+패키지 구조를 관리하는 API입니다. 모듈별 패키지 경로, 허용 클래스 타입, 네이밍 규칙 등을 등록/조회/수정/삭제할 수 있습니다.
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/package-structure-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/package-structure-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-structure-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-structure-get-all/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/package-structure-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/package-structure-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-structure-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-structure-get-by-id/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/package-structure-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/package-structure-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-structure-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-structure-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/package-structure-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/package-structure-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/package-structure-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-structure-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-structure-update/response-fields.adoc[]
+
+==== 삭제
+
+===== Path Parameters
+
+include::{snippets}/package-structure-delete/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/package-structure-delete/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-structure-delete/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-structure-delete/response-fields.adoc[]

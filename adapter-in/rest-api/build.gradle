@@ -1,0 +1,212 @@
+// ========================================
+// Adapter-In: REST Admin Servlet
+// ========================================
+// Inbound adapter for admin REST API (Servlet-based)
+// Handles HTTP requests and responses for admin operations
+// Middleware: Spring MVC (Servlet)
+// NO Lombok allowed
+// ========================================
+
+plugins {
+    id 'java-library'
+    id 'java-test-fixtures'
+    alias(libs.plugins.asciidoctor)
+}
+
+// ========================================
+// REST Docs Snippets Output Directory
+// ========================================
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+dependencies {
+    // ========================================
+    // Core Dependencies
+    // ========================================
+    // Application layer (use cases)
+    api project(':application')
+    api project(':domain')
+
+    // Spring Web
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.validation
+
+    // Spring Security (Optional)
+    implementation libs.spring.boot.starter.security
+
+    // JSON Processing
+    implementation libs.jackson.databind
+    implementation libs.jackson.datatype.jsr310
+
+    // API Documentation (Optional)
+    implementation libs.springdoc.openapi
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+    testImplementation libs.spring.security.test
+    testImplementation libs.rest.assured
+    testImplementation libs.spring.restdocs.mockmvc
+    testImplementation libs.archunit.junit5
+    testImplementation testFixtures(project(":domain"))
+
+    // ========================================
+    // Test Fixtures Dependencies
+    // ========================================
+    // TestFixtures can use main dependencies
+    testFixturesApi project(':application')
+    testFixturesApi project(':domain')
+    testFixturesImplementation libs.jackson.databind
+}
+
+// ========================================
+// Test Coverage (70% for adapters)
+// ========================================
+// Infrastructure/Security 클래스는 통합테스트에서 커버
+// - auth/** : Security 인프라 (Filter, Handler, Config)
+// - common/dto/** : 공통 유틸리티 Record
+// - common/error/** : 에러 처리 인프라
+// - common/mapper/** : 매퍼 인터페이스
+// - common/controller/** : 글로벌 예외 처리
+// - common/util/** : 공통 유틸리티 클래스
+// - convention/** : 템플릿 예시 코드 (Application Layer 구현 후 제거)
+// ========================================
+def jacocoExcludePatterns = [
+    // Infrastructure
+    '**/auth/**',
+    '**/common/dto/**',
+    '**/common/error/**',
+    '**/common/mapper/**',
+    '**/common/controller/**',
+    '**/common/util/**',
+    '**/config/**',
+    // Base domains - tests in progress
+    '**/codingrule/**',
+    '**/convention/**',
+    '**/moduletype/**',
+    '**/packagepurpose/**',
+    '**/mcp/**',
+    // Phase 2 domains - Tests pending
+    '**/archunittest/**',
+    '**/classtemplate/**',
+    '**/ruleexample/**',
+    // Phase 3 domains - Tests pending
+    '**/architecture/**',
+    '**/developmentpattern/**',
+    '**/eventpattern/**',
+    '**/layerdependencyrule/**',
+    '**/module/**',
+    '**/moduledependency/**',
+    '**/packagestructure/**',
+    '**/techstack/**',
+    '**/zerotolerancerule/**',
+    '**/resourcetemplate/**'
+]
+
+afterEvaluate {
+    tasks.jacocoTestReport {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludePatterns)
+        }))
+    }
+
+    tasks.jacocoTestCoverageVerification {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludePatterns)
+        }))
+        violationRules {
+            // Bundle-level rule - temporarily set to 0 until tests are complete
+            rule {
+                limit {
+                    minimum = 0.0
+                }
+            }
+            // Per-class rule - temporarily set to 0 until tests are complete
+            rule {
+                element = 'CLASS'
+                limit {
+                    counter = 'LINE'
+                    minimum = 0.0
+                }
+            }
+        }
+    }
+}
+
+tasks.test {
+    outputs.dir snippetsDir
+    finalizedBy tasks.jacocoTestCoverageVerification
+}
+
+// ========================================
+// Asciidoctor Configuration for REST Docs
+// ========================================
+configurations {
+    asciidoctorExt
+}
+
+dependencies {
+    asciidoctorExt libs.spring.restdocs.asciidoctor
+}
+
+tasks.asciidoctor {
+    // test에서 snippets 생성 후 실행하려면 dependsOn test 활성화
+    // dependsOn test
+    inputs.dir snippetsDir
+
+    configurations 'asciidoctorExt'
+
+    sourceDir = file('docs/v1')
+    outputDir = file("${buildDir}/docs/asciidoc")
+
+    // include 경로가 sourceDir 기준으로 해석되도록 설정
+    baseDirFollowsSourceDir()
+
+    attributes 'snippets': snippetsDir,
+               'source-highlighter': 'highlightjs',
+               'toc': 'left',
+               'toclevels': '3',
+               'sectlinks': '',
+               'sectnums': ''
+}
+
+// Copy generated docs to static resources for serving
+// Gateway 라우팅: /api/v1/templates/** → 이 서버
+// RestDocs 경로: /api/v1/templates/docs/index.html
+tasks.register('copyDocs', Copy) {
+    dependsOn asciidoctor
+    from "${buildDir}/docs/asciidoc"
+    into "${buildDir}/resources/main/static/api/v1/templates/docs"
+}
+
+
+
+// ========================================
+// Permission 스캔 (CI/CD용)
+// ========================================
+// 실행: ./gradlew :adapter-in:rest-api:scanPermissions
+// 출력: build/permissions/permissions.json
+//
+// CI/CD 파이프라인에서 이 파일을 S3/Artifact에 업로드하면
+// 권한 관리 시스템에서 자동완성 소스로 사용 가능
+tasks.register('scanPermissions', JavaExec) {
+    description = 'Scan @PreAuthorize annotations and output permissions to JSON'
+    group = 'verification'
+
+    dependsOn classes
+
+    mainClass = 'com.ryuqq.adapter.in.rest.architecture.PermissionScanner'
+    classpath = sourceSets.test.runtimeClasspath
+
+    args = [
+            '--output', layout.buildDirectory.file('permissions/permissions.json').get().asFile.path,
+            '--service', 'spring-standards',
+            '--package', 'com.ryuqq.adapter.in.rest'
+    ]
+
+    doFirst {
+        mkdir layout.buildDirectory.dir('permissions').get().asFile
+    }
+}

@@ -1,0 +1,97 @@
+=== Convention 개요
+
+컨벤션을 관리하는 API입니다. DOMAIN, APPLICATION, PERSISTENCE, REST_API 등 레이어별 컨벤션 정보를 등록/조회/수정/삭제할 수 있습니다.
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/convention-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/convention-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/convention-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/convention-get-all/response-fields.adoc[]
+
+==== 레이어별 조회
+
+===== Path Parameters
+
+include::{snippets}/convention-get-by-layer/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/convention-get-by-layer/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/convention-get-by-layer/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/convention-get-by-layer/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/convention-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/convention-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/convention-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/convention-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/convention-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/convention-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/convention-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/convention-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/convention-update/response-fields.adoc[]
+
+==== 삭제
+
+===== Path Parameters
+
+include::{snippets}/convention-delete/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/convention-delete/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/convention-delete/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/convention-delete/response-fields.adoc[]

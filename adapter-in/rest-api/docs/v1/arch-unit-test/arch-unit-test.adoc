@@ -1,0 +1,97 @@
+=== ArchUnit Test 개요
+
+ArchUnit 테스트를 관리하는 API입니다. 아키텍처 규칙 검증을 위한 테스트 케이스를 등록/조회/수정/삭제할 수 있습니다.
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/arch-unit-test-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/arch-unit-test-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/arch-unit-test-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/arch-unit-test-get-all/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/arch-unit-test-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/arch-unit-test-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/arch-unit-test-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/arch-unit-test-get-by-id/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/arch-unit-test-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/arch-unit-test-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/arch-unit-test-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/arch-unit-test-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/arch-unit-test-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/arch-unit-test-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/arch-unit-test-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/arch-unit-test-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/arch-unit-test-update/response-fields.adoc[]
+
+==== 삭제
+
+===== Path Parameters
+
+include::{snippets}/arch-unit-test-delete/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/arch-unit-test-delete/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/arch-unit-test-delete/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/arch-unit-test-delete/response-fields.adoc[]

@@ -1,0 +1,15 @@
+rootProject.name = 'conventionHub'
+
+// Core modules
+include 'domain'
+include 'application'
+
+// Adapter modules
+include 'adapter-in:rest-api'
+include 'adapter-out:persistence-mysql'
+
+// Bootstrap modules
+include 'bootstrap:bootstrap-web-api'
+
+// Integration test
+include 'integration-test'

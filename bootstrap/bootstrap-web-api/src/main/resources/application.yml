@@ -1,0 +1,122 @@
+# ===============================================
+# Spring Boot Web API Application Configuration
+# ===============================================
+# Spring Boot 3.5.x + Java 21 기준
+# Bootstrap 모듈 - 실행 가능한 애플리케이션 설정
+#
+# 설정 분리 원칙:
+# - application.yml: 공통 인프라 설정 (Server, Actuator, Config Import)
+# - application-{profile}.yml: 환경별 설정 (local, dev, staging, prod)
+# - rest-api.yml: REST API 레이어 설정 (Jackson, MVC, Web, i18n, OpenAPI)
+# - persistence.yml: 영속성 레이어 설정 (DataSource, JPA, Flyway)
+# - logback-spring.xml: 로깅 설정 (Profile별 JSON/패턴 분리)
+#
+# @since 1.0.0
+# ===============================================
+
+# ===============================================
+# Server Configuration (Tomcat) - 공통 기본값
+# ===============================================
+server:
+  port: 8080
+
+  # Tomcat 서블릿 컨테이너 설정
+  tomcat:
+    # 스레드풀 설정 (환경별 오버라이드)
+    threads:
+      min-spare: 10
+      max: 200
+
+    # 커넥션 설정
+    connection-timeout: 20s
+    keep-alive-timeout: 60s
+
+    # 큐 설정
+    accept-count: 100
+
+    # 최대 커넥션 수
+    max-connections: 8192
+
+  # Graceful Shutdown
+  shutdown: graceful
+
+# ===============================================
+# Spring Configuration
+# ===============================================
+spring:
+  application:
+    name: spring-standards-api
+
+  # Profile 설정 (기본값: local)
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  # Config Import (각 모듈의 설정 파일 로드)
+  config:
+    import:
+      - optional:classpath:rest-api.yml
+      - optional:classpath:persistence.yml
+
+# ===============================================
+# Management & Actuator (모니터링) - 공통 설정
+# ===============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+      base-path: /actuator
+
+  endpoint:
+    health:
+      show-details: when-authorized
+    loggers:
+      access: unrestricted
+
+  # Prometheus Metrics
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+  metrics:
+    # Metrics Tags (ADOT/Prometheus 필수)
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:local}
+
+    # 히스토그램 분포 설정
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+      slo:
+        http.server.requests: 100ms,500ms,1s,5s
+
+  # Health Indicator 설정
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+
+# ===============================================
+# Sentry Configuration (Error Tracking) - 공통 기본값
+# ===============================================
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${spring.profiles.active:local}
+  release: ${APP_VERSION:unknown}
+  server-name: ${HOSTNAME:unknown}
+  traces-sample-rate: 1.0
+  enable-tracing: true
+  send-default-pii: false
+  ignored-exceptions-for-type:
+    - org.springframework.web.HttpRequestMethodNotSupportedException
+    - org.springframework.web.servlet.NoHandlerFoundException
+    - org.springframework.web.servlet.resource.NoResourceFoundException
+    - org.springframework.security.access.AccessDeniedException
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info

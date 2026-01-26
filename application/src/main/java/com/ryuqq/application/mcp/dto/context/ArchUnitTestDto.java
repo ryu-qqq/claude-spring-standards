@@ -1,0 +1,15 @@
+package com.ryuqq.application.mcp.dto.context;
+
+/**
+ * ArchUnitTestDto - ArchUnit 테스트 조회 결과
+ *
+ * <p>MCP Context 조회용 DTO입니다.
+ *
+ * @param testId 테스트 ID
+ * @param name 테스트 이름
+ * @param description 설명
+ * @param testCode 테스트 코드
+ * @author ryu-qqq
+ * @since 1.0.0
+ */
+public record ArchUnitTestDto(Long testId, String name, String description, String testCode) {}

@@ -1,0 +1,73 @@
+=== ClassType 개요
+
+클래스 타입 정보를 관리하는 API입니다. Aggregate, Value Object, Use Case 등의 클래스 타입을 등록/조회/수정할 수 있습니다.
+
+ClassType은 ClassTypeCategory에 종속되며, 아키텍처별 클래스 타입 분류를 위해 사용됩니다.
+
+==== 복합 조건 조회 (커서 기반)
+
+===== HTTP Request
+
+include::{snippets}/class-type-search-by-cursor/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/class-type-search-by-cursor/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-search-by-cursor/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/class-type-search-by-cursor/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/class-type-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/class-type-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/class-type-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/class-type-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/class-type-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/class-type-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/class-type-update/response-fields.adoc[]
+
+==== Validation 오류
+
+===== HTTP Request
+
+include::{snippets}/class-type-create-validation-error/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-create-validation-error/http-response.adoc[]

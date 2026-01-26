@@ -1,0 +1,194 @@
+=== FeedbackQueue 개요
+
+피드백 큐를 관리하는 API입니다. LLM/Human 기반 2단계 승인 프로세스를 통해 코딩 규칙, 클래스 템플릿 등의 변경 요청을 관리합니다.
+
+==== 상태 흐름
+
+[source]
+----
+PENDING_LLM → LLM_APPROVED → (LOW: MERGED | MEDIUM: PENDING_HUMAN)
+           ↘ LLM_REJECTED
+
+PENDING_HUMAN → HUMAN_APPROVED → MERGED
+             ↘ HUMAN_REJECTED
+----
+
+==== 리스크 레벨
+
+|===
+| 레벨 | 설명 | 승인 프로세스
+
+| LOW
+| 낮은 위험
+| LLM 승인만으로 머지 가능
+
+| MEDIUM
+| 중간 위험
+| LLM + Human 2단계 승인 필요
+
+| HIGH
+| 높은 위험
+| LLM + Human 2단계 승인 필요 (추가 검토)
+|===
+
+==== 피드백 생성
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/feedback-queue-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-create/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/feedback-queue-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-get-by-id/response-fields.adoc[]
+
+==== 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/feedback-queue-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-get-all/response-fields.adoc[]
+
+==== LLM 1차 승인
+
+PENDING_LLM 상태의 피드백을 LLM이 1차 승인합니다.
+
+===== Path Parameters
+
+include::{snippets}/feedback-queue-llm-approve/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-llm-approve/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-llm-approve/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-llm-approve/response-fields.adoc[]
+
+==== LLM 1차 거절
+
+PENDING_LLM 상태의 피드백을 LLM이 1차 거절합니다.
+
+===== Path Parameters
+
+include::{snippets}/feedback-queue-llm-reject/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-llm-reject/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/feedback-queue-llm-reject/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-llm-reject/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-llm-reject/response-fields.adoc[]
+
+==== Human 2차 승인
+
+LLM_APPROVED 상태의 Medium/High 리스크 피드백을 Human이 2차 승인합니다.
+
+===== Path Parameters
+
+include::{snippets}/feedback-queue-human-approve/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-human-approve/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-human-approve/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-human-approve/response-fields.adoc[]
+
+==== Human 2차 거절
+
+LLM_APPROVED 상태의 Medium/High 리스크 피드백을 Human이 2차 거절합니다.
+
+===== Path Parameters
+
+include::{snippets}/feedback-queue-human-reject/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-human-reject/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/feedback-queue-human-reject/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-human-reject/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-human-reject/response-fields.adoc[]
+
+==== 피드백 머지
+
+승인된 피드백을 실제 대상 테이블에 반영합니다.
+
+===== Path Parameters
+
+include::{snippets}/feedback-queue-merge/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/feedback-queue-merge/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/feedback-queue-merge/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/feedback-queue-merge/response-fields.adoc[]

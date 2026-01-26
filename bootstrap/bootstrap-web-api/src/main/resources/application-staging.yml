@@ -1,0 +1,18 @@
+# ===============================================
+# Staging 환경 설정
+# ===============================================
+# 활성화: spring.profiles.active=staging
+# AWS 스테이징 환경 (ECS)
+# ===============================================
+
+server:
+  tomcat:
+    threads:
+      max: 150
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Staging: loggers 제외
+        include: health,info,metrics,prometheus

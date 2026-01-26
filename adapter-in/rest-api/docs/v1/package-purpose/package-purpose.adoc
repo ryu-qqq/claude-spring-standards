@@ -1,0 +1,79 @@
+=== Package Purpose 개요
+
+패키지 목적을 관리하는 API입니다. 각 모듈 타입에서 사용하는 패키지의 목적(aggregate, service, controller 등)을 등록/조회/수정할 수 있습니다.
+
+==== 모듈 타입별 조회
+
+===== Query Parameters
+
+include::{snippets}/package-purpose-get-by-module-type/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/package-purpose-get-by-module-type/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-purpose-get-by-module-type/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-purpose-get-by-module-type/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/package-purpose-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/package-purpose-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-purpose-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-purpose-get-by-id/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/package-purpose-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/package-purpose-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-purpose-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-purpose-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/package-purpose-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/package-purpose-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/package-purpose-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/package-purpose-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/package-purpose-update/response-fields.adoc[]

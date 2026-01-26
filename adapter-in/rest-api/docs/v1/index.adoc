@@ -1,0 +1,199 @@
+= Spring Standards API Documentation
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+:sectnums:
+
+[[overview]]
+== 개요
+
+Spring Standards API는 헥사고날 아키텍처 기반의 Spring Boot 코딩 컨벤션 및 표준을 관리하는 REST API입니다.
+
+=== 기본 정보
+
+|===
+| 항목 | 값
+
+| Base URL
+| `/api/v1/standards`
+
+| Content-Type
+| `application/json`
+
+| Character Encoding
+| `UTF-8`
+|===
+
+=== HTTP 상태 코드
+
+|===
+| 상태 코드 | 설명
+
+| `200 OK`
+| 요청 성공
+
+| `201 Created`
+| 리소스 생성 성공
+
+| `400 Bad Request`
+| 잘못된 요청 파라미터
+
+| `404 Not Found`
+| 리소스를 찾을 수 없음
+
+| `500 Internal Server Error`
+| 서버 내부 오류
+|===
+
+[[api-reference]]
+== API Reference
+
+=== 핵심 도메인
+
+* <<convention-api,Convention API>> - 레이어별 컨벤션 관리
+* <<coding-rule-api,Coding Rule API>> - 코딩 규칙 관리
+* <<class-template-api,Class Template API>> - 클래스 템플릿 관리
+* <<zero-tolerance-rule-api,Zero-Tolerance Rule API>> - 필수 준수 규칙
+
+=== 아키텍처 도메인
+
+* <<architecture-api,Architecture API>> - 아키텍처 정보 관리
+* <<layer-api,Layer API>> - 레이어 관리
+* <<layer-dependency-rule-api,Layer Dependency Rule API>> - 레이어 의존성 규칙
+* <<arch-unit-test-api,ArchUnit Test API>> - 아키텍처 테스트 관리
+* <<class-type-category-api,ClassTypeCategory API>> - 클래스 타입 카테고리 관리
+* <<class-type-api,ClassType API>> - 클래스 타입 관리
+
+=== 패키지 구조 도메인
+
+* <<module-api,Module API>> - 모듈 관리
+* <<package-purpose-api,Package Purpose API>> - 패키지 목적 관리
+* <<package-structure-api,Package Structure API>> - 패키지 구조 관리
+
+=== 부가 도메인
+
+* <<rule-example-api,Rule Example API>> - 규칙 예제 CRUD
+* <<resource-template-api,Resource Template API>> - 리소스 템플릿 관리
+* <<tech-stack-api,Tech Stack API>> - 기술 스택 관리
+* <<checklist-item-api,Checklist Item API>> - 체크리스트 항목 관리
+
+=== AI 도구 도메인
+
+* <<config-file-template-api,Config File Template API>> - AI 도구 설정 파일 템플릿 관리
+* <<onboarding-context-api,Onboarding Context API>> - Serena 온보딩 컨텍스트 관리
+
+=== 워크플로우 도메인
+
+* <<feedback-queue-api,FeedbackQueue API>> - LLM/Human 2단계 승인 피드백 관리
+
+=== 통합 API
+
+* <<mcp-api,MCP API>> - MCP 통합 검색 및 집계
+
+[[convention-api]]
+== Convention API
+
+include::convention/convention.adoc[]
+
+[[coding-rule-api]]
+== Coding Rule API
+
+include::coding-rule/coding-rule.adoc[]
+
+[[class-template-api]]
+== Class Template API
+
+include::class-template/class-template.adoc[]
+
+[[zero-tolerance-rule-api]]
+== Zero-Tolerance Rule API
+
+include::zero-tolerance-rule/zero-tolerance-rule.adoc[]
+
+[[architecture-api]]
+== Architecture API
+
+include::architecture/architecture.adoc[]
+
+[[layer-api]]
+== Layer API
+
+include::layer/layer.adoc[]
+
+[[layer-dependency-rule-api]]
+== Layer Dependency Rule API
+
+include::layer-dependency-rule/layer-dependency-rule.adoc[]
+
+[[arch-unit-test-api]]
+== ArchUnit Test API
+
+include::arch-unit-test/arch-unit-test.adoc[]
+
+[[module-api]]
+== Module API
+
+include::module/module.adoc[]
+
+[[package-purpose-api]]
+== Package Purpose API
+
+include::package-purpose/package-purpose.adoc[]
+
+[[package-structure-api]]
+== Package Structure API
+
+include::package-structure/package-structure.adoc[]
+
+[[rule-example-api]]
+== Rule Example API
+
+include::rule-example/rule-example.adoc[]
+
+[[resource-template-api]]
+== Resource Template API
+
+include::resource-template/resource-template.adoc[]
+
+[[tech-stack-api]]
+== Tech Stack API
+
+include::tech-stack/tech-stack.adoc[]
+
+[[checklist-item-api]]
+== Checklist Item API
+
+include::checklist-item/checklist-item.adoc[]
+
+[[mcp-api]]
+== MCP API
+
+include::mcp/mcp.adoc[]
+
+[[feedback-queue-api]]
+== FeedbackQueue API
+
+include::feedback-queue/feedback-queue.adoc[]
+
+[[config-file-template-api]]
+== Config File Template API
+
+include::config-file-template/config-file-template.adoc[]
+
+[[onboarding-context-api]]
+== Onboarding Context API
+
+include::onboarding-context/onboarding-context.adoc[]
+
+[[class-type-category-api]]
+== ClassTypeCategory API
+
+include::class-type-category/class-type-category.adoc[]
+
+[[class-type-api]]
+== ClassType API
+
+include::class-type/class-type.adoc[]

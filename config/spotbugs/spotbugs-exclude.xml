@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    SpotBugs Exclusion Configuration
+    Enterprise Spring Boot Standards
+
+    @author Architecture Team (arch-team@company.com)
+    @since 2024-01-01
+-->
+<FindBugsFilter>
+    <!-- ========================================
+         Exclude Generated Code
+         ======================================== -->
+    <Match>
+        <Class name="~.*\.Q.*"/>  <!-- QueryDSL generated classes -->
+    </Match>
+
+    <Match>
+        <Package name="~.*\.generated\..*"/>
+    </Match>
+
+    <!-- ========================================
+         Exclude Test Code from Certain Rules
+         ======================================== -->
+    <Match>
+        <Class name="~.*Test"/>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
+    </Match>
+
+    <!-- Exclude test support classes - TestContainers generic type false positives -->
+    <Match>
+        <Class name="~.*TestSupport"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.common\..*"/>
+        <Bug pattern="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE"/>
+    </Match>
+
+    <!-- ArchUnit tests use fluent API - ignore return value warnings -->
+    <Match>
+        <Class name="~.*ArchTest"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+    <Match>
+        <Class name="~.*ArchTest"/>
+        <Bug pattern="RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED"/>
+    </Match>
+
+    <!-- Exclude all ArchUnit architecture test classes -->
+    <Match>
+        <Class name="~.*\.architecture\..*"/>
+    </Match>
+
+    <!-- ========================================
+         Configuration Classes
+         ======================================== -->
+    <Match>
+        <Class name="~.*Configuration"/>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.config"/>
+    </Match>
+
+    <!-- ========================================
+         Common Utilities
+         ======================================== -->
+    <Match>
+        <Package name="~.*\.common\..*"/>
+    </Match>
+
+    <!-- ========================================
+         Redis Infrastructure - Adapters
+         ======================================== -->
+    <Match>
+        <Package name="~.*\.redis\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.cache\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.lock\..*"/>
+    </Match>
+
+    <!-- ========================================
+         IAM - Auth Infrastructure
+         ======================================== -->
+    <Match>
+        <Package name="~.*\.iam\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.auth\..*"/>
+    </Match>
+
+    <!-- ========================================
+         Base Domains - Tests in Progress
+         ======================================== -->
+    <Match>
+        <Package name="~.*\.codingrule\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.convention\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.mcp\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.moduletype\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.packagepurpose\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.checklistitem\..*"/>
+    </Match>
+
+    <!-- ========================================
+         Integration Tests - Exclude from strict rules
+         ======================================== -->
+    <Match>
+        <Package name="~.*\.integration\..*"/>
+    </Match>
+
+    <!-- ========================================
+         Phase 2 & 3 Domains - Pending Review
+         TODO: Remove these exclusions after code review
+         ======================================== -->
+    <Match>
+        <Package name="~.*\.archunittest\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.classtemplate\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.ruleexample\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.architecture\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.developmentpattern\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.eventpattern\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.layerdependency\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.layerdependencyrule\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.module\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.moduledependency\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.packagestructure\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.techstack\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.resourcetemplate\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.zerotolerance\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.zerotolerancerule\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.feedbackqueue\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.layer\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.classtype\..*"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.classtypecategory\..*"/>
+    </Match>
+</FindBugsFilter>

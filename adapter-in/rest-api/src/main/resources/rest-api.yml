@@ -1,0 +1,91 @@
+# ============================================================
+# REST API Adapter 공통 설정
+# ============================================================
+# 환경별 설정은 rest-api-{profile}.yml 참조
+# - rest-api-local.yml: 로컬 개발 환경
+# - rest-api-prod.yml: 운영 환경
+#
+# 인증 아키텍처: Gateway Only
+# - JWT 검증: API Gateway에서 처리
+# - OAuth2: API Gateway에서 처리
+# - CORS: API Gateway에서 처리
+# - 이 서비스: Gateway가 전달하는 헤더(X-User-Id, X-User-Roles)만 파싱
+#
+# @since 1.0.0
+# ============================================================
+
+spring:
+  # ============================================================
+  # MessageSource (i18n)
+  # ============================================================
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  # ============================================================
+  # Jackson (JSON 직렬화/역직렬화)
+  # ============================================================
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+    time-zone: Asia/Seoul
+
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+      FAIL_ON_EMPTY_BEANS: false
+
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+
+    default-property-inclusion: non_null
+
+  # ============================================================
+  # Web Configuration
+  # ============================================================
+  web:
+    locale: ko_KR
+    locale-resolver: fixed
+
+  # ============================================================
+  # MVC Configuration
+  # ============================================================
+  mvc:
+    contentnegotiation:
+      favor-parameter: false
+      favor-path-extension: false
+
+# ============================================================
+# Error Response Configuration (RFC 7807)
+# ============================================================
+# @see com.ryuqq.adapter.in.rest.common.controller.GlobalExceptionHandler
+api:
+  error:
+    base-url: about:blank
+    use-about-blank: true
+
+# ============================================================
+# API Documentation (Springdoc OpenAPI)
+# ============================================================
+# Gateway 라우팅 패턴: /api/v1/templates/** → 이 서버
+# prefix strip 없이 그대로 전달되므로 경로를 맞춰줌
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api/v1/templates/api-docs
+
+  swagger-ui:
+    enabled: true
+    path: /api/v1/templates/swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    try-it-out-enabled: true
+
+  packages-to-scan:
+    - com.ryuqq.adapter.in.rest
+
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+  cache:
+    disabled: true

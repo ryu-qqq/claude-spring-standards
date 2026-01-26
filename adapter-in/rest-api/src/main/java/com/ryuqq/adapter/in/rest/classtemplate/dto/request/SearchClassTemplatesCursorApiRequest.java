@@ -1,0 +1,46 @@
+package com.ryuqq.adapter.in.rest.classtemplate.dto.request;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.util.List;
+
+/**
+ * SearchClassTemplatesCursorApiRequest - ClassTemplate 복합 조건 조회 API Request (커서 기반)
+ *
+ * <p>ClassTemplate 복합 조건 조회 REST API 요청 DTO입니다. 패키지 구조 ID 및 클래스 타입 ID 필터링을 지원합니다.
+ *
+ * <p>ADTO-001: API Request DTO는 Record로 정의.
+ *
+ * <p>ADTO-002: *ApiRequest 네이밍.
+ *
+ * <p>ADTO-003: Validation 어노테이션은 API Request에만 적용.
+ *
+ * <p>기본값 처리는 Mapper에서 수행합니다. Request DTO에서는 기본값 설정 금지.
+ *
+ * <p>커서 기반 조회: cursor는 마지막 항목의 ID이며, DESC 정렬로 조회합니다.
+ *
+ * @param cursor 커서 값 (마지막 항목의 ID, null이면 첫 페이지)
+ * @param size 슬라이스 크기 (nullable, 최대: 100)
+ * @param structureIds 패키지 구조 ID 필터 목록 (null 또는 빈 리스트면 전체 조회)
+ * @param classTypeIds 클래스 타입 ID 필터 목록 (null 또는 빈 리스트면 전체 조회)
+ * @author ryu-qqq
+ * @since 1.0.0
+ */
+@Schema(description = "ClassTemplate 복합 조건 조회 요청 (커서 기반)")
+public record SearchClassTemplatesCursorApiRequest(
+        @Parameter(description = "커서 값 (마지막 항목의 ID)", example = "123")
+                @Schema(description = "커서 값 (마지막 항목의 ID)", nullable = true)
+                String cursor,
+        @Parameter(description = "슬라이스 크기", example = "20")
+                @Schema(description = "슬라이스 크기", minimum = "1", maximum = "100")
+                @Min(value = 1, message = "슬라이스 크기는 1 이상이어야 합니다")
+                @Max(value = 100, message = "슬라이스 크기는 100 이하여야 합니다")
+                Integer size,
+        @Parameter(description = "패키지 구조 ID 필터 (복수 선택 가능)", example = "1,2,3")
+                @Schema(description = "패키지 구조 ID 필터 목록", nullable = true)
+                List<Long> structureIds,
+        @Parameter(description = "클래스 타입 ID 필터 (복수 선택 가능)", example = "1,2,3")
+                @Schema(description = "클래스 타입 ID 필터 목록", nullable = true)
+                List<Long> classTypeIds) {}

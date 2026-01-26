@@ -1,0 +1,161 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: MCP Convention Server - Coding Convention SSOT
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: 배포 환경
+
+  DbHost:
+    Type: String
+    Description: RDS Proxy 엔드포인트
+
+  DbName:
+    Type: String
+    Default: convention_db
+    Description: 데이터베이스 이름
+
+  DbUser:
+    Type: String
+    Default: convention_user
+    Description: 데이터베이스 사용자
+
+  DbPassword:
+    Type: String
+    NoEcho: true
+    Description: 데이터베이스 비밀번호
+
+  # PostgreSQL (Feedback Storage)
+  PgHost:
+    Type: String
+    Default: ""
+    Description: PostgreSQL 호스트 (Feedback 로깅용)
+
+  PgPort:
+    Type: String
+    Default: "5432"
+    Description: PostgreSQL 포트
+
+  PgDatabase:
+    Type: String
+    Default: "shared_api"
+    Description: PostgreSQL 데이터베이스명
+
+  PgUser:
+    Type: String
+    Default: "shared_api_user"
+    Description: PostgreSQL 사용자
+
+  PgPassword:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: PostgreSQL 비밀번호
+
+  VpcSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: VPC 서브넷 ID 목록
+
+  VpcSecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: VPC 보안 그룹 ID 목록
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.12
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        # MySQL (Convention DB)
+        DB_HOST: !Ref DbHost
+        DB_NAME: !Ref DbName
+        DB_USER: !Ref DbUser
+        DB_PASSWORD: !Ref DbPassword
+        DB_PORT: "3306"
+        USE_RDS_PROXY: "true"
+        RDS_PROXY_ENDPOINT: !Ref DbHost
+        # PostgreSQL (Feedback Logging)
+        PG_HOST: !Ref PgHost
+        PG_PORT: !Ref PgPort
+        PG_DATABASE: !Ref PgDatabase
+        PG_USER: !Ref PgUser
+        PG_PASSWORD: !Ref PgPassword
+        # Common
+        AWS_REGION: !Ref AWS::Region
+        ENVIRONMENT: !Ref Environment
+
+Resources:
+  # Lambda 함수
+  MCPConventionServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub mcp-convention-server-${Environment}
+      Description: MCP Convention Server - 코딩 컨벤션 SSOT
+      CodeUri: src/
+      Handler: server.handler
+      VpcConfig:
+        SubnetIds: !Ref VpcSubnetIds
+        SecurityGroupIds: !Ref VpcSecurityGroupIds
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - rds-db:connect
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: "*"
+      Events:
+        MCPApi:
+          Type: Api
+          Properties:
+            Path: /mcp
+            Method: POST
+            RestApiId: !Ref MCPApi
+
+  # API Gateway
+  MCPApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub mcp-convention-api-${Environment}
+      StageName: !Ref Environment
+      Description: MCP Convention Server API
+      Cors:
+        AllowMethods: "'POST, OPTIONS'"
+        AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: NONE
+
+  # CloudWatch Log Group
+  MCPLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/mcp-convention-server-${Environment}
+      RetentionInDays: 30
+
+Outputs:
+  MCPApiUrl:
+    Description: MCP API Gateway URL
+    Value: !Sub https://${MCPApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/mcp
+
+  MCPFunctionArn:
+    Description: MCP Lambda Function ARN
+    Value: !GetAtt MCPConventionServerFunction.Arn
+
+  MCPFunctionName:
+    Description: MCP Lambda Function Name
+    Value: !Ref MCPConventionServerFunction

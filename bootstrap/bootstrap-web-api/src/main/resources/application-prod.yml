@@ -1,0 +1,28 @@
+# ===============================================
+# Production 환경 설정
+# ===============================================
+# 활성화: spring.profiles.active=prod
+# AWS 운영 환경 (ECS)
+# ⚠️ 모든 민감 정보는 환경 변수로 관리
+# ===============================================
+
+spring:
+  # Graceful Shutdown Timeout
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  tomcat:
+    threads:
+      max: 200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # 프로덕션: health, metrics, prometheus만 노출
+        include: health,metrics,prometheus
+
+# Sentry 샘플링 비율 조정 (비용 최적화)
+sentry:
+  traces-sample-rate: 0.1

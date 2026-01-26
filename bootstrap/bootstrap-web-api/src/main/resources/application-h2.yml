@@ -1,0 +1,49 @@
+# ===============================================
+# H2 인메모리 DB 환경 설정 (로컬 테스트용)
+# ===============================================
+# 활성화: spring.profiles.active=h2
+# MySQL 없이 로컬에서 앱 실행 테스트용
+# ===============================================
+
+spring:
+  # ========================================
+  # DataSource (H2 MySQL 호환 모드)
+  # ========================================
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+
+  # ========================================
+  # JPA/Hibernate
+  # ========================================
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: true
+
+  # ========================================
+  # Flyway 비활성화
+  # ========================================
+  flyway:
+    enabled: false
+
+# Sentry 비활성화
+sentry:
+  dsn: ""
+
+# ========================================
+# Logging (핸들러 매핑 확인용)
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.ryuqq: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE

@@ -1,0 +1,73 @@
+=== ClassTypeCategory 개요
+
+클래스 타입 카테고리 정보를 관리하는 API입니다. 도메인 타입, 애플리케이션 타입, 어댑터 타입 등의 카테고리를 등록/조회/수정할 수 있습니다.
+
+ClassTypeCategory는 Architecture에 종속되며, 아키텍처별 클래스 타입 분류 체계의 상위 계층입니다.
+
+==== 복합 조건 조회 (커서 기반)
+
+===== HTTP Request
+
+include::{snippets}/class-type-category-search-by-cursor/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/class-type-category-search-by-cursor/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-category-search-by-cursor/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/class-type-category-search-by-cursor/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/class-type-category-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/class-type-category-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-category-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/class-type-category-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/class-type-category-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/class-type-category-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/class-type-category-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-category-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/class-type-category-update/response-fields.adoc[]
+
+==== Validation 오류
+
+===== HTTP Request
+
+include::{snippets}/class-type-category-create-validation-error/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/class-type-category-create-validation-error/http-response.adoc[]

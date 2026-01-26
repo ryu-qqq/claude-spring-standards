@@ -1,0 +1,55 @@
+package com.ryuqq.adapter.in.rest.packagepurpose.dto.request;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.util.List;
+
+/**
+ * CreatePackagePurposeApiRequest - PackagePurpose 생성 API Request
+ *
+ * <p>PackagePurpose 생성 REST API 요청 DTO입니다.
+ *
+ * <p>DTO-001: API Request DTO는 Record로 정의.
+ *
+ * <p>DTO-002: Request DTO @NotNull/@Nullable 명시 필수.
+ *
+ * <p>DTO-003: *ApiRequest 네이밍, @Schema 설명 필수.
+ *
+ * @param structureId 패키지 구조 ID
+ * @param code 목적 코드 (예: AGGREGATE, VALUE_OBJECT)
+ * @param name 목적 이름
+ * @param description 설명
+ * @param defaultAllowedClassTypes 기본 허용 클래스 타입 목록
+ * @param defaultNamingPattern 기본 네이밍 패턴 (정규식)
+ * @param defaultNamingSuffix 기본 네이밍 접미사
+ * @author ryu-qqq
+ * @since 1.0.0
+ */
+public record CreatePackagePurposeApiRequest(
+        @NotNull(message = "structureId는 필수입니다") @Schema(description = "패키지 구조 ID", example = "1")
+                Long structureId,
+        @NotBlank(message = "code는 필수입니다")
+                @Size(max = 50, message = "code는 50자 이내여야 합니다")
+                @Schema(description = "목적 코드", example = "AGGREGATE")
+                String code,
+        @NotBlank(message = "name은 필수입니다")
+                @Size(max = 100, message = "name은 100자 이내여야 합니다")
+                @Schema(description = "목적 이름", example = "Aggregate Root")
+                String name,
+        @Nullable
+                @Size(max = 2000, message = "description은 2000자 이내여야 합니다")
+                @Schema(description = "설명", example = "DDD Aggregate Root 패키지")
+                String description,
+        @Nullable @Schema(description = "기본 허용 클래스 타입 목록", example = "[\"CLASS\", \"RECORD\"]")
+                List<String> defaultAllowedClassTypes,
+        @Nullable
+                @Size(max = 200, message = "defaultNamingPattern은 200자 이내여야 합니다")
+                @Schema(description = "기본 네이밍 패턴 (정규식)", example = "^[A-Z][a-zA-Z0-9]*$")
+                String defaultNamingPattern,
+        @Nullable
+                @Size(max = 50, message = "defaultNamingSuffix는 50자 이내여야 합니다")
+                @Schema(description = "기본 네이밍 접미사", example = "Aggregate")
+                String defaultNamingSuffix) {}

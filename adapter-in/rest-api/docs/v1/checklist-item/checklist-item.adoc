@@ -1,0 +1,97 @@
+=== Checklist Item 개요
+
+체크리스트 항목을 관리하는 API입니다. 코딩 규칙 준수 여부를 확인하기 위한 체크리스트 항목을 등록/조회/수정/삭제할 수 있습니다.
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/checklist-item-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/checklist-item-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/checklist-item-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/checklist-item-get-all/response-fields.adoc[]
+
+==== 단건 조회
+
+===== Path Parameters
+
+include::{snippets}/checklist-item-get-by-id/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/checklist-item-get-by-id/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/checklist-item-get-by-id/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/checklist-item-get-by-id/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/checklist-item-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/checklist-item-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/checklist-item-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/checklist-item-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/checklist-item-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/checklist-item-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/checklist-item-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/checklist-item-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/checklist-item-update/response-fields.adoc[]
+
+==== 삭제
+
+===== Path Parameters
+
+include::{snippets}/checklist-item-delete/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/checklist-item-delete/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/checklist-item-delete/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/checklist-item-delete/response-fields.adoc[]

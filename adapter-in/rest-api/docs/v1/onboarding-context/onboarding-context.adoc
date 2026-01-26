@@ -1,0 +1,61 @@
+=== Onboarding Context 개요
+
+Serena 온보딩 컨텍스트를 관리하는 API입니다. 프로젝트 개요, Zero-Tolerance 규칙, 규칙 인덱스, MCP 사용법 등의 온보딩 컨텍스트를 등록/조회/수정할 수 있습니다.
+
+==== 전체 목록 조회
+
+===== HTTP Request
+
+include::{snippets}/onboarding-context-get-all/http-request.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/onboarding-context-get-all/query-parameters.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/onboarding-context-get-all/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/onboarding-context-get-all/response-fields.adoc[]
+
+==== 생성
+
+===== HTTP Request
+
+include::{snippets}/onboarding-context-create/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/onboarding-context-create/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/onboarding-context-create/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/onboarding-context-create/response-fields.adoc[]
+
+==== 수정
+
+===== Path Parameters
+
+include::{snippets}/onboarding-context-update/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/onboarding-context-update/http-request.adoc[]
+
+===== Request Fields
+
+include::{snippets}/onboarding-context-update/request-fields.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/onboarding-context-update/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/onboarding-context-update/response-fields.adoc[]

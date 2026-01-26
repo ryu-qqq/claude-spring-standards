@@ -1,0 +1,147 @@
+=== MCP 개요
+
+MCP(Model Context Protocol) 통합 API입니다. 컨벤션 트리 조회 및 통합 검색 기능을 제공합니다.
+
+==== 컨벤션 트리 조회
+
+컨벤션 ID로 관련된 모든 코딩 규칙, 클래스 템플릿, 체크리스트 항목을 트리 구조로 조회합니다.
+
+===== Path Parameters
+
+include::{snippets}/mcp-convention-tree/path-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-convention-tree/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-convention-tree/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-convention-tree/response-fields.adoc[]
+
+==== 통합 검색
+
+키워드로 코딩 규칙, 클래스 템플릿, 컨벤션 등을 통합 검색합니다.
+
+===== Query Parameters
+
+include::{snippets}/mcp-search/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-search/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-search/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-search/response-fields.adoc[]
+
+==== Validation Context 조회
+
+코드 검증에 필요한 Zero-Tolerance 규칙과 체크리스트 항목을 조회합니다.
+
+===== Query Parameters
+
+include::{snippets}/mcp-validation-context/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-validation-context/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-validation-context/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-validation-context/response-fields.adoc[]
+
+==== Planning Context 조회
+
+코드 생성 계획에 필요한 레이어별 컨텍스트 정보를 조회합니다.
+
+===== Query Parameters
+
+include::{snippets}/mcp-planning-context/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-planning-context/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-planning-context/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-planning-context/response-fields.adoc[]
+
+==== Module Context 조회
+
+특정 모듈의 패키지 구조와 허용된 클래스 타입 정보를 조회합니다.
+
+===== Path Parameters
+
+include::{snippets}/mcp-module-context/path-parameters.adoc[]
+
+===== Query Parameters
+
+include::{snippets}/mcp-module-context/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-module-context/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-module-context/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-module-context/response-fields.adoc[]
+
+==== Config Files 조회 (init_project Tool)
+
+설정 파일 템플릿 목록을 조회합니다. init_project Tool에서 사용합니다.
+
+===== Query Parameters
+
+include::{snippets}/mcp-config-files/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-config-files/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-config-files/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-config-files/response-fields.adoc[]
+
+==== Onboarding Context 조회 (get_onboarding_context Tool)
+
+온보딩 컨텍스트 목록을 조회합니다. get_onboarding_context Tool에서 사용합니다.
+
+===== Query Parameters
+
+include::{snippets}/mcp-onboarding/query-parameters.adoc[]
+
+===== HTTP Request
+
+include::{snippets}/mcp-onboarding/http-request.adoc[]
+
+===== HTTP Response
+
+include::{snippets}/mcp-onboarding/http-response.adoc[]
+
+===== Response Fields
+
+include::{snippets}/mcp-onboarding/response-fields.adoc[]

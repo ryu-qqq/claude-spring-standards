@@ -1,0 +1,274 @@
+// ========================================
+// Bootstrap: Web API Application
+// ========================================
+// Runnable Spring Boot application
+// Wires all adapters and beans together
+// Main application entry point
+// NO Lombok allowed
+// ========================================
+
+import java.time.Instant
+
+plugins {
+    id 'java'
+    id 'java-test-fixtures'  // ← ArchUnit 유틸리티를 testFixtures로 제공
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.asciidoctor)
+    alias(libs.plugins.sentry)
+}
+
+// ========================================
+// REST Docs Configuration
+// ========================================
+ext {
+    snippetsDir = file("${project(':adapter-in:rest-api').buildDir}/generated-snippets")
+}
+
+configurations {
+    asciidoctorExt
+}
+
+dependencies {
+    // ========================================
+    // Core Modules
+    // ========================================
+    implementation project(':domain')
+    implementation project(':application')
+
+    // ========================================
+    // Adapters
+    // ========================================
+    // Inbound
+    implementation project(':adapter-in:rest-api')
+
+    // Outbound
+    implementation project(':adapter-out:persistence-mysql')
+
+    // ========================================
+    // Spring Boot Starters
+    // ========================================
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.data.jpa
+    implementation libs.spring.boot.starter.validation
+    implementation libs.spring.boot.starter.security
+    implementation libs.spring.boot.starter.actuator
+
+    // Configuration Processing
+    annotationProcessor libs.spring.boot.configuration.processor
+
+    // ========================================
+    // Observability
+    // ========================================
+    // Micrometer for metrics
+    implementation libs.micrometer.prometheus
+
+    // Logging
+    implementation libs.logstash.logback.encoder
+
+    // Sentry for error tracking
+    implementation libs.sentry.spring.boot.starter.jakarta
+    implementation libs.sentry.logback
+
+    // ========================================
+    // Database
+    // ========================================
+    runtimeOnly libs.mysql.connector
+
+    // ========================================
+    // AWS SDK (from adapters)
+    // ========================================
+    implementation platform(libs.aws.bom)
+
+    // ========================================
+    // Test Dependencies
+    // ========================================
+    testImplementation libs.spring.boot.starter.test
+    testImplementation libs.spring.security.test
+    testImplementation libs.testcontainers.mysql
+    testImplementation libs.testcontainers.junit
+    testImplementation libs.rest.assured
+    testRuntimeOnly libs.h2  // Integration Test용 H2 (MySQL 호환 모드)
+
+    // ========================================
+    // REST Docs (Asciidoctor Extension)
+    // ========================================
+    asciidoctorExt libs.spring.restdocs.asciidoctor
+
+    // ArchUnit (for testFixtures utility classes)
+    testFixturesApi libs.archunit.junit5  // ← testFixtures에서 ArchUnit 사용
+
+    // TestFixtures from all modules (for CommonTestingRulesTest)
+    testImplementation testFixtures(project(':domain'))
+    testImplementation testFixtures(project(':application'))
+    testImplementation testFixtures(project(':adapter-in:rest-api'))
+    testImplementation testFixtures(project(':adapter-out:persistence-mysql'))
+}
+
+// ========================================
+// Spring Boot Configuration
+// ========================================
+tasks.bootJar {
+    archiveFileName = "${project.rootProject.name}-web-api.jar"
+
+    manifest {
+        attributes(
+            'Implementation-Title': project.rootProject.name,
+            'Implementation-Version': project.version,
+            'Built-By': System.getProperty('user.name'),
+            'Built-JDK': System.getProperty('java.version'),
+            'Build-Timestamp': Instant.now().toString()
+        )
+    }
+}
+
+// ========================================
+// Integration Test Coverage
+// ========================================
+def jacocoExcludePatterns = [
+    // Common utilities
+    '**/common/**',
+    // Infrastructure
+    '**/auth/**',
+    '**/config/**',
+    // Base domains - tests in progress
+    '**/codingrule/**',
+    '**/convention/**',
+    // Phase 2 domains - Tests pending
+    '**/archunittest/**',
+    '**/classtemplate/**',
+    '**/ruleexample/**',
+    // Phase 3 domains - Tests pending
+    '**/architecture/**',
+    '**/developmentpattern/**',
+    '**/eventpattern/**',
+    '**/layerdependency/**',
+    '**/module/**',
+    '**/moduledependency/**',
+    '**/packagestructure/**',
+    '**/techstack/**',
+    '**/zerotolerance/**'
+]
+
+afterEvaluate {
+    tasks.jacocoTestReport {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludePatterns)
+        }))
+    }
+
+    tasks.jacocoTestCoverageVerification {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludePatterns)
+        }))
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        // Bundle-level rule - temporarily disabled until tests are complete
+        rule {
+            enabled = false
+            limit {
+                minimum = 0.70
+            }
+        }
+        rule {
+            element = 'CLASS'
+            limit {
+                counter = 'LINE'
+                minimum = 0.50
+            }
+            excludes = [
+                '*.config.*',
+                '*Application'
+            ]
+        }
+    }
+}
+
+tasks.test {
+    finalizedBy tasks.jacocoTestCoverageVerification
+}
+
+// ========================================
+// Application Run Configuration
+// ========================================
+tasks.bootRun {
+    jvmArgs = [
+        '-Xms512m',
+        '-Xmx1024m',
+        '-XX:+UseG1GC'
+    ]
+}
+
+// ========================================
+// REST Docs - Asciidoctor Configuration
+// ========================================
+asciidoctor {
+    dependsOn ':adapter-in:rest-api:test'
+
+    // snippets 디렉토리가 없으면 스킵 (테스트 미실행 시)
+    onlyIf { snippetsDir.exists() }
+
+    // inputs.dir은 디렉토리가 있을 때만 설정 (Configuration 단계에서 검증 우회)
+    if (snippetsDir.exists()) {
+        inputs.dir snippetsDir
+    }
+    configurations 'asciidoctorExt'
+
+    sources {
+        include '**/index.adoc'
+    }
+
+    baseDirFollowsSourceFile()
+
+    attributes 'snippets': snippetsDir
+}
+
+// Copy generated docs to static resources
+tasks.register('copyDocs', Copy) {
+    dependsOn asciidoctor
+    // asciidoctor 결과가 있을 때만 복사
+    onlyIf { asciidoctor.didWork }
+    from "${asciidoctor.outputDir}"
+    into "${sourceSets.main.output.resourcesDir}/static/docs"
+}
+
+// Ensure copyDocs runs before tasks that need the generated docs (조건부)
+tasks.named('processResources') {
+    dependsOn 'copyDocs'
+}
+
+tasks.named('jar') {
+    dependsOn 'copyDocs'
+}
+
+tasks.named('resolveMainClassName') {
+    dependsOn 'copyDocs'
+}
+
+bootJar {
+    dependsOn copyDocs
+}
+
+// ========================================
+// Sentry Configuration (Source Context Upload)
+// ========================================
+// CI/CD에서 소스 코드 업로드를 위한 설정
+// 스택 트레이스에서 실제 소스 코드를 확인할 수 있음
+// SENTRY_AUTH_TOKEN 환경변수 필요 (SSM에서 주입)
+// ========================================
+sentry {
+    // 소스 컨텍스트 활성화 (스택 트레이스에 소스 코드 표시)
+    includeSourceContext = true
+
+    // Sentry 조직 및 프로젝트 설정
+    // org: Sentry 조직 슬러그 (https://sentry.io/organizations/{org}/)
+    // projectName: Sentry 프로젝트명 (대시보드에 표시되는 이름)
+    org = "connectly-sentry"
+    projectName = "convention-mcp"
+
+    // Auth Token (CI/CD 환경변수에서 주입)
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
+}
