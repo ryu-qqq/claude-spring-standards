@@ -85,21 +85,24 @@ Claude가 자동으로:
 → 모든 AI 도구가 동일한 규칙 참조
 ```
 
-### 핵심 가치: Lazy Loading
+### 핵심 가치: 중앙 집중 관리
 
-AI가 **전체 규칙을 미리 로딩하지 않고**, 작업에 필요한 규칙만 그때그때 조회합니다.
+**ConventionHub**는 토큰 효율성보다 **규칙의 중앙 집중 관리**에 집중합니다.
 
 ```
-Static 방식 (.claude/CLAUDE.md)
-├── 세션 시작 시 전체 규칙 로딩
-├── 사용하지 않는 규칙도 컨텍스트 차지
-└── 규칙이 많아질수록 토큰 낭비
+로컬 파일 방식 (.claude/CLAUDE.md, Skills)
+├── 각 팀원이 개별 파일 관리
+├── 규칙 변경 시 모든 팀원이 수동 동기화
+└── 버전 불일치 발생 가능
 
-Dynamic 방식 (MCP)
-├── 필요할 때만 규칙 조회 (Lazy Loading)
-├── Aggregate 만들 때 → Aggregate 규칙만
-└── Controller 만들 때 → Controller 규칙만
+MCP 방식 (ConventionHub)
+├── DB가 Single Source of Truth
+├── 규칙 변경 = DB 수정 → 팀 전체 즉시 적용
+└── 모든 AI 도구가 동일한 규칙 조회
 ```
+
+> 참고: Claude Code의 Skills도 Lazy Loading을 지원합니다.
+> ConventionHub의 차별점은 **팀 전체가 동일한 규칙을 공유**하는 것입니다.
 
 ---
 
