@@ -559,11 +559,7 @@ validation = validation_context(layers=["DOMAIN"])
 ### 1. Spring API 실행
 
 ```bash
-# 로컬 개발
 ./gradlew :bootstrap:bootstrap-web-api:bootRun
-
-# 또는 Docker
-docker-compose up -d
 ```
 
 ### 2. 규칙 데이터 등록
@@ -631,9 +627,7 @@ conventionHub/
 ├── adapter-out/persistence-mysql/  # JPA/QueryDSL
 ├── application/                    # UseCase 서비스
 ├── domain/                         # 도메인 모델
-├── bootstrap/bootstrap-web-api/    # Spring Boot App
-│
-└── terraform/                      # 인프라 코드 (AWS)
+└── bootstrap/bootstrap-web-api/    # Spring Boot App
 ```
 
 ---
@@ -647,7 +641,7 @@ conventionHub/
 | **Database** | MySQL 8.0, Flyway |
 | **Query** | QueryDSL 5.x |
 | **MCP Server** | Python 3.12, FastMCP |
-| **Infra** | AWS Lambda, ECS, Terraform |
+| **Infra** | AWS Lambda, ECS |
 | **AI Integration** | Claude Code, Cursor, Serena MCP |
 
 ---
