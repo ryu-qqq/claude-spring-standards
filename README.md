@@ -556,43 +556,46 @@ validation = validation_context(layers=["DOMAIN"])
 
 ## 시작하기
 
-### 1. Spring API 실행
+### 1. Docker로 실행 (권장)
 
 ```bash
-./gradlew :bootstrap:bootstrap-web-api:bootRun
+# MySQL + Spring API 실행
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f api
 ```
 
-### 2. 규칙 데이터 등록
+API가 시작되면 Flyway가 자동으로 스키마와 시드 데이터를 적용합니다.
 
-DB에 팀의 규칙을 등록합니다:
+### 2. MCP Server 실행
 
-```sql
--- 기술 스택 등록
-INSERT INTO tech_stack (name, language_type, framework_type, ...)
-VALUES ('my-team-stack', 'JAVA', 'SPRING_BOOT', ...);
+```bash
+cd mcp-lambda-server
 
--- 아키텍처 등록
-INSERT INTO architecture (tech_stack_id, name, pattern_type, ...)
-VALUES (1, 'hexagonal', 'HEXAGONAL', ...);
+# 환경 설정
+cp .env.example .env
 
--- 클래스 타입 카테고리 등록
-INSERT INTO class_type_category (architecture_id, code, name, order_index, ...)
-VALUES (1, 'DOMAIN_TYPES', '도메인 타입', 1, ...);
+# 실행 (uv 사용)
+uv run conventionhub-mcp
 
--- 클래스 타입 등록
-INSERT INTO class_type (category_id, code, name, order_index, ...)
-VALUES (1, 'AGGREGATE', 'Aggregate', 1, ...);
-
--- 레이어 등록
-INSERT INTO layer (architecture_id, code, name, ...)
-VALUES (1, 'DOMAIN', 'Domain Layer', ...);
-
--- 코딩 규칙 등록
-INSERT INTO coding_rule (convention_id, code, name, severity, ...)
-VALUES (1, 'NO-LOMBOK', 'Lombok 사용 금지', 'BLOCKER', ...);
+# 또는 pip 사용
+pip install -e .
+conventionhub-mcp
 ```
 
-또는 Seed SQL 파일을 사용하여 일괄 등록할 수 있습니다.
+### 3. 로컬 개발 (Docker 없이)
+
+```bash
+# MySQL 직접 설치 필요
+# DB 생성: convention_hub
+
+# Spring API 실행
+./gradlew :bootstrap:bootstrap-web-api:bootRun \
+  -Dspring.datasource.url=jdbc:mysql://localhost:3306/convention_hub \
+  -Dspring.datasource.username=root \
+  -Dspring.datasource.password=root
+```
 
 ### 3. Claude Code에서 사용
 
