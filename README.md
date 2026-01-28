@@ -155,24 +155,6 @@ conventionHub는 **고정된 규칙을 제공하는 것이 아니라**, 팀이 �
                     → ClassType FK 참조
 ```
 
-### ERD 요약
-
-```
-┌──────────────┐    ┌──────────────────────┐    ┌─────────────┐
-│  TechStack   │───▶│    Architecture      │───▶│    Layer    │
-└──────────────┘    └──────────────────────┘    └─────────────┘
-                              │                        │
-                              ▼                        ▼
-                    ┌──────────────────┐       ┌─────────────┐
-                    │ClassTypeCategory │       │   Module    │
-                    └──────────────────┘       └─────────────┘
-                              │                        │
-                              ▼                        ▼
-                    ┌──────────────────┐       ┌───────────────────┐
-                    │    ClassType     │◀──FK──│  ClassTemplate    │
-                    └──────────────────┘       └───────────────────┘
-```
-
 ---
 
 ## MCP Tools (15개)
@@ -656,46 +638,6 @@ conventionHub/
 
 ---
 
-## API Endpoints
-
-### CodingRule API
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/api/v1/templates/coding-rules` | 규칙 목록 (커서 기반) |
-| GET | `/api/v1/templates/coding-rules/index` | 규칙 인덱스 (경량) |
-| GET | `/api/v1/templates/coding-rules/{id}` | 규칙 상세 |
-| POST | `/api/v1/templates/coding-rules` | 규칙 생성 |
-| PUT | `/api/v1/templates/coding-rules/{id}` | 규칙 수정 |
-
-### ClassType API (NEW)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/api/v1/templates/class-types` | 클래스 타입 목록 (커서 기반) |
-| POST | `/api/v1/templates/class-types` | 클래스 타입 생성 |
-| PUT | `/api/v1/templates/class-types/{id}` | 클래스 타입 수정 |
-
-### ClassTypeCategory API (NEW)
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/api/v1/templates/class-type-categories` | 카테고리 목록 (커서 기반) |
-| POST | `/api/v1/templates/class-type-categories` | 카테고리 생성 |
-| PUT | `/api/v1/templates/class-type-categories/{id}` | 카테고리 수정 |
-
-### MCP API
-
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| GET | `/api/v1/templates/mcp/planning-context` | Planning Context |
-| GET | `/api/v1/templates/mcp/module-context` | Module Context |
-| GET | `/api/v1/templates/mcp/validation-context` | Validation Context |
-| GET | `/api/v1/templates/mcp/config-files` | 설정 파일 템플릿 |
-| GET | `/api/v1/templates/mcp/feedback-schema` | 피드백 스키마 |
-
----
-
 ## 기술 스택
 
 | 구분 | 기술 |
@@ -716,11 +658,11 @@ conventionHub/
 
 | Layer | Rules | BLOCKER | 설명 |
 |-------|-------|---------|------|
-| DOMAIN | 53 | 40 | Aggregate, VO, Event 규칙 |
-| APPLICATION | 37 | 10 | UseCase, Service, Port 규칙 |
-| ADAPTER_OUT | 16 | 10 | Entity, Repository 규칙 |
-| ADAPTER_IN | 46 | 3 | Controller, DTO 규칙 |
-| **합계** | **162** | **58** | - |
+| DOMAIN | 69 | 45 | Aggregate, VO, Event, Exception 규칙 |
+| APPLICATION | 39 | 10 | UseCase, Service, Port 규칙 |
+| ADAPTER_OUT | 15 | 10 | Entity, Repository 규칙 |
+| ADAPTER_IN | 47 | 3 | Controller, DTO 규칙 |
+| **합계** | **170** | **68** | - |
 
 이 데이터는 **예시**이며, 실제 사용 시 팀의 컨벤션에 맞게 수정하거나 새로 등록할 수 있습니다.
 
