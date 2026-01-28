@@ -63,9 +63,6 @@ public class PackageStructureQueryApiMapper {
                 result.id(),
                 result.moduleId(),
                 result.pathPattern(),
-                result.allowedClassTypes(),
-                result.namingPattern(),
-                result.namingSuffix(),
                 result.description(),
                 DateTimeFormatUtils.formatIso8601(result.createdAt()),
                 DateTimeFormatUtils.formatIso8601(result.updatedAt()));

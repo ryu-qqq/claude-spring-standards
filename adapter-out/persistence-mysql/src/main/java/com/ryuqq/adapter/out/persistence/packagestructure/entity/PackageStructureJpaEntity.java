@@ -32,15 +32,6 @@ public class PackageStructureJpaEntity extends SoftDeletableEntity {
     @Column(name = "path_pattern", length = 300, nullable = false)
     private String pathPattern;
 
-    @Column(name = "allowed_class_types", columnDefinition = "JSON", nullable = false)
-    private String allowedClassTypes;
-
-    @Column(name = "naming_pattern", length = 200)
-    private String namingPattern;
-
-    @Column(name = "naming_suffix", length = 50)
-    private String namingSuffix;
-
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
@@ -50,9 +41,6 @@ public class PackageStructureJpaEntity extends SoftDeletableEntity {
             Long id,
             Long moduleId,
             String pathPattern,
-            String allowedClassTypes,
-            String namingPattern,
-            String namingSuffix,
             String description,
             Instant createdAt,
             Instant updatedAt,
@@ -61,9 +49,6 @@ public class PackageStructureJpaEntity extends SoftDeletableEntity {
         this.id = id;
         this.moduleId = moduleId;
         this.pathPattern = pathPattern;
-        this.allowedClassTypes = allowedClassTypes;
-        this.namingPattern = namingPattern;
-        this.namingSuffix = namingSuffix;
         this.description = description;
     }
 
@@ -71,24 +56,12 @@ public class PackageStructureJpaEntity extends SoftDeletableEntity {
             Long id,
             Long moduleId,
             String pathPattern,
-            String allowedClassTypes,
-            String namingPattern,
-            String namingSuffix,
             String description,
             Instant createdAt,
             Instant updatedAt,
             Instant deletedAt) {
         return new PackageStructureJpaEntity(
-                id,
-                moduleId,
-                pathPattern,
-                allowedClassTypes,
-                namingPattern,
-                namingSuffix,
-                description,
-                createdAt,
-                updatedAt,
-                deletedAt);
+                id, moduleId, pathPattern, description, createdAt, updatedAt, deletedAt);
     }
 
     public Long getId() {
@@ -101,18 +74,6 @@ public class PackageStructureJpaEntity extends SoftDeletableEntity {
 
     public String getPathPattern() {
         return pathPattern;
-    }
-
-    public String getAllowedClassTypes() {
-        return allowedClassTypes;
-    }
-
-    public String getNamingPattern() {
-        return namingPattern;
-    }
-
-    public String getNamingSuffix() {
-        return namingSuffix;
     }
 
     public String getDescription() {

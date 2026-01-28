@@ -24,7 +24,6 @@ import com.ryuqq.application.packagepurpose.dto.command.CreatePackagePurposeComm
 import com.ryuqq.application.packagepurpose.dto.command.UpdatePackagePurposeCommand;
 import com.ryuqq.application.packagepurpose.port.in.CreatePackagePurposeUseCase;
 import com.ryuqq.application.packagepurpose.port.in.UpdatePackagePurposeUseCase;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -61,13 +60,7 @@ class PackagePurposeCommandControllerRestDocsTest extends RestDocsTestSupport {
             var request = CreatePackagePurposeApiRequestFixture.valid();
             var command =
                     new CreatePackagePurposeCommand(
-                            1L,
-                            "AGGREGATE",
-                            "Aggregate Root",
-                            "DDD Aggregate Root 패키지",
-                            java.util.List.of("CLASS", "RECORD"),
-                            "^[A-Z][a-zA-Z0-9]*$",
-                            "Aggregate");
+                            1L, "AGGREGATE", "Aggregate Root", "DDD Aggregate Root 패키지");
             Long createdId = 1L;
 
             given(mapper.toCommand(any())).willReturn(command);
@@ -95,18 +88,6 @@ class PackagePurposeCommandControllerRestDocsTest extends RestDocsTestSupport {
                                                     .type(String.class),
                                             fieldWithPath("description")
                                                     .description("설명")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("defaultAllowedClassTypes")
-                                                    .description("기본 허용 클래스 타입 목록")
-                                                    .type(List.class)
-                                                    .optional(),
-                                            fieldWithPath("defaultNamingPattern")
-                                                    .description("기본 네이밍 패턴")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("defaultNamingSuffix")
-                                                    .description("기본 네이밍 접미사")
                                                     .type(String.class)
                                                     .optional()),
                                     responseFields(
@@ -137,13 +118,7 @@ class PackagePurposeCommandControllerRestDocsTest extends RestDocsTestSupport {
             var request = UpdatePackagePurposeApiRequestFixture.valid();
             var command =
                     new UpdatePackagePurposeCommand(
-                            1L,
-                            "AGGREGATE",
-                            "Aggregate Root",
-                            "DDD Aggregate Root 패키지",
-                            java.util.List.of("CLASS", "RECORD"),
-                            "^[A-Z][a-zA-Z0-9]*$",
-                            "Aggregate");
+                            1L, "AGGREGATE", "Aggregate Root", "DDD Aggregate Root 패키지");
 
             given(mapper.toCommand(eq(packagePurposeId), any())).willReturn(command);
 
@@ -168,18 +143,6 @@ class PackagePurposeCommandControllerRestDocsTest extends RestDocsTestSupport {
                                                     .type(String.class),
                                             fieldWithPath("description")
                                                     .description("설명")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("defaultAllowedClassTypes")
-                                                    .description("기본 허용 클래스 타입 목록")
-                                                    .type(List.class)
-                                                    .optional(),
-                                            fieldWithPath("defaultNamingPattern")
-                                                    .description("기본 네이밍 패턴")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("defaultNamingSuffix")
-                                                    .description("기본 네이밍 접미사")
                                                     .type(String.class)
                                                     .optional()),
                                     responseFields(

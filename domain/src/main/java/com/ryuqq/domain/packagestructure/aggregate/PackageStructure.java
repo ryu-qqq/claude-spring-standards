@@ -2,9 +2,6 @@ package com.ryuqq.domain.packagestructure.aggregate;
 
 import com.ryuqq.domain.common.vo.DeletionStatus;
 import com.ryuqq.domain.module.id.ModuleId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import com.ryuqq.domain.packagestructure.vo.PathPattern;
 import java.time.Instant;
@@ -21,9 +18,6 @@ public class PackageStructure {
     private PackageStructureId id;
     private ModuleId moduleId;
     private PathPattern pathPattern;
-    private AllowedClassTypes allowedClassTypes;
-    private NamingPattern namingPattern;
-    private NamingSuffix namingSuffix;
     private String description;
     private DeletionStatus deletionStatus;
 
@@ -40,9 +34,6 @@ public class PackageStructure {
             PackageStructureId id,
             ModuleId moduleId,
             PathPattern pathPattern,
-            AllowedClassTypes allowedClassTypes,
-            NamingPattern namingPattern,
-            NamingSuffix namingSuffix,
             String description,
             DeletionStatus deletionStatus,
             Instant createdAt,
@@ -50,10 +41,6 @@ public class PackageStructure {
         this.id = id;
         this.moduleId = moduleId;
         this.pathPattern = pathPattern;
-        this.allowedClassTypes =
-                allowedClassTypes != null ? allowedClassTypes : AllowedClassTypes.empty();
-        this.namingPattern = namingPattern;
-        this.namingSuffix = namingSuffix;
         this.description = description;
         this.deletionStatus = deletionStatus != null ? deletionStatus : DeletionStatus.active();
         this.createdAt = createdAt;
@@ -65,28 +52,16 @@ public class PackageStructure {
      *
      * @param moduleId 모듈 ID
      * @param pathPattern 경로 패턴
-     * @param allowedClassTypes 허용 클래스 타입
-     * @param namingPattern 네이밍 패턴
-     * @param namingSuffix 네이밍 접미사
      * @param description 설명
      * @param now 현재 시각 (Instant.now() 외부 주입)
      * @return 새로운 PackageStructure 인스턴스
      */
     public static PackageStructure forNew(
-            ModuleId moduleId,
-            PathPattern pathPattern,
-            AllowedClassTypes allowedClassTypes,
-            NamingPattern namingPattern,
-            NamingSuffix namingSuffix,
-            String description,
-            Instant now) {
+            ModuleId moduleId, PathPattern pathPattern, String description, Instant now) {
         return new PackageStructure(
                 PackageStructureId.forNew(),
                 moduleId,
                 pathPattern,
-                allowedClassTypes,
-                namingPattern,
-                namingSuffix,
                 description,
                 DeletionStatus.active(),
                 now,
@@ -99,9 +74,6 @@ public class PackageStructure {
      * @param id 패키지 구조 ID
      * @param moduleId 모듈 ID
      * @param pathPattern 경로 패턴
-     * @param allowedClassTypes 허용 클래스 타입
-     * @param namingPattern 네이밍 패턴
-     * @param namingSuffix 네이밍 접미사
      * @param description 설명
      * @param deletionStatus 삭제 상태
      * @param createdAt 생성 시각
@@ -112,24 +84,12 @@ public class PackageStructure {
             PackageStructureId id,
             ModuleId moduleId,
             PathPattern pathPattern,
-            AllowedClassTypes allowedClassTypes,
-            NamingPattern namingPattern,
-            NamingSuffix namingSuffix,
             String description,
             DeletionStatus deletionStatus,
             Instant createdAt,
             Instant updatedAt) {
         return new PackageStructure(
-                id,
-                moduleId,
-                pathPattern,
-                allowedClassTypes,
-                namingPattern,
-                namingSuffix,
-                description,
-                deletionStatus,
-                createdAt,
-                updatedAt);
+                id, moduleId, pathPattern, description, deletionStatus, createdAt, updatedAt);
     }
 
     /**
@@ -138,9 +98,6 @@ public class PackageStructure {
      * @param id 패키지 구조 ID
      * @param moduleId 모듈 ID
      * @param pathPattern 경로 패턴
-     * @param allowedClassTypes 허용 클래스 타입
-     * @param namingPattern 네이밍 패턴
-     * @param namingSuffix 네이밍 접미사
      * @param description 설명
      * @param deletionStatus 삭제 상태
      * @param createdAt 생성 시각
@@ -151,24 +108,11 @@ public class PackageStructure {
             PackageStructureId id,
             ModuleId moduleId,
             PathPattern pathPattern,
-            AllowedClassTypes allowedClassTypes,
-            NamingPattern namingPattern,
-            NamingSuffix namingSuffix,
             String description,
             DeletionStatus deletionStatus,
             Instant createdAt,
             Instant updatedAt) {
-        return of(
-                id,
-                moduleId,
-                pathPattern,
-                allowedClassTypes,
-                namingPattern,
-                namingSuffix,
-                description,
-                deletionStatus,
-                createdAt,
-                updatedAt);
+        return of(id, moduleId, pathPattern, description, deletionStatus, createdAt, updatedAt);
     }
 
     /**
@@ -203,18 +147,6 @@ public class PackageStructure {
 
     public PathPattern pathPattern() {
         return pathPattern;
-    }
-
-    public AllowedClassTypes allowedClassTypes() {
-        return allowedClassTypes;
-    }
-
-    public NamingPattern namingPattern() {
-        return namingPattern;
-    }
-
-    public NamingSuffix namingSuffix() {
-        return namingSuffix;
     }
 
     public String description() {
@@ -272,9 +204,6 @@ public class PackageStructure {
      */
     public void update(PackageStructureUpdateData updateData, Instant now) {
         this.pathPattern = updateData.pathPattern();
-        this.allowedClassTypes = updateData.allowedClassTypes();
-        this.namingPattern = updateData.namingPattern();
-        this.namingSuffix = updateData.namingSuffix();
         this.description = updateData.description();
         this.updatedAt = now;
     }
@@ -313,28 +242,6 @@ public class PackageStructure {
      */
     public String pathPatternValue() {
         return pathPattern.value();
-    }
-
-    /**
-     * NamingPattern 원시값 반환
-     *
-     * <p>AGG-014: Law of Demeter 준수를 위한 위임 메서드
-     *
-     * @return 네이밍 패턴 문자열 (nullable)
-     */
-    public String namingPatternValue() {
-        return namingPattern != null && !namingPattern.isEmpty() ? namingPattern.value() : null;
-    }
-
-    /**
-     * NamingSuffix 원시값 반환
-     *
-     * <p>AGG-014: Law of Demeter 준수를 위한 위임 메서드
-     *
-     * @return 네이밍 접미사 문자열 (nullable)
-     */
-    public String namingSuffixValue() {
-        return namingSuffix != null && !namingSuffix.isEmpty() ? namingSuffix.value() : null;
     }
 
     /**

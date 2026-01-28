@@ -66,9 +66,6 @@ class PackagePurposeQueryControllerRestDocsTest extends RestDocsTestSupport {
                             "AGGREGATE",
                             "Aggregate Root",
                             "Description",
-                            List.of("CLASS", "RECORD"),
-                            "pattern",
-                            "suffix",
                             Instant.parse("2024-01-01T00:00:00Z"),
                             Instant.parse("2024-01-01T00:00:00Z"));
             var response =
@@ -78,9 +75,6 @@ class PackagePurposeQueryControllerRestDocsTest extends RestDocsTestSupport {
                             "AGGREGATE",
                             "Aggregate Root",
                             "Description",
-                            List.of("CLASS", "RECORD"),
-                            "pattern",
-                            "suffix",
                             "2024-01-01T00:00:00Z",
                             "2024-01-01T00:00:00Z");
 
@@ -133,17 +127,6 @@ class PackagePurposeQueryControllerRestDocsTest extends RestDocsTestSupport {
                                                     .type(String.class),
                                             fieldWithPath("data.content[].description")
                                                     .description("설명")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("data.content[].defaultAllowedClassTypes")
-                                                    .description("기본 허용 클래스 타입 목록")
-                                                    .type(List.class),
-                                            fieldWithPath("data.content[].defaultNamingPattern")
-                                                    .description("기본 네이밍 패턴")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("data.content[].defaultNamingSuffix")
-                                                    .description("기본 네이밍 접미사")
                                                     .type(String.class)
                                                     .optional(),
                                             fieldWithPath("data.content[].createdAt")

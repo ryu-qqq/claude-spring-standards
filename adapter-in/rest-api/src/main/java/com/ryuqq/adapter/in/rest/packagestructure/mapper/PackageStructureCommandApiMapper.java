@@ -4,8 +4,6 @@ import com.ryuqq.adapter.in.rest.packagestructure.dto.request.CreatePackageStruc
 import com.ryuqq.adapter.in.rest.packagestructure.dto.request.UpdatePackageStructureApiRequest;
 import com.ryuqq.application.packagestructure.dto.command.CreatePackageStructureCommand;
 import com.ryuqq.application.packagestructure.dto.command.UpdatePackageStructureCommand;
-import java.util.Collections;
-import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,12 +33,7 @@ public class PackageStructureCommandApiMapper {
      */
     public CreatePackageStructureCommand toCommand(CreatePackageStructureApiRequest request) {
         return new CreatePackageStructureCommand(
-                request.moduleId(),
-                request.pathPattern(),
-                nullSafeList(request.allowedClassTypes()),
-                request.namingPattern(),
-                request.namingSuffix(),
-                request.description());
+                request.moduleId(), request.pathPattern(), request.description());
     }
 
     /**
@@ -55,15 +48,6 @@ public class PackageStructureCommandApiMapper {
     public UpdatePackageStructureCommand toCommand(
             Long packageStructureId, UpdatePackageStructureApiRequest request) {
         return new UpdatePackageStructureCommand(
-                packageStructureId,
-                request.pathPattern(),
-                nullSafeList(request.allowedClassTypes()),
-                request.namingPattern(),
-                request.namingSuffix(),
-                request.description());
-    }
-
-    private List<String> nullSafeList(List<String> list) {
-        return list != null ? list : Collections.emptyList();
+                packageStructureId, request.pathPattern(), request.description());
     }
 }

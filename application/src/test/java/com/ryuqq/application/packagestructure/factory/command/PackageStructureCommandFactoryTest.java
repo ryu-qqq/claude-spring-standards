@@ -11,7 +11,6 @@ import com.ryuqq.domain.packagestructure.aggregate.PackageStructure;
 import com.ryuqq.domain.packagestructure.aggregate.PackageStructureUpdateData;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import java.time.Instant;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -55,13 +54,7 @@ class PackageStructureCommandFactoryTest {
         void create_WithValidCommand_ShouldReturnPackageStructure() {
             // given
             CreatePackageStructureCommand command =
-                    new CreatePackageStructureCommand(
-                            1L,
-                            "aggregate",
-                            List.of("AGGREGATE"),
-                            "{Domain}",
-                            "",
-                            "도메인 애그리게이트 패키지");
+                    new CreatePackageStructureCommand(1L, "aggregate", "도메인 애그리게이트 패키지");
             given(timeProvider.now()).willReturn(FIXED_TIME);
 
             // when
@@ -71,9 +64,6 @@ class PackageStructureCommandFactoryTest {
             assertThat(result).isNotNull();
             assertThat(result.moduleId().value()).isEqualTo(command.moduleId());
             assertThat(result.pathPattern().value()).isEqualTo(command.pathPattern());
-            assertThat(result.allowedClassTypes().values())
-                    .containsExactlyElementsOf(command.allowedClassTypes());
-            assertThat(result.namingPattern().value()).isEqualTo(command.namingPattern());
             assertThat(result.description()).isEqualTo(command.description());
         }
     }
@@ -87,8 +77,7 @@ class PackageStructureCommandFactoryTest {
         void toUpdateData_WithValidCommand_ShouldReturnUpdateData() {
             // given
             UpdatePackageStructureCommand command =
-                    new UpdatePackageStructureCommand(
-                            1L, "updated/path", List.of("VALUE_OBJECT"), "{VO}", "VO", "수정된 설명");
+                    new UpdatePackageStructureCommand(1L, "updated/path", "수정된 설명");
 
             // when
             PackageStructureUpdateData result = sut.toUpdateData(command);
@@ -96,10 +85,6 @@ class PackageStructureCommandFactoryTest {
             // then
             assertThat(result).isNotNull();
             assertThat(result.pathPattern().value()).isEqualTo(command.pathPattern());
-            assertThat(result.allowedClassTypes().values())
-                    .containsExactlyElementsOf(command.allowedClassTypes());
-            assertThat(result.namingPattern().value()).isEqualTo(command.namingPattern());
-            assertThat(result.namingSuffix().value()).isEqualTo(command.namingSuffix());
             assertThat(result.description()).isEqualTo(command.description());
         }
     }
@@ -113,8 +98,7 @@ class PackageStructureCommandFactoryTest {
         void createUpdateContext_WithValidCommand_ShouldReturnUpdateContext() {
             // given
             UpdatePackageStructureCommand command =
-                    new UpdatePackageStructureCommand(
-                            1L, "updated/path", List.of("VALUE_OBJECT"), "{VO}", "VO", "수정된 설명");
+                    new UpdatePackageStructureCommand(1L, "updated/path", "수정된 설명");
             given(timeProvider.now()).willReturn(FIXED_TIME);
 
             // when

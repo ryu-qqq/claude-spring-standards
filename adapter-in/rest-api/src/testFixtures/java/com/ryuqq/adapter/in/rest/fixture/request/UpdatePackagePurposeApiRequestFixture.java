@@ -1,7 +1,6 @@
 package com.ryuqq.adapter.in.rest.fixture.request;
 
 import com.ryuqq.adapter.in.rest.packagepurpose.dto.request.UpdatePackagePurposeApiRequest;
-import java.util.List;
 
 /**
  * UpdatePackagePurposeApiRequest Test Fixture
@@ -20,64 +19,45 @@ public final class UpdatePackagePurposeApiRequestFixture {
     /** 정상 요청 - 기본 케이스 */
     public static UpdatePackagePurposeApiRequest valid() {
         return new UpdatePackagePurposeApiRequest(
-                "AGGREGATE",
-                "Aggregate Root",
-                "DDD Aggregate Root 패키지",
-                List.of("CLASS", "RECORD"),
-                "^[A-Z][a-zA-Z0-9]*$",
-                "Aggregate");
+                "AGGREGATE", "Aggregate Root", "DDD Aggregate Root 패키지");
     }
 
     /** 정상 요청 - 최소 필수 필드만 */
     public static UpdatePackagePurposeApiRequest validMinimal() {
-        return new UpdatePackagePurposeApiRequest(
-                "VALUE_OBJECT", "Value Object", null, null, null, null);
+        return new UpdatePackagePurposeApiRequest("VALUE_OBJECT", "Value Object", null);
     }
 
     /** 잘못된 요청 - code 누락 (빈 문자열) */
     public static UpdatePackagePurposeApiRequest invalidWithBlankCode() {
-        return new UpdatePackagePurposeApiRequest("", "Aggregate Root", null, null, null, null);
+        return new UpdatePackagePurposeApiRequest("", "Aggregate Root", null);
     }
 
     /** 잘못된 요청 - code 길이 초과 (50자 초과) */
     public static UpdatePackagePurposeApiRequest invalidWithLongCode() {
         String longCode = "A".repeat(51);
-        return new UpdatePackagePurposeApiRequest(
-                longCode, "Aggregate Root", null, null, null, null);
+        return new UpdatePackagePurposeApiRequest(longCode, "Aggregate Root", null);
     }
 
     /** 잘못된 요청 - name 누락 (빈 문자열) */
     public static UpdatePackagePurposeApiRequest invalidWithBlankName() {
-        return new UpdatePackagePurposeApiRequest("AGGREGATE", "", null, null, null, null);
+        return new UpdatePackagePurposeApiRequest("AGGREGATE", "", null);
     }
 
     /** 잘못된 요청 - name 길이 초과 (100자 초과) */
     public static UpdatePackagePurposeApiRequest invalidWithLongName() {
         String longName = "A".repeat(101);
-        return new UpdatePackagePurposeApiRequest("AGGREGATE", longName, null, null, null, null);
+        return new UpdatePackagePurposeApiRequest("AGGREGATE", longName, null);
     }
 
     /** 잘못된 요청 - description 길이 초과 (2000자 초과) */
     public static UpdatePackagePurposeApiRequest invalidWithLongDescription() {
         String longDescription = "A".repeat(2001);
-        return new UpdatePackagePurposeApiRequest(
-                "AGGREGATE", "Aggregate Root", longDescription, null, null, null);
+        return new UpdatePackagePurposeApiRequest("AGGREGATE", "Aggregate Root", longDescription);
     }
 
     /** 커스텀 요청 생성 */
     public static UpdatePackagePurposeApiRequest custom(
-            String code,
-            String name,
-            String description,
-            List<String> defaultAllowedClassTypes,
-            String defaultNamingPattern,
-            String defaultNamingSuffix) {
-        return new UpdatePackagePurposeApiRequest(
-                code,
-                name,
-                description,
-                defaultAllowedClassTypes,
-                defaultNamingPattern,
-                defaultNamingSuffix);
+            String code, String name, String description) {
+        return new UpdatePackagePurposeApiRequest(code, name, description);
     }
 }

@@ -20,7 +20,6 @@ import com.ryuqq.domain.packagestructure.exception.PackageStructureDuplicateExce
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import com.ryuqq.domain.packagestructure.vo.PathPattern;
 import java.time.Instant;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -141,12 +140,6 @@ class UpdatePackageStructureServiceTest {
     }
 
     private UpdatePackageStructureCommand createDefaultCommand() {
-        return new UpdatePackageStructureCommand(
-                1L,
-                "domain/aggregate",
-                List.of("AGGREGATE", "ENTITY"),
-                "{Name}",
-                null,
-                "Aggregate 패키지 구조");
+        return new UpdatePackageStructureCommand(1L, "domain/aggregate", "Aggregate 패키지 구조");
     }
 }

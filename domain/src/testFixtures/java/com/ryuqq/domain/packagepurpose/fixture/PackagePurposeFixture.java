@@ -35,9 +35,6 @@ public final class PackagePurposeFixture {
                 PackagePurposeVoFixtures.defaultPurposeCode(),
                 PackagePurposeVoFixtures.defaultPurposeName(),
                 "기본 설명",
-                PackagePurposeVoFixtures.defaultAllowedClassTypes(),
-                PackagePurposeVoFixtures.defaultNamingPattern(),
-                PackagePurposeVoFixtures.defaultNamingSuffix(),
                 FIXED_CLOCK.instant());
     }
 
@@ -64,9 +61,6 @@ public final class PackagePurposeFixture {
                 PackagePurposeVoFixtures.defaultPurposeCode(),
                 PackagePurposeVoFixtures.defaultPurposeName(),
                 "기본 설명",
-                PackagePurposeVoFixtures.defaultAllowedClassTypes(),
-                PackagePurposeVoFixtures.defaultNamingPattern(),
-                PackagePurposeVoFixtures.defaultNamingSuffix(),
                 DeletionStatus.active(),
                 now,
                 now);
@@ -85,9 +79,6 @@ public final class PackagePurposeFixture {
                 PackagePurposeVoFixtures.defaultPurposeCode(),
                 PackagePurposeVoFixtures.defaultPurposeName(),
                 "기본 설명",
-                PackagePurposeVoFixtures.defaultAllowedClassTypes(),
-                PackagePurposeVoFixtures.defaultNamingPattern(),
-                PackagePurposeVoFixtures.defaultNamingSuffix(),
                 DeletionStatus.active(),
                 now,
                 now);
@@ -106,9 +97,6 @@ public final class PackagePurposeFixture {
                 PackagePurposeVoFixtures.defaultPurposeCode(),
                 PackagePurposeVoFixtures.defaultPurposeName(),
                 "기본 설명",
-                PackagePurposeVoFixtures.defaultAllowedClassTypes(),
-                PackagePurposeVoFixtures.defaultNamingPattern(),
-                PackagePurposeVoFixtures.defaultNamingSuffix(),
                 DeletionStatus.deletedAt(now),
                 now,
                 now);
@@ -128,9 +116,6 @@ public final class PackagePurposeFixture {
                 PackagePurposeVoFixtures.defaultPurposeCode(),
                 PackagePurposeVoFixtures.defaultPurposeName(),
                 "기본 설명",
-                PackagePurposeVoFixtures.defaultAllowedClassTypes(),
-                PackagePurposeVoFixtures.defaultNamingPattern(),
-                PackagePurposeVoFixtures.defaultNamingSuffix(),
                 DeletionStatus.active(),
                 now,
                 now);

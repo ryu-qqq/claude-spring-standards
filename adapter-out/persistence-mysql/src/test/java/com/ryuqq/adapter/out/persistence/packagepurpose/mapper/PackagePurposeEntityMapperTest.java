@@ -2,15 +2,11 @@ package com.ryuqq.adapter.out.persistence.packagepurpose.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ryuqq.adapter.out.persistence.common.MapperTestSupport;
 import com.ryuqq.adapter.out.persistence.packagepurpose.entity.PackagePurposeJpaEntity;
 import com.ryuqq.domain.common.vo.DeletionStatus;
 import com.ryuqq.domain.packagepurpose.aggregate.PackagePurpose;
 import com.ryuqq.domain.packagepurpose.id.PackagePurposeId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagepurpose.vo.PurposeCode;
 import com.ryuqq.domain.packagepurpose.vo.PurposeName;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
@@ -21,7 +17,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -37,13 +32,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @DisplayName("PackagePurposeEntityMapper 단위 테스트")
 class PackagePurposeEntityMapperTest extends MapperTestSupport {
 
-    @Mock private ObjectMapper objectMapper;
-
     private PackagePurposeEntityMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new PackagePurposeEntityMapper(objectMapper);
+        mapper = new PackagePurposeEntityMapper();
     }
 
     @Nested
@@ -121,17 +114,7 @@ class PackagePurposeEntityMapperTest extends MapperTestSupport {
     // Helper methods
     private PackagePurposeJpaEntity createTestEntity(Instant now) {
         return PackagePurposeJpaEntity.of(
-                1L,
-                1L,
-                "DOMAIN",
-                "Domain Layer",
-                "Test Description",
-                "[]",
-                "Test.*",
-                "Test",
-                now,
-                now,
-                null);
+                1L, 1L, "DOMAIN", "Domain Layer", "Test Description", now, now, null);
     }
 
     private PackagePurpose createTestDomain(Instant now) {
@@ -141,9 +124,6 @@ class PackagePurposeEntityMapperTest extends MapperTestSupport {
                 PurposeCode.of("DOMAIN"),
                 PurposeName.of("Domain Layer"),
                 "Test Description",
-                AllowedClassTypes.empty(),
-                NamingPattern.of("Test.*"),
-                NamingSuffix.of("Test"),
                 DeletionStatus.active(),
                 now,
                 now);

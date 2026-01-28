@@ -75,6 +75,6 @@ class PackageStructureJpaRepositoryTest extends RepositoryTestSupport {
     // Helper method
     private PackageStructureJpaEntity createTestEntity(Instant now) {
         return PackageStructureJpaEntity.of(
-                null, 100L, "com.test", "[]", "Test.*", "Test", "Test Description", now, now, null);
+                null, 100L, "com.test", "Test Description", now, now, null);
     }
 }

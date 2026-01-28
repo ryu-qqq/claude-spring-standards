@@ -38,15 +38,6 @@ public class PackagePurposeJpaEntity extends SoftDeletableEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "default_allowed_class_types", columnDefinition = "JSON")
-    private String defaultAllowedClassTypes;
-
-    @Column(name = "default_naming_pattern", length = 200)
-    private String defaultNamingPattern;
-
-    @Column(name = "default_naming_suffix", length = 50)
-    private String defaultNamingSuffix;
-
     protected PackagePurposeJpaEntity() {}
 
     private PackagePurposeJpaEntity(
@@ -55,9 +46,6 @@ public class PackagePurposeJpaEntity extends SoftDeletableEntity {
             String code,
             String name,
             String description,
-            String defaultAllowedClassTypes,
-            String defaultNamingPattern,
-            String defaultNamingSuffix,
             Instant createdAt,
             Instant updatedAt,
             Instant deletedAt) {
@@ -67,9 +55,6 @@ public class PackagePurposeJpaEntity extends SoftDeletableEntity {
         this.code = code;
         this.name = name;
         this.description = description;
-        this.defaultAllowedClassTypes = defaultAllowedClassTypes;
-        this.defaultNamingPattern = defaultNamingPattern;
-        this.defaultNamingSuffix = defaultNamingSuffix;
     }
 
     public static PackagePurposeJpaEntity of(
@@ -78,24 +63,11 @@ public class PackagePurposeJpaEntity extends SoftDeletableEntity {
             String code,
             String name,
             String description,
-            String defaultAllowedClassTypes,
-            String defaultNamingPattern,
-            String defaultNamingSuffix,
             Instant createdAt,
             Instant updatedAt,
             Instant deletedAt) {
         return new PackagePurposeJpaEntity(
-                id,
-                structureId,
-                code,
-                name,
-                description,
-                defaultAllowedClassTypes,
-                defaultNamingPattern,
-                defaultNamingSuffix,
-                createdAt,
-                updatedAt,
-                deletedAt);
+                id, structureId, code, name, description, createdAt, updatedAt, deletedAt);
     }
 
     public Long getId() {
@@ -116,18 +88,6 @@ public class PackagePurposeJpaEntity extends SoftDeletableEntity {
 
     public String getDescription() {
         return description;
-    }
-
-    public String getDefaultAllowedClassTypes() {
-        return defaultAllowedClassTypes;
-    }
-
-    public String getDefaultNamingPattern() {
-        return defaultNamingPattern;
-    }
-
-    public String getDefaultNamingSuffix() {
-        return defaultNamingSuffix;
     }
 
     @Override

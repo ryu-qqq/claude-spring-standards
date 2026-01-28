@@ -2,7 +2,6 @@ package com.ryuqq.application.packagestructure.dto.response;
 
 import com.ryuqq.domain.packagestructure.aggregate.PackageStructure;
 import java.time.Instant;
-import java.util.List;
 
 /**
  * PackageStructureResult - 패키지 구조 조회 결과 DTO
@@ -12,9 +11,6 @@ import java.util.List;
  * @param id 패키지 구조 ID
  * @param moduleId 모듈 ID
  * @param pathPattern 경로 패턴
- * @param allowedClassTypes 허용 클래스 타입 목록
- * @param namingPattern 네이밍 패턴 (nullable)
- * @param namingSuffix 네이밍 접미사 (nullable)
  * @param description 설명 (nullable)
  * @param createdAt 생성 시각
  * @param updatedAt 수정 시각
@@ -25,9 +21,6 @@ public record PackageStructureResult(
         Long id,
         Long moduleId,
         String pathPattern,
-        List<String> allowedClassTypes,
-        String namingPattern,
-        String namingSuffix,
         String description,
         Instant createdAt,
         Instant updatedAt) {
@@ -43,15 +36,6 @@ public record PackageStructureResult(
                 packageStructure.id().value(),
                 packageStructure.moduleId().value(),
                 packageStructure.pathPattern().value(),
-                packageStructure.allowedClassTypes() != null
-                        ? packageStructure.allowedClassTypes().values()
-                        : List.of(),
-                packageStructure.namingPattern() != null
-                        ? packageStructure.namingPattern().value()
-                        : null,
-                packageStructure.namingSuffix() != null
-                        ? packageStructure.namingSuffix().value()
-                        : null,
                 packageStructure.description(),
                 packageStructure.createdAt(),
                 packageStructure.updatedAt());

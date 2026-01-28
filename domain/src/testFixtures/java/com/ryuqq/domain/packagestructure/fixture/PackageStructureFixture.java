@@ -2,9 +2,6 @@ package com.ryuqq.domain.packagestructure.fixture;
 
 import com.ryuqq.domain.common.vo.DeletionStatus;
 import com.ryuqq.domain.module.id.ModuleId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagestructure.aggregate.PackageStructure;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import com.ryuqq.domain.packagestructure.vo.PathPattern;
@@ -58,9 +55,6 @@ public final class PackageStructureFixture {
         return PackageStructure.forNew(
                 nextModuleId(),
                 PathPattern.of("com.example.domain.{bc}.aggregate"),
-                AllowedClassTypes.empty(),
-                NamingPattern.empty(),
-                NamingSuffix.empty(),
                 "기본 설명",
                 FIXED_CLOCK.instant());
     }
@@ -86,9 +80,6 @@ public final class PackageStructureFixture {
                 id,
                 nextModuleId(),
                 PathPattern.of("com.example.domain.{bc}.aggregate"),
-                AllowedClassTypes.empty(),
-                NamingPattern.empty(),
-                NamingSuffix.empty(),
                 "기본 설명",
                 DeletionStatus.active(),
                 now,
@@ -106,9 +97,6 @@ public final class PackageStructureFixture {
                 nextPackageStructureId(),
                 nextModuleId(),
                 PathPattern.of("com.example.domain.{bc}.aggregate"),
-                AllowedClassTypes.empty(),
-                NamingPattern.empty(),
-                NamingSuffix.empty(),
                 "기본 설명",
                 DeletionStatus.active(),
                 now,
@@ -126,9 +114,6 @@ public final class PackageStructureFixture {
                 nextPackageStructureId(),
                 nextModuleId(),
                 PathPattern.of("com.example.domain.{bc}.aggregate"),
-                AllowedClassTypes.empty(),
-                NamingPattern.empty(),
-                NamingSuffix.empty(),
                 "기본 설명",
                 DeletionStatus.deletedAt(now),
                 now,

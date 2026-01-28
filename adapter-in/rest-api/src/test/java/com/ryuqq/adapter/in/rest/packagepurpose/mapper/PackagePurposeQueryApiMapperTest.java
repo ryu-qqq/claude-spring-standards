@@ -100,7 +100,7 @@ class PackagePurposeQueryApiMapperTest {
         @DisplayName("정상 변환 - 모든 필드 매핑 및 날짜 포맷팅")
         void validResult_ShouldMapAllFields() {
             // Given
-            Instant createdAt = Instant.parse("2024-01-01T09:00:00+09:00");
+            Instant createdAt = Instant.parse("2024-01-01T00:00:00Z");
             Instant updatedAt = Instant.parse("2024-01-02T00:00:00Z");
             Long structureId = 1L;
             PackagePurposeResult result =
@@ -110,9 +110,6 @@ class PackagePurposeQueryApiMapperTest {
                             "AGGREGATE",
                             "Aggregate Root",
                             "DDD Aggregate Root 패키지",
-                            List.of("CLASS", "RECORD"),
-                            "^[A-Z][a-zA-Z0-9]*$",
-                            "Aggregate",
                             createdAt,
                             updatedAt);
 
@@ -125,9 +122,6 @@ class PackagePurposeQueryApiMapperTest {
             assertThat(response.code()).isEqualTo("AGGREGATE");
             assertThat(response.name()).isEqualTo("Aggregate Root");
             assertThat(response.description()).isEqualTo("DDD Aggregate Root 패키지");
-            assertThat(response.defaultAllowedClassTypes()).containsExactly("CLASS", "RECORD");
-            assertThat(response.defaultNamingPattern()).isEqualTo("^[A-Z][a-zA-Z0-9]*$");
-            assertThat(response.defaultNamingSuffix()).isEqualTo("Aggregate");
             assertThat(response.createdAt())
                     .isEqualTo(DateTimeFormatUtils.formatIso8601(createdAt));
             assertThat(response.updatedAt())
@@ -135,32 +129,20 @@ class PackagePurposeQueryApiMapperTest {
         }
 
         @Test
-        @DisplayName("null 필드 처리 - description, defaultAllowedClassTypes 등 null 허용")
+        @DisplayName("null 필드 처리 - description null 허용")
         void nullFields_ShouldHandleGracefully() {
             // Given
             Instant now = Instant.now();
             Long structureId = 1L;
             PackagePurposeResult result =
                     new PackagePurposeResult(
-                            1L,
-                            structureId,
-                            "VALUE_OBJECT",
-                            "Value Object",
-                            null,
-                            null,
-                            null,
-                            null,
-                            now,
-                            now);
+                            1L, structureId, "VALUE_OBJECT", "Value Object", null, now, now);
 
             // When
             PackagePurposeApiResponse response = mapper.toResponse(result);
 
             // Then
             assertThat(response.description()).isNull();
-            assertThat(response.defaultAllowedClassTypes()).isNull();
-            assertThat(response.defaultNamingPattern()).isNull();
-            assertThat(response.defaultNamingSuffix()).isNull();
         }
     }
 
@@ -177,24 +159,12 @@ class PackagePurposeQueryApiMapperTest {
             List<PackagePurposeResult> results =
                     List.of(
                             new PackagePurposeResult(
-                                    1L,
-                                    structureId,
-                                    "AGGREGATE",
-                                    "Aggregate Root",
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    now,
-                                    now),
+                                    1L, structureId, "AGGREGATE", "Aggregate Root", null, now, now),
                             new PackagePurposeResult(
                                     2L,
                                     structureId,
                                     "VALUE_OBJECT",
                                     "Value Object",
-                                    null,
-                                    null,
-                                    null,
                                     null,
                                     now,
                                     now));
@@ -237,11 +207,8 @@ class PackagePurposeQueryApiMapperTest {
                             "AGGREGATE",
                             "Aggregate",
                             "Description",
-                            List.of("CLASS"),
-                            "pattern",
-                            "suffix",
-                            Instant.parse("2024-01-01T09:00:00+09:00"),
-                            Instant.parse("2024-01-01T09:00:00+09:00"));
+                            Instant.parse("2024-01-01T00:00:00Z"),
+                            Instant.parse("2024-01-01T00:00:00Z"));
             var sliceResult = PackagePurposeSliceResult.of(List.of(result), true);
 
             // When

@@ -62,9 +62,6 @@ public class PackagePurposeQueryApiMapper {
                 result.code(),
                 result.name(),
                 result.description(),
-                result.defaultAllowedClassTypes(),
-                result.defaultNamingPattern(),
-                result.defaultNamingSuffix(),
                 DateTimeFormatUtils.formatIso8601(result.createdAt()),
                 DateTimeFormatUtils.formatIso8601(result.updatedAt()));
     }

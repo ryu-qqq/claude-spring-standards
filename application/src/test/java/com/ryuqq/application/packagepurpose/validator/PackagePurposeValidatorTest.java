@@ -11,13 +11,9 @@ import com.ryuqq.domain.packagepurpose.aggregate.PackagePurposeUpdateData;
 import com.ryuqq.domain.packagepurpose.exception.PackagePurposeDuplicateCodeException;
 import com.ryuqq.domain.packagepurpose.fixture.PackagePurposeFixture;
 import com.ryuqq.domain.packagepurpose.id.PackagePurposeId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagepurpose.vo.PurposeCode;
 import com.ryuqq.domain.packagepurpose.vo.PurposeName;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -162,10 +158,7 @@ class PackagePurposeValidatorTest {
                     new PackagePurposeUpdateData(
                             PurposeCode.of("UPDATED-CODE"),
                             PurposeName.of("Updated Name"),
-                            "Updated Description",
-                            AllowedClassTypes.of(List.of("Service")),
-                            NamingPattern.of("*Service"),
-                            NamingSuffix.of("Service"));
+                            "Updated Description");
 
             given(packagePurposeReadManager.getById(id)).willReturn(packagePurpose);
             given(
@@ -190,10 +183,7 @@ class PackagePurposeValidatorTest {
                     new PackagePurposeUpdateData(
                             PurposeCode.of("DUPLICATE-CODE"),
                             PurposeName.of("Name"),
-                            "Description",
-                            AllowedClassTypes.of(List.of("Service")),
-                            NamingPattern.of("*Service"),
-                            NamingSuffix.of("Service"));
+                            "Description");
 
             given(packagePurposeReadManager.getById(id)).willReturn(packagePurpose);
             given(

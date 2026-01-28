@@ -1,8 +1,5 @@
 package com.ryuqq.domain.packagepurpose.aggregate;
 
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagepurpose.vo.PurposeCode;
 import com.ryuqq.domain.packagepurpose.vo.PurposeName;
 
@@ -16,15 +13,6 @@ import com.ryuqq.domain.packagepurpose.vo.PurposeName;
  * @param code 목적 코드 (필수)
  * @param name 목적 이름 (필수)
  * @param description 설명 (필수)
- * @param defaultAllowedClassTypes 기본 허용 클래스 타입 목록 (필수)
- * @param defaultNamingPattern 기본 네이밍 패턴 (필수)
- * @param defaultNamingSuffix 기본 네이밍 접미사 (필수)
  * @author ryu-qqq
  */
-public record PackagePurposeUpdateData(
-        PurposeCode code,
-        PurposeName name,
-        String description,
-        AllowedClassTypes defaultAllowedClassTypes,
-        NamingPattern defaultNamingPattern,
-        NamingSuffix defaultNamingSuffix) {}
+public record PackagePurposeUpdateData(PurposeCode code, PurposeName name, String description) {}

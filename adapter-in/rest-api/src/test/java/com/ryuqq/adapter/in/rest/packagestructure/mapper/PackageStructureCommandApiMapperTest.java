@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
  *
  * <ul>
  *   <li>Request DTO → Command DTO 변환
- *   <li>null 처리 (allowedClassTypes)
  *   <li>필드 매핑 정확성
  * </ul>
  *
@@ -54,15 +53,12 @@ class PackageStructureCommandApiMapperTest {
             // Then
             assertThat(command.moduleId()).isEqualTo(1L);
             assertThat(command.pathPattern()).isEqualTo("{base}.domain.{bc}.aggregate");
-            assertThat(command.allowedClassTypes()).containsExactly("CLASS", "RECORD");
-            assertThat(command.namingPattern()).isEqualTo(".*Aggregate");
-            assertThat(command.namingSuffix()).isEqualTo("Aggregate");
             assertThat(command.description()).isEqualTo("Aggregate Root 패키지");
         }
 
         @Test
-        @DisplayName("null 필드 처리 - allowedClassTypes가 null이면 빈 리스트")
-        void nullAllowedClassTypes_ShouldReturnEmptyList() {
+        @DisplayName("최소 필드 요청 변환")
+        void minimalRequest_ShouldMapRequiredFields() {
             // Given
             CreatePackageStructureApiRequest request =
                     CreatePackageStructureApiRequestFixture.validMinimal();
@@ -71,7 +67,9 @@ class PackageStructureCommandApiMapperTest {
             CreatePackageStructureCommand command = mapper.toCommand(request);
 
             // Then
-            assertThat(command.allowedClassTypes()).isEmpty();
+            assertThat(command.moduleId()).isEqualTo(1L);
+            assertThat(command.pathPattern()).isEqualTo("{base}.domain");
+            assertThat(command.description()).isNull();
         }
     }
 
@@ -93,7 +91,7 @@ class PackageStructureCommandApiMapperTest {
             // Then
             assertThat(command.packageStructureId()).isEqualTo(packageStructureId);
             assertThat(command.pathPattern()).isEqualTo("{base}.domain.{bc}.aggregate");
-            assertThat(command.allowedClassTypes()).containsExactly("CLASS", "RECORD");
+            assertThat(command.description()).isEqualTo("Aggregate Root 패키지");
         }
     }
 }

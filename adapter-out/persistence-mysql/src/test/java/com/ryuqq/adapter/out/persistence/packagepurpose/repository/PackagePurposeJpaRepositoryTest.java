@@ -76,16 +76,6 @@ class PackagePurposeJpaRepositoryTest extends RepositoryTestSupport {
     // Helper method
     private PackagePurposeJpaEntity createTestEntity(Instant now) {
         return PackagePurposeJpaEntity.of(
-                null,
-                1L,
-                "DOMAIN",
-                "Domain Layer",
-                "Test Description",
-                "[]",
-                "Test.*",
-                "Test",
-                now,
-                now,
-                null);
+                null, 1L, "DOMAIN", "Domain Layer", "Test Description", now, now, null);
     }
 }

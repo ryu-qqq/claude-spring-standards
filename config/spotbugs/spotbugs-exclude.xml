@@ -122,8 +122,16 @@
 
     <!-- ========================================
          Phase 2 & 3 Domains - Pending Review
-         TODO: Remove these exclusions after code review
+         TODO(SPOTBUGS-001, 2026-02-28): 테스트 코드 SpotBugs 수정 후 제거
          ======================================== -->
+    <Match>
+        <Package name="~.*\.configfiletemplate\..*"/>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.onboardingcontext\..*"/>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
     <Match>
         <Package name="~.*\.archunittest\..*"/>
     </Match>

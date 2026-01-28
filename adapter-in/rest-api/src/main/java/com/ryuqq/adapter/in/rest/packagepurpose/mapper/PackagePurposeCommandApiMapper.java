@@ -4,8 +4,6 @@ import com.ryuqq.adapter.in.rest.packagepurpose.dto.request.CreatePackagePurpose
 import com.ryuqq.adapter.in.rest.packagepurpose.dto.request.UpdatePackagePurposeApiRequest;
 import com.ryuqq.application.packagepurpose.dto.command.CreatePackagePurposeCommand;
 import com.ryuqq.application.packagepurpose.dto.command.UpdatePackagePurposeCommand;
-import java.util.List;
-import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,17 +32,8 @@ public class PackagePurposeCommandApiMapper {
      * @return Application Command DTO
      */
     public CreatePackagePurposeCommand toCommand(CreatePackagePurposeApiRequest request) {
-        List<String> allowedClassTypes =
-                Objects.requireNonNullElse(request.defaultAllowedClassTypes(), List.of());
-
         return new CreatePackagePurposeCommand(
-                request.structureId(),
-                request.code(),
-                request.name(),
-                request.description(),
-                allowedClassTypes,
-                request.defaultNamingPattern(),
-                request.defaultNamingSuffix());
+                request.structureId(), request.code(), request.name(), request.description());
     }
 
     /**
@@ -58,16 +47,7 @@ public class PackagePurposeCommandApiMapper {
      */
     public UpdatePackagePurposeCommand toCommand(
             Long packagePurposeId, UpdatePackagePurposeApiRequest request) {
-        List<String> allowedClassTypes =
-                Objects.requireNonNullElse(request.defaultAllowedClassTypes(), List.of());
-
         return new UpdatePackagePurposeCommand(
-                packagePurposeId,
-                request.code(),
-                request.name(),
-                request.description(),
-                allowedClassTypes,
-                request.defaultNamingPattern(),
-                request.defaultNamingSuffix());
+                packagePurposeId, request.code(), request.name(), request.description());
     }
 }

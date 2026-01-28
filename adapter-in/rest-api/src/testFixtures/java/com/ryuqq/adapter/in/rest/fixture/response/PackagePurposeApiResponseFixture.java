@@ -1,7 +1,6 @@
 package com.ryuqq.adapter.in.rest.fixture.response;
 
 import com.ryuqq.adapter.in.rest.packagepurpose.dto.response.PackagePurposeApiResponse;
-import java.util.List;
 
 /**
  * PackagePurposeApiResponse Test Fixture
@@ -25,9 +24,6 @@ public final class PackagePurposeApiResponseFixture {
                 "AGGREGATE",
                 "Aggregate Root",
                 "DDD Aggregate Root 패키지",
-                List.of("CLASS", "RECORD"),
-                "^[A-Z][a-zA-Z0-9]*$",
-                "Aggregate",
                 "2024-01-01T00:00:00Z",
                 "2024-01-01T00:00:00Z");
     }
@@ -40,9 +36,6 @@ public final class PackagePurposeApiResponseFixture {
                 "VALUE_OBJECT",
                 "Value Object",
                 null,
-                null,
-                null,
-                null,
                 "2024-01-01T00:00:00Z",
                 "2024-01-01T00:00:00Z");
     }
@@ -54,21 +47,9 @@ public final class PackagePurposeApiResponseFixture {
             String code,
             String name,
             String description,
-            List<String> defaultAllowedClassTypes,
-            String defaultNamingPattern,
-            String defaultNamingSuffix,
             String createdAt,
             String updatedAt) {
         return new PackagePurposeApiResponse(
-                packagePurposeId,
-                structureId,
-                code,
-                name,
-                description,
-                defaultAllowedClassTypes,
-                defaultNamingPattern,
-                defaultNamingSuffix,
-                createdAt,
-                updatedAt);
+                packagePurposeId, structureId, code, name, description, createdAt, updatedAt);
     }
 }

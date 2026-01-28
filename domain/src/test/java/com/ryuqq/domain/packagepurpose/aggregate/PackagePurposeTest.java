@@ -7,9 +7,6 @@ import com.ryuqq.domain.common.vo.DeletionStatus;
 import com.ryuqq.domain.packagepurpose.fixture.PackagePurposeFixture;
 import com.ryuqq.domain.packagepurpose.fixture.PackagePurposeVoFixtures;
 import com.ryuqq.domain.packagepurpose.id.PackagePurposeId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagepurpose.vo.PurposeCode;
 import com.ryuqq.domain.packagepurpose.vo.PurposeName;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
@@ -43,23 +40,11 @@ class PackagePurposeTest {
             PurposeCode code = PackagePurposeVoFixtures.defaultPurposeCode();
             PurposeName name = PackagePurposeVoFixtures.defaultPurposeName();
             String description = "기본 설명";
-            AllowedClassTypes allowedClassTypes =
-                    PackagePurposeVoFixtures.defaultAllowedClassTypes();
-            NamingPattern namingPattern = PackagePurposeVoFixtures.defaultNamingPattern();
-            NamingSuffix namingSuffix = PackagePurposeVoFixtures.defaultNamingSuffix();
             Instant now = FIXED_CLOCK.instant();
 
             // when
             PackagePurpose packagePurpose =
-                    PackagePurpose.forNew(
-                            structureId,
-                            code,
-                            name,
-                            description,
-                            allowedClassTypes,
-                            namingPattern,
-                            namingSuffix,
-                            now);
+                    PackagePurpose.forNew(structureId, code, name, description, now);
 
             // then
             assertThat(packagePurpose.isNew()).isTrue();
@@ -67,9 +52,6 @@ class PackagePurposeTest {
             assertThat(packagePurpose.code()).isEqualTo(code);
             assertThat(packagePurpose.name()).isEqualTo(name);
             assertThat(packagePurpose.description()).isEqualTo(description);
-            assertThat(packagePurpose.defaultAllowedClassTypes()).isEqualTo(allowedClassTypes);
-            assertThat(packagePurpose.defaultNamingPattern()).isEqualTo(namingPattern);
-            assertThat(packagePurpose.defaultNamingSuffix()).isEqualTo(namingSuffix);
             assertThat(packagePurpose.deletionStatus().isDeleted()).isFalse();
             assertThat(packagePurpose.createdAt()).isEqualTo(now);
             assertThat(packagePurpose.updatedAt()).isEqualTo(now);
@@ -131,61 +113,39 @@ class PackagePurposeTest {
             PurposeCode newCode = PurposeCode.of("UPDATED_CODE");
             PurposeName newName = PurposeName.of("업데이트된 이름");
             String newDescription = "업데이트된 설명";
-            AllowedClassTypes newAllowedClassTypes =
-                    AllowedClassTypes.of(java.util.List.of("VALUE_OBJECT"));
-            NamingPattern newNamingPattern = NamingPattern.of("Updated.*");
-            NamingSuffix newNamingSuffix = NamingSuffix.of("Updated");
             Instant updateTime = FIXED_CLOCK.instant().plusSeconds(3600);
 
             // when
             PackagePurposeUpdateData updateData =
-                    new PackagePurposeUpdateData(
-                            newCode,
-                            newName,
-                            newDescription,
-                            newAllowedClassTypes,
-                            newNamingPattern,
-                            newNamingSuffix);
+                    new PackagePurposeUpdateData(newCode, newName, newDescription);
             packagePurpose.update(updateData, updateTime);
 
             // then
             assertThat(packagePurpose.code()).isEqualTo(newCode);
             assertThat(packagePurpose.name()).isEqualTo(newName);
             assertThat(packagePurpose.description()).isEqualTo(newDescription);
-            assertThat(packagePurpose.defaultAllowedClassTypes()).isEqualTo(newAllowedClassTypes);
-            assertThat(packagePurpose.defaultNamingPattern()).isEqualTo(newNamingPattern);
-            assertThat(packagePurpose.defaultNamingSuffix()).isEqualTo(newNamingSuffix);
             assertThat(packagePurpose.updatedAt()).isEqualTo(updateTime);
         }
 
         @Test
-        @DisplayName("빈 값으로 수정 성공")
-        void update_WithEmptyValues_ShouldSucceed() {
+        @DisplayName("null description으로 수정 성공")
+        void update_WithNullDescription_ShouldSucceed() {
             // given
             PackagePurpose packagePurpose = PackagePurposeFixture.defaultExistingPackagePurpose();
             PurposeCode newCode = PurposeCode.of("NEW_CODE");
             PurposeName newName = PurposeName.of("새 이름");
-            String newDescription = "새 설명";
-            AllowedClassTypes newAllowedClassTypes = AllowedClassTypes.empty();
-            NamingPattern newNamingPattern = NamingPattern.empty();
-            NamingSuffix newNamingSuffix = NamingSuffix.empty();
             Instant updateTime = FIXED_CLOCK.instant().plusSeconds(3600);
 
             // when
             PackagePurposeUpdateData updateData =
-                    new PackagePurposeUpdateData(
-                            newCode,
-                            newName,
-                            newDescription,
-                            newAllowedClassTypes,
-                            newNamingPattern,
-                            newNamingSuffix);
+                    new PackagePurposeUpdateData(newCode, newName, null);
             packagePurpose.update(updateData, updateTime);
 
             // then
-            assertThat(packagePurpose.defaultAllowedClassTypes().isEmpty()).isTrue();
-            assertThat(packagePurpose.defaultNamingPattern().isEmpty()).isTrue();
-            assertThat(packagePurpose.defaultNamingSuffix().isEmpty()).isTrue();
+            assertThat(packagePurpose.code()).isEqualTo(newCode);
+            assertThat(packagePurpose.name()).isEqualTo(newName);
+            assertThat(packagePurpose.description()).isNull();
+            assertThat(packagePurpose.updatedAt()).isEqualTo(updateTime);
         }
     }
 
@@ -253,10 +213,6 @@ class PackagePurposeTest {
             PurposeCode code = PackagePurposeVoFixtures.defaultPurposeCode();
             PurposeName name = PackagePurposeVoFixtures.defaultPurposeName();
             String description = "기본 설명";
-            AllowedClassTypes allowedClassTypes =
-                    PackagePurposeVoFixtures.defaultAllowedClassTypes();
-            NamingPattern namingPattern = PackagePurposeVoFixtures.defaultNamingPattern();
-            NamingSuffix namingSuffix = PackagePurposeVoFixtures.defaultNamingSuffix();
             DeletionStatus deletionStatus = DeletionStatus.active();
             Instant createdAt = FIXED_CLOCK.instant();
             Instant updatedAt = FIXED_CLOCK.instant();
@@ -269,9 +225,6 @@ class PackagePurposeTest {
                             code,
                             name,
                             description,
-                            allowedClassTypes,
-                            namingPattern,
-                            namingSuffix,
                             deletionStatus,
                             createdAt,
                             updatedAt);
@@ -282,9 +235,6 @@ class PackagePurposeTest {
             assertThat(packagePurpose.code()).isEqualTo(code);
             assertThat(packagePurpose.name()).isEqualTo(name);
             assertThat(packagePurpose.description()).isEqualTo(description);
-            assertThat(packagePurpose.defaultAllowedClassTypes()).isEqualTo(allowedClassTypes);
-            assertThat(packagePurpose.defaultNamingPattern()).isEqualTo(namingPattern);
-            assertThat(packagePurpose.defaultNamingSuffix()).isEqualTo(namingSuffix);
             assertThat(packagePurpose.createdAt()).isEqualTo(createdAt);
             assertThat(packagePurpose.updatedAt()).isEqualTo(updatedAt);
         }

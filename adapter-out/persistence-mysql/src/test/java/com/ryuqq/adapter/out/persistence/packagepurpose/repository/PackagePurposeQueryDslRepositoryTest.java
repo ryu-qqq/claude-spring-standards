@@ -37,41 +37,18 @@ class PackagePurposeQueryDslRepositoryTest extends RepositoryTestSupport {
         Instant now = Instant.now();
         persistAll(
                 PackagePurposeJpaEntity.of(
-                        null,
-                        STRUCTURE_ID_1,
-                        "AGGREGATE",
-                        "Aggregate",
-                        "Desc 1",
-                        "[]",
-                        "Test.*",
-                        "Test",
-                        now,
-                        now,
-                        null),
+                        null, STRUCTURE_ID_1, "AGGREGATE", "Aggregate", "Desc 1", now, now, null),
                 PackagePurposeJpaEntity.of(
                         null,
                         STRUCTURE_ID_1,
                         "VALUE_OBJECT",
                         "Value Object",
                         "Desc 2",
-                        "[]",
-                        "Test.*",
-                        "Test",
                         now,
                         now,
                         null),
                 PackagePurposeJpaEntity.of(
-                        null,
-                        STRUCTURE_ID_2,
-                        "SERVICE",
-                        "Service",
-                        "Desc 3",
-                        "[]",
-                        "Test.*",
-                        "Test",
-                        now,
-                        now,
-                        null));
+                        null, STRUCTURE_ID_2, "SERVICE", "Service", "Desc 3", now, now, null));
         flushAndClear();
     }
 

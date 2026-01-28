@@ -3,6 +3,7 @@ package com.ryuqq.adapter.in.rest.packagestructure.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ryuqq.adapter.in.rest.common.dto.SliceApiResponse;
+import com.ryuqq.adapter.in.rest.common.util.DateTimeFormatUtils;
 import com.ryuqq.adapter.in.rest.fixture.request.SearchPackageStructuresCursorApiRequestFixture;
 import com.ryuqq.adapter.in.rest.packagestructure.dto.request.SearchPackageStructuresCursorApiRequest;
 import com.ryuqq.adapter.in.rest.packagestructure.dto.response.PackageStructureApiResponse;
@@ -82,17 +83,16 @@ class PackageStructureQueryApiMapperTest {
         @DisplayName("정상 변환 - 모든 필드 매핑")
         void validResult_ShouldMapAllFields() {
             // Given
+            Instant createdAt = Instant.parse("2024-01-01T00:00:00Z");
+            Instant updatedAt = Instant.parse("2024-01-02T00:00:00Z");
             var result =
                     new PackageStructureResult(
                             1L,
                             1L,
                             "{base}.domain.{bc}.aggregate",
-                            List.of("CLASS", "RECORD"),
-                            ".*Aggregate",
-                            "Aggregate",
                             "Aggregate Root 패키지",
-                            Instant.parse("2024-01-01T09:00:00+09:00"),
-                            Instant.parse("2024-01-01T09:00:00+09:00"));
+                            createdAt,
+                            updatedAt);
 
             // When
             PackageStructureApiResponse response = mapper.toResponse(result);
@@ -101,12 +101,11 @@ class PackageStructureQueryApiMapperTest {
             assertThat(response.packageStructureId()).isEqualTo(1L);
             assertThat(response.moduleId()).isEqualTo(1L);
             assertThat(response.pathPattern()).isEqualTo("{base}.domain.{bc}.aggregate");
-            assertThat(response.allowedClassTypes()).containsExactly("CLASS", "RECORD");
-            assertThat(response.namingPattern()).isEqualTo(".*Aggregate");
-            assertThat(response.namingSuffix()).isEqualTo("Aggregate");
             assertThat(response.description()).isEqualTo("Aggregate Root 패키지");
-            assertThat(response.createdAt()).isEqualTo("2024-01-01T09:00:00+09:00");
-            assertThat(response.updatedAt()).isEqualTo("2024-01-01T09:00:00+09:00");
+            assertThat(response.createdAt())
+                    .isEqualTo(DateTimeFormatUtils.formatIso8601(createdAt));
+            assertThat(response.updatedAt())
+                    .isEqualTo(DateTimeFormatUtils.formatIso8601(updatedAt));
         }
     }
 
@@ -123,23 +122,17 @@ class PackageStructureQueryApiMapperTest {
                             1L,
                             1L,
                             "path1",
-                            List.of("CLASS"),
-                            "pattern1",
-                            "suffix1",
                             "description1",
-                            Instant.parse("2024-01-01T09:00:00+09:00"),
-                            Instant.parse("2024-01-01T09:00:00+09:00"));
+                            Instant.parse("2024-01-01T00:00:00Z"),
+                            Instant.parse("2024-01-01T00:00:00Z"));
             var result2 =
                     new PackageStructureResult(
                             2L,
                             1L,
                             "path2",
-                            List.of("RECORD"),
-                            "pattern2",
-                            "suffix2",
                             "description2",
-                            Instant.parse("2024-01-01T09:00:00+09:00"),
-                            Instant.parse("2024-01-01T09:00:00+09:00"));
+                            Instant.parse("2024-01-01T00:00:00Z"),
+                            Instant.parse("2024-01-01T00:00:00Z"));
 
             // When
             List<PackageStructureApiResponse> responses =
@@ -165,12 +158,9 @@ class PackageStructureQueryApiMapperTest {
                             1L,
                             1L,
                             "path",
-                            List.of("CLASS"),
-                            "pattern",
-                            "suffix",
                             "description",
-                            Instant.parse("2024-01-01T09:00:00+09:00"),
-                            Instant.parse("2024-01-01T09:00:00+09:00"));
+                            Instant.parse("2024-01-01T00:00:00Z"),
+                            Instant.parse("2024-01-01T00:00:00Z"));
             var sliceResult = PackageStructureSliceResult.of(List.of(result), true);
 
             // When

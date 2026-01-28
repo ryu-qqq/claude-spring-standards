@@ -177,7 +177,7 @@ class CodingRuleApiResponse(BaseModel):
     severity: str
     category: str
     description: str
-    rationale: str
+    rationale: Optional[str] = None
     auto_fixable: bool = Field(alias="autoFixable")
     applies_to: Optional[list[str]] = Field(None, alias="appliesTo")
     sdk_constraint: Optional[str] = Field(None, alias="sdkConstraint")
@@ -502,11 +502,6 @@ class PackageStructureApiResponse(BaseModel):
     module_id: int = Field(alias="moduleId")
     purpose_id: Optional[int] = Field(None, alias="purposeId")
     path_pattern: str = Field(alias="pathPattern")
-    allowed_class_types: list[str] = Field(
-        default_factory=list, alias="allowedClassTypes"
-    )
-    naming_pattern: Optional[str] = Field(None, alias="namingPattern")
-    naming_suffix: Optional[str] = Field(None, alias="namingSuffix")
     description: Optional[str] = None
     created_at: Optional[str] = Field(None, alias="createdAt")
     updated_at: Optional[str] = Field(None, alias="updatedAt")
@@ -635,11 +630,6 @@ class PackagePurposeApiResponse(BaseModel):
     code: str
     name: str
     description: Optional[str] = None
-    default_allowed_class_types: list[str] = Field(
-        default_factory=list, alias="defaultAllowedClassTypes"
-    )
-    default_naming_pattern: Optional[str] = Field(None, alias="defaultNamingPattern")
-    default_naming_suffix: Optional[str] = Field(None, alias="defaultNamingSuffix")
     created_at: Optional[str] = Field(None, alias="createdAt")
     updated_at: Optional[str] = Field(None, alias="updatedAt")
 

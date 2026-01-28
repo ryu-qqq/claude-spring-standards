@@ -1,0 +1,70 @@
+version: '3.8'
+
+# ===============================================
+# Spring Standards - AWS 연결 환경
+# ===============================================
+# 로컬에서 실제 AWS 리소스(RDS, SQS 등)에 연결
+#
+# 사전 조건:
+#   1. AWS SSM Session Manager 설치
+#   2. Bastion Host (EC2) 또는 SSM 엔드포인트 설정
+#   3. ./scripts/aws-port-forward.sh 실행 (별도 터미널)
+#
+# 사용법:
+#   터미널 1: ./scripts/aws-port-forward.sh  # 포트 포워딩
+#   터미널 2: ./scripts/aws-start.sh         # 애플리케이션 시작
+# ===============================================
+
+services:
+  # ===============================================
+  # Application Services (AWS 리소스 연결)
+  # ===============================================
+
+  api:
+    build:
+      context: ..
+      dockerfile: bootstrap/bootstrap-web-api/Dockerfile
+    container_name: standards-api
+    env_file:
+      - .env.aws
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+
+      # Database (AWS RDS - SSM 포트 포워딩 경유)
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:13307/common?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: admin
+      DB_HOST: host.docker.internal
+      DB_PORT: 13307
+      DB_NAME: ${DB_NAME:-common}
+      DB_USERNAME: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Flyway 비활성화 (운영 DB 마이그레이션 방지)
+      SPRING_FLYWAY_ENABLED: "false"
+
+      # AWS Credentials (SQS, S3 등 직접 연결용)
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # Security 자동 설정 제외 (로컬 개발용)
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration,org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - standards-network
+    restart: unless-stopped
+
+# ===============================================
+# Networks
+# ===============================================
+networks:
+  standards-network:
+    driver: bridge

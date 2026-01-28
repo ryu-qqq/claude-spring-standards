@@ -17,7 +17,6 @@ import com.ryuqq.domain.packagepurpose.aggregate.PackagePurposeUpdateData;
 import com.ryuqq.domain.packagepurpose.exception.PackagePurposeDuplicateCodeException;
 import com.ryuqq.domain.packagepurpose.id.PackagePurposeId;
 import java.time.Instant;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -119,12 +118,6 @@ class UpdatePackagePurposeServiceTest {
 
     private UpdatePackagePurposeCommand createDefaultCommand() {
         return new UpdatePackagePurposeCommand(
-                1L,
-                "AGGREGATE",
-                "Aggregate Root",
-                "Aggregate Root 패키지 목적",
-                List.of("AGGREGATE"),
-                "{Name}",
-                null);
+                1L, "AGGREGATE", "Aggregate Root", "Aggregate Root 패키지 목적");
     }
 }

@@ -5,9 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ryuqq.domain.common.vo.DeletionStatus;
 import com.ryuqq.domain.module.id.ModuleId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagestructure.fixture.PackageStructureFixture;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import com.ryuqq.domain.packagestructure.vo.PathPattern;
@@ -39,30 +36,17 @@ class PackageStructureTest {
             // given
             ModuleId moduleId = ModuleId.of(1L);
             PathPattern pathPattern = PathPattern.of("com.example.domain.{bc}.aggregate");
-            AllowedClassTypes allowedClassTypes = AllowedClassTypes.empty();
-            NamingPattern namingPattern = NamingPattern.empty();
-            NamingSuffix namingSuffix = NamingSuffix.empty();
             String description = "기본 설명";
             Instant now = FIXED_CLOCK.instant();
 
             // when
             PackageStructure packageStructure =
-                    PackageStructure.forNew(
-                            moduleId,
-                            pathPattern,
-                            allowedClassTypes,
-                            namingPattern,
-                            namingSuffix,
-                            description,
-                            now);
+                    PackageStructure.forNew(moduleId, pathPattern, description, now);
 
             // then
             assertThat(packageStructure.isNew()).isTrue();
             assertThat(packageStructure.moduleId()).isEqualTo(moduleId);
             assertThat(packageStructure.pathPattern()).isEqualTo(pathPattern);
-            assertThat(packageStructure.allowedClassTypes()).isEqualTo(allowedClassTypes);
-            assertThat(packageStructure.namingPattern()).isEqualTo(namingPattern);
-            assertThat(packageStructure.namingSuffix()).isEqualTo(namingSuffix);
             assertThat(packageStructure.description()).isEqualTo(description);
             assertThat(packageStructure.deletionStatus().isDeleted()).isFalse();
             assertThat(packageStructure.createdAt()).isEqualTo(now);
@@ -178,9 +162,6 @@ class PackageStructureTest {
             PackageStructureId id = PackageStructureFixture.nextPackageStructureId();
             ModuleId moduleId = ModuleId.of(1L);
             PathPattern pathPattern = PathPattern.of("com.example.domain.{bc}.aggregate");
-            AllowedClassTypes allowedClassTypes = AllowedClassTypes.empty();
-            NamingPattern namingPattern = NamingPattern.empty();
-            NamingSuffix namingSuffix = NamingSuffix.empty();
             String description = "기본 설명";
             DeletionStatus deletionStatus = DeletionStatus.active();
             Instant createdAt = FIXED_CLOCK.instant();
@@ -192,9 +173,6 @@ class PackageStructureTest {
                             id,
                             moduleId,
                             pathPattern,
-                            allowedClassTypes,
-                            namingPattern,
-                            namingSuffix,
                             description,
                             deletionStatus,
                             createdAt,
@@ -204,9 +182,6 @@ class PackageStructureTest {
             assertThat(packageStructure.id()).isEqualTo(id);
             assertThat(packageStructure.moduleId()).isEqualTo(moduleId);
             assertThat(packageStructure.pathPattern()).isEqualTo(pathPattern);
-            assertThat(packageStructure.allowedClassTypes()).isEqualTo(allowedClassTypes);
-            assertThat(packageStructure.namingPattern()).isEqualTo(namingPattern);
-            assertThat(packageStructure.namingSuffix()).isEqualTo(namingSuffix);
             assertThat(packageStructure.description()).isEqualTo(description);
             assertThat(packageStructure.createdAt()).isEqualTo(createdAt);
             assertThat(packageStructure.updatedAt()).isEqualTo(updatedAt);

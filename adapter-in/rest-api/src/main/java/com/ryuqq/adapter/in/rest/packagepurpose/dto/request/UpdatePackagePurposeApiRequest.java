@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 
 /**
  * UpdatePackagePurposeApiRequest - PackagePurpose 수정 API Request
@@ -21,10 +20,7 @@ import java.util.List;
  *
  * @param code 목적 코드
  * @param name 목적 이름
- * @param description 설명
- * @param defaultAllowedClassTypes 기본 허용 클래스 타입 목록
- * @param defaultNamingPattern 기본 네이밍 패턴 (정규식)
- * @param defaultNamingSuffix 기본 네이밍 접미사
+ * @param description 설명 (nullable)
  * @author ryu-qqq
  * @since 1.0.0
  */
@@ -40,14 +36,4 @@ public record UpdatePackagePurposeApiRequest(
         @Nullable
                 @Size(max = 2000, message = "description은 2000자 이내여야 합니다")
                 @Schema(description = "설명", example = "DDD Aggregate Root 패키지")
-                String description,
-        @Nullable @Schema(description = "기본 허용 클래스 타입 목록", example = "[\"CLASS\", \"RECORD\"]")
-                List<String> defaultAllowedClassTypes,
-        @Nullable
-                @Size(max = 200, message = "defaultNamingPattern은 200자 이내여야 합니다")
-                @Schema(description = "기본 네이밍 패턴 (정규식)", example = "^[A-Z][a-zA-Z0-9]*$")
-                String defaultNamingPattern,
-        @Nullable
-                @Size(max = 50, message = "defaultNamingSuffix는 50자 이내여야 합니다")
-                @Schema(description = "기본 네이밍 접미사", example = "Aggregate")
-                String defaultNamingSuffix) {}
+                String description) {}

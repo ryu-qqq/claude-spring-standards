@@ -58,12 +58,7 @@ class PackageStructureCommandControllerRestDocsTest extends RestDocsTestSupport 
             var request = CreatePackageStructureApiRequestFixture.valid();
             var command =
                     new CreatePackageStructureCommand(
-                            1L,
-                            "{base}.domain.{bc}.aggregate",
-                            java.util.List.of("CLASS", "RECORD"),
-                            ".*Aggregate",
-                            "Aggregate",
-                            "Aggregate Root 패키지");
+                            1L, "{base}.domain.{bc}.aggregate", "Aggregate Root 패키지");
             Long createdId = 1L;
 
             given(mapper.toCommand(any())).willReturn(command);
@@ -83,25 +78,9 @@ class PackageStructureCommandControllerRestDocsTest extends RestDocsTestSupport 
                                             fieldWithPath("moduleId")
                                                     .description("모듈 ID")
                                                     .type(Long.class),
-                                            fieldWithPath("purposeId")
-                                                    .description("패키지 목적 ID")
-                                                    .type(Long.class)
-                                                    .optional(),
                                             fieldWithPath("pathPattern")
                                                     .description("경로 패턴")
                                                     .type(String.class),
-                                            fieldWithPath("allowedClassTypes")
-                                                    .description("허용 클래스 타입 목록")
-                                                    .type(java.util.List.class)
-                                                    .optional(),
-                                            fieldWithPath("namingPattern")
-                                                    .description("네이밍 패턴")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("namingSuffix")
-                                                    .description("네이밍 접미사")
-                                                    .type(String.class)
-                                                    .optional(),
                                             fieldWithPath("description")
                                                     .description("설명")
                                                     .type(String.class)
@@ -149,12 +128,7 @@ class PackageStructureCommandControllerRestDocsTest extends RestDocsTestSupport 
             var request = UpdatePackageStructureApiRequestFixture.valid();
             var command =
                     new UpdatePackageStructureCommand(
-                            1L,
-                            "{base}.domain.{bc}.aggregate",
-                            java.util.List.of("CLASS", "RECORD"),
-                            ".*Aggregate",
-                            "Aggregate",
-                            "Aggregate Root 패키지");
+                            1L, "{base}.domain.{bc}.aggregate", "Aggregate Root 패키지");
 
             given(mapper.toCommand(eq(packageStructureId), any())).willReturn(command);
 
@@ -174,18 +148,10 @@ class PackageStructureCommandControllerRestDocsTest extends RestDocsTestSupport 
                                             fieldWithPath("pathPattern")
                                                     .description("경로 패턴")
                                                     .type(String.class),
-                                            fieldWithPath("allowedClassTypes")
-                                                    .description("허용 클래스 타입 목록")
-                                                    .type(java.util.List.class),
-                                            fieldWithPath("namingPattern")
-                                                    .description("네이밍 패턴")
-                                                    .type(String.class),
-                                            fieldWithPath("namingSuffix")
-                                                    .description("네이밍 접미사")
-                                                    .type(String.class),
                                             fieldWithPath("description")
                                                     .description("설명")
-                                                    .type(String.class)),
+                                                    .type(String.class)
+                                                    .optional()),
                                     responseFields(
                                             fieldWithPath("data")
                                                     .description("응답 데이터")

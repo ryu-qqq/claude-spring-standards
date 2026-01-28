@@ -61,9 +61,6 @@ class PackageStructureQueryControllerRestDocsTest extends RestDocsTestSupport {
                             1L,
                             1L,
                             "{base}.domain.{bc}.aggregate",
-                            List.of("CLASS", "RECORD"),
-                            ".*Aggregate",
-                            "Aggregate",
                             "Aggregate Root 패키지",
                             java.time.Instant.parse("2024-01-01T00:00:00Z"),
                             java.time.Instant.parse("2024-01-01T00:00:00Z"));
@@ -109,17 +106,6 @@ class PackageStructureQueryControllerRestDocsTest extends RestDocsTestSupport {
                                             fieldWithPath("data.content[].pathPattern")
                                                     .description("경로 패턴")
                                                     .type(String.class),
-                                            fieldWithPath("data.content[].allowedClassTypes")
-                                                    .description("허용 클래스 타입 목록")
-                                                    .type(java.util.List.class),
-                                            fieldWithPath("data.content[].namingPattern")
-                                                    .description("네이밍 패턴")
-                                                    .type(String.class)
-                                                    .optional(),
-                                            fieldWithPath("data.content[].namingSuffix")
-                                                    .description("네이밍 접미사")
-                                                    .type(String.class)
-                                                    .optional(),
                                             fieldWithPath("data.content[].description")
                                                     .description("설명")
                                                     .type(String.class)

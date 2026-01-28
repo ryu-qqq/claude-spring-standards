@@ -6,9 +6,6 @@ import com.ryuqq.adapter.out.persistence.common.MapperTestSupport;
 import com.ryuqq.adapter.out.persistence.packagestructure.entity.PackageStructureJpaEntity;
 import com.ryuqq.domain.common.vo.DeletionStatus;
 import com.ryuqq.domain.module.id.ModuleId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagestructure.aggregate.PackageStructure;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import com.ryuqq.domain.packagestructure.vo.PathPattern;
@@ -114,7 +111,7 @@ class PackageStructureJpaEntityMapperTest extends MapperTestSupport {
     // Helper methods
     private PackageStructureJpaEntity createTestEntity(Instant now) {
         return PackageStructureJpaEntity.of(
-                1L, 100L, "com.test", "[]", "Test.*", "Test", "Test Description", now, now, null);
+                1L, 100L, "com.test", "Test Description", now, now, null);
     }
 
     private PackageStructure createTestDomain(Instant now) {
@@ -122,9 +119,6 @@ class PackageStructureJpaEntityMapperTest extends MapperTestSupport {
                 PackageStructureId.of(1L),
                 ModuleId.of(100L),
                 PathPattern.of("com.test"),
-                AllowedClassTypes.empty(),
-                NamingPattern.of("Test.*"),
-                NamingSuffix.of("Test"),
                 "Test Description",
                 DeletionStatus.active(),
                 now,

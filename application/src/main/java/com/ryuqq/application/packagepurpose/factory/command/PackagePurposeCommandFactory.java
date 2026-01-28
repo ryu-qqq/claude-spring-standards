@@ -7,9 +7,6 @@ import com.ryuqq.application.packagepurpose.dto.command.UpdatePackagePurposeComm
 import com.ryuqq.domain.packagepurpose.aggregate.PackagePurpose;
 import com.ryuqq.domain.packagepurpose.aggregate.PackagePurposeUpdateData;
 import com.ryuqq.domain.packagepurpose.id.PackagePurposeId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagepurpose.vo.PurposeCode;
 import com.ryuqq.domain.packagepurpose.vo.PurposeName;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
@@ -47,31 +44,7 @@ public class PackagePurposeCommandFactory {
                 PurposeCode.of(command.code()),
                 PurposeName.of(command.name()),
                 command.description(),
-                toAllowedClassTypes(command.defaultAllowedClassTypes()),
-                toNamingPattern(command.defaultNamingPattern()),
-                toNamingSuffix(command.defaultNamingSuffix()),
                 timeProvider.now());
-    }
-
-    private AllowedClassTypes toAllowedClassTypes(java.util.List<String> types) {
-        if (types == null || types.isEmpty()) {
-            return AllowedClassTypes.empty();
-        }
-        return AllowedClassTypes.of(types);
-    }
-
-    private NamingPattern toNamingPattern(String pattern) {
-        if (pattern == null || pattern.isBlank()) {
-            return NamingPattern.empty();
-        }
-        return NamingPattern.of(pattern);
-    }
-
-    private NamingSuffix toNamingSuffix(String suffix) {
-        if (suffix == null || suffix.isBlank()) {
-            return NamingSuffix.empty();
-        }
-        return NamingSuffix.of(suffix);
     }
 
     /**
@@ -86,10 +59,7 @@ public class PackagePurposeCommandFactory {
         return new PackagePurposeUpdateData(
                 PurposeCode.of(command.code()),
                 PurposeName.of(command.name()),
-                command.description(),
-                AllowedClassTypes.of(command.defaultAllowedClassTypes()),
-                NamingPattern.of(command.defaultNamingPattern()),
-                NamingSuffix.of(command.defaultNamingSuffix()));
+                command.description());
     }
 
     /**

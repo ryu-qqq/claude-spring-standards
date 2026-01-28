@@ -16,7 +16,6 @@ import com.ryuqq.domain.packagestructure.aggregate.PackageStructure;
 import com.ryuqq.domain.packagestructure.exception.PackageStructureDuplicateException;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
 import com.ryuqq.domain.packagestructure.vo.PathPattern;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -113,12 +112,6 @@ class CreatePackageStructureServiceTest {
     }
 
     private CreatePackageStructureCommand createDefaultCommand() {
-        return new CreatePackageStructureCommand(
-                1L,
-                "{domain}/aggregate",
-                List.of("AGGREGATE"),
-                "{Name}",
-                null,
-                "Aggregate package");
+        return new CreatePackageStructureCommand(1L, "{domain}/aggregate", "Aggregate package");
     }
 }

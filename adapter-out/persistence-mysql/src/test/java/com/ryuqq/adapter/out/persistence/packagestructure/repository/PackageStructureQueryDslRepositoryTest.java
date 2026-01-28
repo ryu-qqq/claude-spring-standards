@@ -33,39 +33,9 @@ class PackageStructureQueryDslRepositoryTest extends RepositoryTestSupport {
         // 테스트 데이터 준비
         Instant now = Instant.now();
         persistAll(
-                PackageStructureJpaEntity.of(
-                        null,
-                        100L,
-                        "com.test1",
-                        "[]",
-                        "Test1.*",
-                        "Test1",
-                        "Desc 1",
-                        now,
-                        now,
-                        null),
-                PackageStructureJpaEntity.of(
-                        null,
-                        100L,
-                        "com.test2",
-                        "[]",
-                        "Test2.*",
-                        "Test2",
-                        "Desc 2",
-                        now,
-                        now,
-                        null),
-                PackageStructureJpaEntity.of(
-                        null,
-                        200L,
-                        "com.test3",
-                        "[]",
-                        "Test3.*",
-                        "Test3",
-                        "Desc 3",
-                        now,
-                        now,
-                        null));
+                PackageStructureJpaEntity.of(null, 100L, "com.test1", "Desc 1", now, now, null),
+                PackageStructureJpaEntity.of(null, 100L, "com.test2", "Desc 2", now, now, null),
+                PackageStructureJpaEntity.of(null, 200L, "com.test3", "Desc 3", now, now, null));
         flushAndClear();
     }
 

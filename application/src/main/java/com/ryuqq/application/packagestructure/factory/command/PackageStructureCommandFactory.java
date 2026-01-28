@@ -5,9 +5,6 @@ import com.ryuqq.application.common.time.TimeProvider;
 import com.ryuqq.application.packagestructure.dto.command.CreatePackageStructureCommand;
 import com.ryuqq.application.packagestructure.dto.command.UpdatePackageStructureCommand;
 import com.ryuqq.domain.module.id.ModuleId;
-import com.ryuqq.domain.packagepurpose.vo.AllowedClassTypes;
-import com.ryuqq.domain.packagepurpose.vo.NamingPattern;
-import com.ryuqq.domain.packagepurpose.vo.NamingSuffix;
 import com.ryuqq.domain.packagestructure.aggregate.PackageStructure;
 import com.ryuqq.domain.packagestructure.aggregate.PackageStructureUpdateData;
 import com.ryuqq.domain.packagestructure.id.PackageStructureId;
@@ -44,9 +41,6 @@ public class PackageStructureCommandFactory {
         return PackageStructure.forNew(
                 ModuleId.of(command.moduleId()),
                 PathPattern.of(command.pathPattern()),
-                AllowedClassTypes.of(command.allowedClassTypes()),
-                NamingPattern.of(command.namingPattern()),
-                NamingSuffix.of(command.namingSuffix()),
                 command.description(),
                 timeProvider.now());
     }
@@ -61,11 +55,7 @@ public class PackageStructureCommandFactory {
      */
     public PackageStructureUpdateData toUpdateData(UpdatePackageStructureCommand command) {
         return new PackageStructureUpdateData(
-                PathPattern.of(command.pathPattern()),
-                AllowedClassTypes.of(command.allowedClassTypes()),
-                NamingPattern.of(command.namingPattern()),
-                NamingSuffix.of(command.namingSuffix()),
-                command.description());
+                PathPattern.of(command.pathPattern()), command.description());
     }
 
     /**
