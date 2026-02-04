@@ -4,6 +4,7 @@ import static com.ryuqq.adapter.out.persistence.architecture.entity.QArchitectur
 import static com.ryuqq.adapter.out.persistence.archunittest.entity.QArchUnitTestJpaEntity.archUnitTestJpaEntity;
 import static com.ryuqq.adapter.out.persistence.checklistitem.entity.QChecklistItemJpaEntity.checklistItemJpaEntity;
 import static com.ryuqq.adapter.out.persistence.classtemplate.entity.QClassTemplateJpaEntity.classTemplateJpaEntity;
+import static com.ryuqq.adapter.out.persistence.classtype.entity.QClassTypeJpaEntity.classTypeJpaEntity;
 import static com.ryuqq.adapter.out.persistence.codingrule.entity.QCodingRuleJpaEntity.codingRuleJpaEntity;
 import static com.ryuqq.adapter.out.persistence.convention.entity.QConventionJpaEntity.conventionJpaEntity;
 import static com.ryuqq.adapter.out.persistence.layer.entity.QLayerJpaEntity.layerJpaEntity;
@@ -100,27 +101,52 @@ public class McpContextQueryDslRepository {
     }
 
     /**
-     * Query 2-1: CodingRule 기본 정보 조회
+     * Query 2-1: CodingRule 기본 정보 조회 (classTypeCode 필터 적용)
      *
      * @param conventionId 컨벤션 ID
+     * @param classTypeCode 클래스 타입 코드 (appliesTo 필터링, nullable이면 전체 조회)
      * @return CodingRule 목록
      */
-    public List<CodingRuleRow> findCodingRulesByConventionId(Long conventionId) {
+    public List<CodingRuleRow> findCodingRulesByConventionId(
+            Long conventionId, String classTypeCode) {
+        var query =
+                queryFactory
+                        .select(
+                                Projections.constructor(
+                                        CodingRuleRow.class,
+                                        codingRuleJpaEntity.id,
+                                        codingRuleJpaEntity.code,
+                                        codingRuleJpaEntity.name,
+                                        codingRuleJpaEntity.description,
+                                        codingRuleJpaEntity.severity.stringValue(),
+                                        codingRuleJpaEntity.appliesTo))
+                        .from(codingRuleJpaEntity)
+                        .where(
+                                codingRuleJpaEntity.conventionId.eq(conventionId),
+                                codingRuleJpaEntity.deletedAt.isNull());
+
+        if (classTypeCode != null && !classTypeCode.isEmpty()) {
+            query.where(codingRuleJpaEntity.appliesTo.contains(classTypeCode));
+        }
+
+        return query.fetch();
+    }
+
+    /**
+     * classTypeId → code 변환 조회
+     *
+     * @param classTypeId 클래스 타입 ID
+     * @return 클래스 타입 코드 (없으면 null)
+     */
+    public String findClassTypeCodeById(Long classTypeId) {
+        if (classTypeId == null) {
+            return null;
+        }
         return queryFactory
-                .select(
-                        Projections.constructor(
-                                CodingRuleRow.class,
-                                codingRuleJpaEntity.id,
-                                codingRuleJpaEntity.code,
-                                codingRuleJpaEntity.name,
-                                codingRuleJpaEntity.description,
-                                codingRuleJpaEntity.severity.stringValue(),
-                                codingRuleJpaEntity.appliesTo))
-                .from(codingRuleJpaEntity)
-                .where(
-                        codingRuleJpaEntity.conventionId.eq(conventionId),
-                        codingRuleJpaEntity.deletedAt.isNull())
-                .fetch();
+                .select(classTypeJpaEntity.code)
+                .from(classTypeJpaEntity)
+                .where(classTypeJpaEntity.id.eq(classTypeId), classTypeJpaEntity.deletedAt.isNull())
+                .fetchOne();
     }
 
     /**

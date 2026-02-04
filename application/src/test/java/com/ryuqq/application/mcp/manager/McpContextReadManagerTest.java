@@ -196,9 +196,11 @@ class McpContextReadManagerTest {
         void findCodingRulesWithDetails_WhenNullConventionId_ShouldReturnEmptyList() {
             // given
             Long conventionId = null;
+            Long classTypeId = 1L;
 
             // when
-            List<CodingRuleWithDetailsDto> result = sut.findCodingRulesWithDetails(conventionId);
+            List<CodingRuleWithDetailsDto> result =
+                    sut.findCodingRulesWithDetails(conventionId, classTypeId);
 
             // then
             assertThat(result).isEmpty();
@@ -209,13 +211,15 @@ class McpContextReadManagerTest {
         void findCodingRulesWithDetails_WhenHasConventionId_ShouldReturnList() {
             // given
             Long conventionId = 1L;
+            Long classTypeId = 1L;
             List<CodingRuleWithDetailsDto> expected = List.of();
 
-            given(mcpContextQueryPort.findCodingRulesWithDetails(conventionId))
+            given(mcpContextQueryPort.findCodingRulesWithDetails(conventionId, classTypeId))
                     .willReturn(expected);
 
             // when
-            List<CodingRuleWithDetailsDto> result = sut.findCodingRulesWithDetails(conventionId);
+            List<CodingRuleWithDetailsDto> result =
+                    sut.findCodingRulesWithDetails(conventionId, classTypeId);
 
             // then
             assertThat(result).isEqualTo(expected);

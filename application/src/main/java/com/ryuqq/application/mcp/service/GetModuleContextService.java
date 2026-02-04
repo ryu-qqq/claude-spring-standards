@@ -60,7 +60,8 @@ public class GetModuleContextService implements GetModuleContextUseCase {
 
         // Query 4: CodingRule + RuleExample + ZeroTolerance + ChecklistItem 조회
         List<CodingRuleWithDetailsDto> codingRules =
-                mcpContextReadManager.findCodingRulesWithDetails(moduleDto.conventionId());
+                mcpContextReadManager.findCodingRulesWithDetails(
+                        moduleDto.conventionId(), query.classTypeId());
 
         // Assembler를 사용하여 결과 조립
         ExecutionContextResult executionContext =

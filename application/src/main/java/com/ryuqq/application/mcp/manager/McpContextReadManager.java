@@ -96,14 +96,16 @@ public class McpContextReadManager {
      * CodingRule + 상세 정보 조회
      *
      * @param conventionId 컨벤션 ID
+     * @param classTypeId 클래스 타입 ID (appliesTo 필터링용)
      * @return CodingRule 목록 (각각 RuleExample, ZeroTolerance, ChecklistItem 포함)
      */
     @Transactional(readOnly = true)
-    public List<CodingRuleWithDetailsDto> findCodingRulesWithDetails(Long conventionId) {
+    public List<CodingRuleWithDetailsDto> findCodingRulesWithDetails(
+            Long conventionId, Long classTypeId) {
         if (conventionId == null) {
             return List.of();
         }
-        return mcpContextQueryPort.findCodingRulesWithDetails(conventionId);
+        return mcpContextQueryPort.findCodingRulesWithDetails(conventionId, classTypeId);
     }
 
     // ========== Planning Context 조회 메서드 ==========

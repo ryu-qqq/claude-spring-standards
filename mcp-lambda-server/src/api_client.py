@@ -124,7 +124,7 @@ class ConventionApiClient:
         """레이어별 컨벤션 조회 (첫 번째 결과)
 
         Args:
-            layer: 레이어 코드 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)
+            layer: 레이어 코드 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)
 
         Returns:
             해당 레이어의 첫 번째 컨벤션 (없으면 None)
@@ -192,7 +192,7 @@ class ConventionApiClient:
         """레이어별 코딩 규칙 조회 (convention-tree 사용)
 
         Args:
-            layer: 레이어 코드 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)
+            layer: 레이어 코드 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)
 
         Returns:
             해당 레이어의 코딩 규칙 목록
@@ -211,7 +211,7 @@ class ConventionApiClient:
         """레이어별 컨벤션 트리 조회 (get_layer_convention_complete의 별칭)
 
         Args:
-            layer: 레이어 코드 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)
+            layer: 레이어 코드 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)
 
         Returns:
             컨벤션 트리 (코딩 규칙, 템플릿, 체크리스트 포함)
@@ -224,7 +224,7 @@ class ConventionApiClient:
         """Zero-Tolerance 규칙 조회 (전용 엔드포인트 사용)
 
         Args:
-            layer: 레이어 코드 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)
+            layer: 레이어 코드 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)
             size: 슬라이스 크기 (최대 100)
 
         Returns:
@@ -972,7 +972,7 @@ class ConventionApiClient:
     def get_module_context(
         self,
         module_id: int,
-        class_type_id: Optional[int] = None,
+        class_type_id: int,
     ) -> dict[str, Any]:
         """Execution Phase 컨텍스트 조회
 
@@ -980,9 +980,7 @@ class ConventionApiClient:
         - execution_context: PackageStructure, Template, ArchUnitTest
         - rule_context: Convention, CodingRule, RuleExample
         """
-        params: dict[str, Any] = {}
-        if class_type_id:
-            params["classTypeId"] = class_type_id
+        params: dict[str, Any] = {"classTypeId": class_type_id}
 
         response = self._get(f"/api/v1/templates/mcp/module/{module_id}/context", params)
         return self._extract_data(response)

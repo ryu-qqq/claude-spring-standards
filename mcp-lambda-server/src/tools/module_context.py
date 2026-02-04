@@ -4,22 +4,22 @@ module_context Tool
 Execution Phase 컨텍스트 조회 - 코드 생성용 (순수 정보 브릿지)
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from ..api_client import get_api_client
 
 
 def module_context(
     module_id: int,
-    class_type_id: Optional[int] = None,
+    class_type_id: int,
 ) -> dict[str, Any]:
     """코드 생성을 위한 Module 전체 컨텍스트 조회.
 
     사용 시점: /implement 단계에서 실제 코드 작성
 
     Args:
-        module_id: 모듈 ID
-        class_type_id: 특정 클래스 타입 ID로 필터링 (list_tech_stacks()로 조회)
+        module_id: 모듈 ID (필수)
+        class_type_id: 클래스 타입 ID (필수, list_tech_stacks()로 조회)
 
     Returns:
         execution_context: PackageStructure, Template, ArchUnitTest
@@ -30,8 +30,7 @@ def module_context(
     if not module_id or module_id <= 0:
         return {"error": "Valid module_id is required"}
 
-    # class_type_id 유효성 검사 (선택 파라미터)
-    if class_type_id is not None and class_type_id <= 0:
+    if class_type_id <= 0:
         return {"error": "class_type_id must be a positive integer"}
 
     try:

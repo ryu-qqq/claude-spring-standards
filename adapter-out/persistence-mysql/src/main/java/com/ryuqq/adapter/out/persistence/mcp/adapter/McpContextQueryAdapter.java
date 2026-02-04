@@ -67,9 +67,14 @@ public class McpContextQueryAdapter implements McpContextQueryPort {
     }
 
     @Override
-    public List<CodingRuleWithDetailsDto> findCodingRulesWithDetails(Long conventionId) {
-        // 1. CodingRule 기본 정보 조회
-        List<CodingRuleRow> rules = repository.findCodingRulesByConventionId(conventionId);
+    public List<CodingRuleWithDetailsDto> findCodingRulesWithDetails(
+            Long conventionId, Long classTypeId) {
+        // 0. classTypeId → code 변환
+        String classTypeCode = repository.findClassTypeCodeById(classTypeId);
+
+        // 1. CodingRule 기본 정보 조회 (classTypeCode 필터 적용)
+        List<CodingRuleRow> rules =
+                repository.findCodingRulesByConventionId(conventionId, classTypeCode);
         if (rules.isEmpty()) {
             return List.of();
         }

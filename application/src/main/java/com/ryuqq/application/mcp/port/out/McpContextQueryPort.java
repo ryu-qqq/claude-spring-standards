@@ -38,12 +38,13 @@ public interface McpContextQueryPort {
     /**
      * Convention 기준 CodingRule + RuleExample + ZeroTolerance + ChecklistItem 조회
      *
-     * <p>Convention의 모든 CodingRule과 관련 데이터를 JOIN하여 조회합니다.
+     * <p>Convention의 CodingRule 중 classTypeId에 해당하는 규칙만 조회합니다.
      *
      * @param conventionId 컨벤션 ID
+     * @param classTypeId 클래스 타입 ID (appliesTo 필터링용)
      * @return CodingRule 목록 (각각 RuleExample, ZeroTolerance, ChecklistItem 포함)
      */
-    List<CodingRuleWithDetailsDto> findCodingRulesWithDetails(Long conventionId);
+    List<CodingRuleWithDetailsDto> findCodingRulesWithDetails(Long conventionId, Long classTypeId);
 
     /**
      * Module 기준 PackageStructure + PackagePurpose 조회

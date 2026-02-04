@@ -16,6 +16,7 @@ from typing import Any
 from fastmcp import FastMCP
 
 from .config import get_server_config
+from .layer_registry import get_layer_registry
 from .tools import (
     approve,
     feedback,
@@ -58,7 +59,7 @@ def tool_planning_context(
 ) -> dict[str, Any]:
     """개발 계획 수립을 위한 컨텍스트 조회.
     사용 시점: /epic, /plan 단계에서 "어떤 컴포넌트를 어디에 만들지" 결정
-    layers: 조회할 레이어 목록 (DOMAIN|APPLICATION|PERSISTENCE|REST_API)
+    layers: 조회할 레이어 목록 (DOMAIN|APPLICATION|ADAPTER_OUT|ADAPTER_IN)
     tech_stack_id: 기술 스택 ID (선택, 기본값: 활성 스택)
     Returns: 기술스택, 아키텍처, 레이어별 모듈 및 패키지 구조 요약"""
     return planning_context(layers=layers, tech_stack_id=tech_stack_id)
@@ -66,12 +67,12 @@ def tool_planning_context(
 
 @mcp.tool()
 def tool_module_context(
-    module_id: int, class_type_id: int = None
+    module_id: int, class_type_id: int
 ) -> dict[str, Any]:
     """코드 생성을 위한 Module 전체 컨텍스트 조회.
     사용 시점: /implement 단계에서 실제 코드 작성
     module_id: 모듈 ID (필수)
-    class_type_id: 클래스 타입 ID로 필터링 (list_tech_stacks()로 class_types 조회)
+    class_type_id: 클래스 타입 ID (필수, list_tech_stacks()로 class_types 조회)
     Returns: execution_context (PackageStructure, Template, ArchUnitTest), rule_context (Convention, CodingRule, RuleExample)"""
     return module_context(module_id=module_id, class_type_id=class_type_id)
 
@@ -85,7 +86,7 @@ def tool_validation_context(
 ) -> dict[str, Any]:
     """코드 검증을 위한 컨텍스트 조회.
     사용 시점: /review, /check 단계에서 생성된 코드 검증
-    layers: 검증 대상 레이어 (DOMAIN|APPLICATION|PERSISTENCE|REST_API)
+    layers: 검증 대상 레이어 (DOMAIN|APPLICATION|ADAPTER_OUT|ADAPTER_IN)
     tech_stack_id: 기술 스택 ID (필수)
     architecture_id: 아키텍처 ID (필수)
     class_types: 검증 대상 클래스 타입 (선택, AGGREGATE|USE_CASE|ENTITY 등)
@@ -149,7 +150,7 @@ def tool_get_context(
     tech_stack_id: int = None,
     architecture_id: int = None,
 ) -> dict[str, Any]:
-    """컨벤션 컨텍스트 조회. layer: DOMAIN|APPLICATION|PERSISTENCE|REST_API, class_type: AGGREGATE|USE_CASE|ENTITY|CONTROLLER 등, tech_stack_id: 기술 스택 ID, architecture_id: 아키텍처 ID"""
+    """컨벤션 컨텍스트 조회. layer: DOMAIN|APPLICATION|ADAPTER_OUT|ADAPTER_IN, class_type: AGGREGATE|USE_CASE|ENTITY|CONTROLLER 등, tech_stack_id: 기술 스택 ID, architecture_id: 아키텍처 ID"""
     return get_context(
         layer=layer,
         class_type=class_type,
@@ -201,7 +202,7 @@ def tool_get_architecture(architecture_id: int = None) -> dict[str, Any]:
 def tool_get_layer_detail(
     layer_id: int = None, layer_code: str = None
 ) -> dict[str, Any]:
-    """레이어 상세 조회. DOMAIN|APPLICATION|PERSISTENCE|REST_API 등 레이어 정보 반환. 파라미터 없으면 전체 목록"""
+    """레이어 상세 조회. DOMAIN|APPLICATION|ADAPTER_OUT|ADAPTER_IN 등 레이어 정보 반환. 파라미터 없으면 전체 목록"""
     return get_layer_detail(layer_id=layer_id, layer_code=layer_code)
 
 
@@ -327,8 +328,22 @@ def tool_approve(
 # ============================================
 
 
+def _validate_layer_codes_on_startup() -> None:
+    """서버 시작 시 Layer enum과 DB 레이어 코드 검증"""
+    try:
+        registry = get_layer_registry()
+        registry.validate_and_log()
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "시작 시 레이어 코드 검증 실패 (서버는 정상 동작): %s", e
+        )
+
+
 def main() -> None:
     """MCP 서버 실행"""
+    _validate_layer_codes_on_startup()
     mcp.run()
 
 
