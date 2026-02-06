@@ -1,20 +1,22 @@
 """
-Spring Standards MCP Server (v2.1)
+Spring Standards MCP Server (v2.2)
 
 순수 정보 브릿지 서버 - MCP는 정보만 전달, 판단은 LLM이 직접 수행
 
-도구 목록 (13개):
+도구 목록 (15개):
 - 워크플로우 API (v2.0): planning_context, module_context, validation_context ⭐ Module-Centric
 - Convention Hub: get_config_files, get_onboarding_contexts ⭐ Phase 2
 - 컨텍스트 조회: get_context, get_rule, list_rules ⭐ Index + Lookup
 - 계층 정보: list_tech_stacks, get_architecture, get_layer_detail
-- 피드백 시스템: feedback, approve
+- 피드백 시스템: get_feedback_schema, feedback, approve, suggest_convention
 """
 
+import logging
 from typing import Any
 
 from fastmcp import FastMCP
 
+from .api_client import get_api_client
 from .config import get_server_config
 from .layer_registry import get_layer_registry
 from .tools import (
@@ -30,8 +32,11 @@ from .tools import (
     list_tech_stacks,
     module_context,
     planning_context,
+    suggest_convention,
     validation_context,
 )
+
+logger = logging.getLogger(__name__)
 
 # ============================================
 # Server Initialization
@@ -209,11 +214,9 @@ def tool_get_layer_detail(
 # --- 피드백 시스템 (FeedbackQueue 기반) ---
 
 
-@mcp.tool()
-def tool_get_feedback_schema(target_type: str) -> dict[str, Any]:
-    """피드백 payload 스키마 조회. feedback() 호출 전 스키마 확인용.
-    target_type: RULE_EXAMPLE|CODING_RULE|CHECKLIST_ITEM|CLASS_TEMPLATE"""
-    schemas = {
+def _get_static_schemas() -> dict[str, Any]:
+    """하드코딩된 피드백 스키마 반환"""
+    return {
         "RULE_EXAMPLE": {
             "description": "규칙 예시 추가/수정",
             "add_schema": {
@@ -243,7 +246,7 @@ def tool_get_feedback_schema(target_type: str) -> dict[str, Any]:
                 "description": {"type": "String", "required": True, "desc": "상세 설명"},
                 "rationale": {"type": "String", "required": True, "desc": "근거"},
                 "autoFixable": {"type": "boolean", "required": True, "desc": "자동 수정 가능 여부"},
-                "appliesTo": {"type": "List[String]", "required": True, "desc": "CLASS|METHOD|FIELD 등"},
+                "appliesTo": {"type": "List[String]", "required": True, "desc": "적용 대상 class_type 코드"},
                 "structureId": {"type": "Long", "required": False, "desc": "특정 패키지 구조 ID"},
             }
         },
@@ -276,10 +279,60 @@ def tool_get_feedback_schema(target_type: str) -> dict[str, Any]:
         }
     }
 
+
+def _enrich_coding_rule_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """CODING_RULE 스키마에 동적 valid_values 주입
+
+    API에서 convention 목록과 class_type 목록을 조회하여
+    conventionId, appliesTo 필드에 유효값 힌트를 추가합니다.
+    API 실패 시 기존 스키마 그대로 반환 (graceful degradation).
+    """
+    try:
+        client = get_api_client()
+
+        # conventionId valid_values 주입
+        try:
+            conventions = client.get_all_conventions_with_modules()
+            schema["add_schema"]["conventionId"]["valid_values"] = [
+                {"id": c["id"], "module_name": c["module_name"], "layer_code": c["layer_code"]}
+                for c in conventions
+                if c.get("active", True)
+            ]
+        except Exception as e:
+            logger.warning(f"Convention 목록 조회 실패 (graceful skip): {e}")
+
+        # appliesTo valid_values 주입
+        try:
+            class_types = client.get_class_types()
+            schema["add_schema"]["appliesTo"]["valid_values"] = [
+                {"code": ct.code, "name": ct.name}
+                for ct in class_types
+            ]
+        except Exception as e:
+            logger.warning(f"ClassType 목록 조회 실패 (graceful skip): {e}")
+
+    except Exception as e:
+        logger.warning(f"API 클라이언트 초기화 실패 (graceful skip): {e}")
+
+    return schema
+
+
+@mcp.tool()
+def tool_get_feedback_schema(target_type: str) -> dict[str, Any]:
+    """피드백 payload 스키마 조회. feedback() 호출 전 스키마 확인용.
+    target_type: RULE_EXAMPLE|CODING_RULE|CHECKLIST_ITEM|CLASS_TEMPLATE
+    CODING_RULE 조회 시 conventionId/appliesTo의 유효값도 함께 반환합니다."""
+    schemas = _get_static_schemas()
+
     if target_type not in schemas:
         return {"error": f"Unknown target_type: {target_type}. Valid: {list(schemas.keys())}"}
 
-    return schemas[target_type]
+    schema = schemas[target_type]
+
+    if target_type == "CODING_RULE":
+        schema = _enrich_coding_rule_schema(schema)
+
+    return schema
 
 
 @mcp.tool()
@@ -320,6 +373,25 @@ def tool_approve(
         reviewer=reviewer,
         review_notes=review_notes,
         auto_merge=auto_merge,
+    )
+
+
+@mcp.tool()
+def tool_suggest_convention(
+    code: str = "",
+    applies_to: str = "",
+    description: str = "",
+) -> dict[str, Any]:
+    """코드/appliesTo/description 기반 convention 자동 추천.
+    code: 규칙 코드 (예: API-DTO-SEARCH-002)
+    applies_to: 적용 대상 class_type 코드 (쉼표 구분, 예: "REQUEST_DTO,CONTROLLER")
+    description: 규칙 설명
+    3가지 전략(code_prefix, applies_to_layer, description_keywords)으로 추천합니다."""
+    applies_to_list = [s.strip() for s in applies_to.split(",") if s.strip()] if applies_to else []
+    return suggest_convention(
+        code=code,
+        applies_to=applies_to_list,
+        description=description,
     )
 
 

@@ -20,7 +20,7 @@ def validation_context(
     사용 시점: /review, /check 단계에서 생성된 코드 검증
 
     Args:
-        layers: 검증 대상 레이어 (DOMAIN|APPLICATION|PERSISTENCE|REST_API)
+        layers: 검증 대상 레이어 (DOMAIN|APPLICATION|ADAPTER_OUT|ADAPTER_IN)
         tech_stack_id: 기술 스택 ID (필수)
         architecture_id: 아키텍처 ID (필수)
         class_types: 검증 대상 클래스 타입 (선택, AGGREGATE|USE_CASE|ENTITY 등)
@@ -31,15 +31,8 @@ def validation_context(
     """
     client = get_api_client()
 
-    # 레이어 유효성 검사
-    valid_layers = {"DOMAIN", "APPLICATION", "PERSISTENCE", "REST_API"}
+    # 레이어 정규화 (유효성 검증은 Spring API에 위임)
     normalized_layers = [layer.upper() for layer in layers]
-
-    invalid_layers = [layer for layer in normalized_layers if layer not in valid_layers]
-    if invalid_layers:
-        return {
-            "error": f"Invalid layers: {invalid_layers}. Valid: {valid_layers}"
-        }
 
     if not normalized_layers:
         return {"error": "At least one layer must be specified"}

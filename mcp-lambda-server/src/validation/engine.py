@@ -95,7 +95,7 @@ class ValidationEngine:
 
         Args:
             code: 검증할 Java 코드
-            layer: 대상 레이어 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)
+            layer: 대상 레이어 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)
 
         Returns:
             ValidationResult: 검증 결과 (Zero-Tolerance 위반만 포함)

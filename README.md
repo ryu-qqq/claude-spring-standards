@@ -95,8 +95,8 @@ conventionHub는 **고정된 규칙을 제공하는 것이 아니라**, 팀이 �
 │                    MCP Server (Python)                      │
 │                    순수 정보 전달 역할                        │
 │                                                             │
-│   • 15개 Tool 제공 (planning_context, list_rules 등)        │
-│   • 규칙 조회/캐싱/피드백 처리                                │
+│   • 15개 Tool 제공 (planning_context, suggest_convention 등) │
+│   • 규칙 조회/캐싱/피드백/convention 추천                     │
 └──────────────────────────┬──────────────────────────────────┘
                            │ REST API
                            ▼
@@ -155,11 +155,29 @@ conventionHub는 **고정된 규칙을 제공하는 것이 아니라**, 팀이 �
                     → ClassType FK 참조
 ```
 
+### ERD 요약
+
+```
+┌──────────────┐    ┌──────────────────────┐    ┌─────────────┐
+│  TechStack   │───▶│    Architecture      │───▶│    Layer    │
+└──────────────┘    └──────────────────────┘    └─────────────┘
+                              │                        │
+                              ▼                        ▼
+                    ┌──────────────────┐       ┌─────────────┐
+                    │ClassTypeCategory │       │   Module    │
+                    └──────────────────┘       └─────────────┘
+                              │                        │
+                              ▼                        ▼
+                    ┌──────────────────┐       ┌───────────────────┐
+                    │    ClassType     │◀──FK──│  ClassTemplate    │
+                    └──────────────────┘       └───────────────────┘
+```
+
 ---
 
 ## MCP Tools (15개)
 
-AI 도구가 규칙을 조회하는 인터페이스입니다. 각 도구의 상세 설명과 파라미터를 확인하세요.
+AI 도구가 규칙을 조회하고 피드백하는 인터페이스입니다. 각 도구의 상세 설명과 파라미터를 확인하세요.
 
 ### 워크플로우 도구
 
@@ -383,33 +401,124 @@ get_config_files(tool_type="CLAUDE_CODE")
 
 | Tool | 용도 | 주요 파라미터 |
 |------|------|--------------|
-| `get_feedback_schema` | 피드백 JSON 스키마 조회 | `feedback_type` |
-| `feedback` | AI가 새 규칙 제안 | `payload` (JSON) |
+| `get_feedback_schema` | 피드백 스키마 + 유효값 조회 | `target_type` |
+| `feedback` | AI가 새 규칙 제안 (사전 검증 포함) | `target_type`, `feedback_type`, `payload` |
 | `approve` | Human이 피드백 승인 | `feedback_id` |
+| `suggest_convention` | 코드/appliesTo 기반 convention 자동 추천 | `code`, `applies_to`, `description` |
+
+#### `get_feedback_schema` 상세
+
+CODING_RULE 조회 시 `conventionId`와 `appliesTo`의 유효값을 동적으로 반환합니다.
+
+```python
+# 파라미터
+get_feedback_schema(target_type="CODING_RULE")
+
+# 응답 (CODING_RULE의 경우 valid_values 포함)
+{
+    "add_schema": {
+        "conventionId": {
+            "type": "Long", "required": true,
+            "desc": "컨벤션 ID",
+            "valid_values": [                           # ← 동적 주입
+                {"id": 16, "module_name": "domain", "layer_code": "DOMAIN"},
+                {"id": 19, "module_name": "rest-api", "layer_code": "ADAPTER_IN"}
+            ]
+        },
+        "appliesTo": {
+            "type": "List[String]", "required": true,
+            "desc": "적용 대상 class_type 코드",
+            "valid_values": [                           # ← 동적 주입
+                {"code": "AGGREGATE_ROOT", "name": "Aggregate Root"},
+                {"code": "REQUEST_DTO", "name": "Request DTO"}
+            ]
+        }
+    }
+}
+```
 
 #### `feedback` 상세
 
+CODING_RULE ADD 시 Python 레벨에서 사전 검증을 수행합니다. 잘못된 `conventionId`나 `appliesTo`를 입력하면 유효값 힌트와 함께 친절한 에러를 반환합니다.
+
 ```python
-# 파라미터 (get_feedback_schema로 스키마 확인 후 사용)
+# 정상 요청
 feedback(
+    target_type="CODING_RULE",
+    feedback_type="ADD",
     payload={
-        "feedback_type": "NEW_RULE",
-        "layer_code": "DOMAIN",
-        "suggested_rule": {
-            "code": "AGG-010",
-            "name": "불변 컬렉션 사용",
-            "description": "Aggregate 내 컬렉션은 불변으로...",
-            "severity": "MAJOR"
-        },
-        "reason": "코드 리뷰 중 발견된 패턴"
+        "conventionId": 19,            # rest-api (ADAPTER_IN)
+        "code": "API-DTO-010",
+        "name": "불변 컬렉션 사용",
+        "severity": "MAJOR",
+        "appliesTo": ["REQUEST_DTO"]   # 유효한 class_type 코드
     }
+)
+# → {"success": true, "feedback_queue_id": 123, "status": "PENDING"}
+
+# 잘못된 conventionId 입력 시
+feedback(
+    target_type="CODING_RULE",
+    feedback_type="ADD",
+    payload={"conventionId": 999, "appliesTo": ["INVALID_TYPE"]}
+)
+# → 사전 검증 실패: 힌트 포함 에러
+{
+    "success": false,
+    "error": "conventionId=999는 존재하지 않습니다. appliesTo 값 ['INVALID_TYPE']는 유효한 class_type 코드가 아닙니다.",
+    "hints": {
+        "available_conventions": [
+            {"id": 16, "module_name": "domain", "layer_code": "DOMAIN"},
+            {"id": 19, "module_name": "rest-api", "layer_code": "ADAPTER_IN"}
+        ],
+        "suggested_convention": {"id": 19, "reason": "코드 prefix 'API' 기반 추천"},
+        "available_class_types": [
+            {"code": "AGGREGATE_ROOT", "name": "Aggregate Root"},
+            {"code": "REQUEST_DTO", "name": "Request DTO"}
+        ]
+    },
+    "tip": "get_feedback_schema('CODING_RULE')로 유효한 값을 먼저 확인하세요."
+}
+```
+
+#### `suggest_convention` 상세
+
+3가지 전략으로 적절한 convention을 자동 추천합니다:
+
+| 전략 | 입력 | 신뢰도 | 방식 |
+|------|------|--------|------|
+| `code_prefix` | `code` | 0.9 | `API-*`→ADAPTER_IN, `DOM-*`→DOMAIN 매핑 |
+| `applies_to_layer` | `applies_to` | 0.85 | class_type → 레이어 역추적 |
+| `description_keywords` | `description` | 0.5~0.8 | 키워드 매칭 |
+
+여러 전략이 동일 convention을 추천하면 confidence 보너스가 부여됩니다.
+
+```python
+# 파라미터
+suggest_convention(
+    code="API-DTO-SEARCH-002",
+    applies_to="REQUEST_DTO,CONTROLLER",   # 쉼표 구분
+    description="REST API 검색 DTO 규칙"
 )
 
 # 응답
 {
-    "feedback_id": "fb-12345",
-    "status": "PENDING_REVIEW",
-    "message": "피드백이 등록되었습니다. Human 승인 대기 중입니다."
+    "success": true,
+    "suggested_convention": {
+        "id": 19,
+        "module_name": "rest-api",
+        "layer_code": "ADAPTER_IN",
+        "confidence": 0.95,
+        "reason": "코드 prefix 'API' → ADAPTER_IN 매핑 + appliesTo 'REQUEST_DTO' → ADAPTER_IN 레이어 매핑"
+    },
+    "existing_similar_rules": [
+        {"code": "API-DTO-001", "name": "API DTO 기본 규칙"},
+        {"code": "API-DTO-SEARCH-001", "name": "Search ApiRequest DTO 규칙"}
+    ],
+    "all_conventions": [
+        {"id": 16, "module_name": "domain", "layer_code": "DOMAIN"},
+        {"id": 19, "module_name": "rest-api", "layer_code": "ADAPTER_IN"}
+    ]
 }
 ```
 
@@ -556,46 +665,47 @@ validation = validation_context(layers=["DOMAIN"])
 
 ## 시작하기
 
-### 1. Docker로 실행 (권장)
+### 1. Spring API 실행
 
 ```bash
-# MySQL + Spring API 실행
+# 로컬 개발
+./gradlew :bootstrap:bootstrap-web-api:bootRun
+
+# 또는 Docker
 docker-compose up -d
-
-# 로그 확인
-docker-compose logs -f api
 ```
 
-API가 시작되면 Flyway가 자동으로 스키마와 시드 데이터를 적용합니다.
+### 2. 규칙 데이터 등록
 
-### 2. MCP Server 실행
+DB에 팀의 규칙을 등록합니다:
 
-```bash
-cd mcp-lambda-server
+```sql
+-- 기술 스택 등록
+INSERT INTO tech_stack (name, language_type, framework_type, ...)
+VALUES ('my-team-stack', 'JAVA', 'SPRING_BOOT', ...);
 
-# 환경 설정
-cp .env.example .env
+-- 아키텍처 등록
+INSERT INTO architecture (tech_stack_id, name, pattern_type, ...)
+VALUES (1, 'hexagonal', 'HEXAGONAL', ...);
 
-# 실행 (uv 사용)
-uv run conventionhub-mcp
+-- 클래스 타입 카테고리 등록
+INSERT INTO class_type_category (architecture_id, code, name, order_index, ...)
+VALUES (1, 'DOMAIN_TYPES', '도메인 타입', 1, ...);
 
-# 또는 pip 사용
-pip install -e .
-conventionhub-mcp
+-- 클래스 타입 등록
+INSERT INTO class_type (category_id, code, name, order_index, ...)
+VALUES (1, 'AGGREGATE', 'Aggregate', 1, ...);
+
+-- 레이어 등록
+INSERT INTO layer (architecture_id, code, name, ...)
+VALUES (1, 'DOMAIN', 'Domain Layer', ...);
+
+-- 코딩 규칙 등록
+INSERT INTO coding_rule (convention_id, code, name, severity, ...)
+VALUES (1, 'NO-LOMBOK', 'Lombok 사용 금지', 'BLOCKER', ...);
 ```
 
-### 3. 로컬 개발 (Docker 없이)
-
-```bash
-# MySQL 직접 설치 필요
-# DB 생성: convention_hub
-
-# Spring API 실행
-./gradlew :bootstrap:bootstrap-web-api:bootRun \
-  -Dspring.datasource.url=jdbc:mysql://localhost:3306/convention_hub \
-  -Dspring.datasource.username=root \
-  -Dspring.datasource.password=root
-```
+또는 Seed SQL 파일을 사용하여 일괄 등록할 수 있습니다.
 
 ### 3. Claude Code에서 사용
 
@@ -621,17 +731,59 @@ validation_context(layers=["DOMAIN"])
 conventionHub/
 ├── mcp-lambda-server/              # MCP Server (Python)
 │   ├── src/
-│   │   ├── server.py               # FastMCP 서버
-│   │   ├── api_client.py           # API 클라이언트
-│   │   └── tools/                  # 15개 Tool 구현
+│   │   ├── server.py               # FastMCP 서버 (15 tools)
+│   │   ├── api_client.py           # Spring API 클라이언트
+│   │   └── tools/                  # Tool 구현 (suggest, feedback 등)
 │   └── pyproject.toml
 │
 ├── adapter-in/rest-api/            # REST API 컨트롤러
 ├── adapter-out/persistence-mysql/  # JPA/QueryDSL
 ├── application/                    # UseCase 서비스
 ├── domain/                         # 도메인 모델
-└── bootstrap/bootstrap-web-api/    # Spring Boot App
+├── bootstrap/bootstrap-web-api/    # Spring Boot App
+│
+└── terraform/                      # 인프라 코드 (AWS)
 ```
+
+---
+
+## API Endpoints
+
+### CodingRule API
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/api/v1/templates/coding-rules` | 규칙 목록 (커서 기반) |
+| GET | `/api/v1/templates/coding-rules/index` | 규칙 인덱스 (경량) |
+| GET | `/api/v1/templates/coding-rules/{id}` | 규칙 상세 |
+| POST | `/api/v1/templates/coding-rules` | 규칙 생성 |
+| PUT | `/api/v1/templates/coding-rules/{id}` | 규칙 수정 |
+
+### ClassType API (NEW)
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/api/v1/templates/class-types` | 클래스 타입 목록 (커서 기반) |
+| POST | `/api/v1/templates/class-types` | 클래스 타입 생성 |
+| PUT | `/api/v1/templates/class-types/{id}` | 클래스 타입 수정 |
+
+### ClassTypeCategory API (NEW)
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/api/v1/templates/class-type-categories` | 카테고리 목록 (커서 기반) |
+| POST | `/api/v1/templates/class-type-categories` | 카테고리 생성 |
+| PUT | `/api/v1/templates/class-type-categories/{id}` | 카테고리 수정 |
+
+### MCP API
+
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| GET | `/api/v1/templates/mcp/planning-context` | Planning Context |
+| GET | `/api/v1/templates/mcp/module-context` | Module Context |
+| GET | `/api/v1/templates/mcp/validation-context` | Validation Context |
+| GET | `/api/v1/templates/mcp/config-files` | 설정 파일 템플릿 |
+| GET | `/api/v1/templates/mcp/feedback-schema` | 피드백 스키마 (유효값 포함) |
 
 ---
 
@@ -644,7 +796,7 @@ conventionHub/
 | **Database** | MySQL 8.0, Flyway |
 | **Query** | QueryDSL 5.x |
 | **MCP Server** | Python 3.12, FastMCP |
-| **Infra** | AWS Lambda, ECS |
+| **Infra** | AWS Lambda, ECS, Terraform |
 | **AI Integration** | Claude Code, Cursor, Serena MCP |
 
 ---
@@ -655,11 +807,11 @@ conventionHub/
 
 | Layer | Rules | BLOCKER | 설명 |
 |-------|-------|---------|------|
-| DOMAIN | 69 | 45 | Aggregate, VO, Event, Exception 규칙 |
-| APPLICATION | 39 | 10 | UseCase, Service, Port 규칙 |
-| ADAPTER_OUT | 15 | 10 | Entity, Repository 규칙 |
-| ADAPTER_IN | 47 | 3 | Controller, DTO 규칙 |
-| **합계** | **170** | **68** | - |
+| DOMAIN | 53 | 40 | Aggregate, VO, Event 규칙 |
+| APPLICATION | 37 | 10 | UseCase, Service, Port 규칙 |
+| ADAPTER_OUT | 16 | 10 | Entity, Repository 규칙 |
+| ADAPTER_IN | 46 | 3 | Controller, DTO 규칙 |
+| **합계** | **162** | **58** | - |
 
 이 데이터는 **예시**이며, 실제 사용 시 팀의 컨벤션에 맞게 수정하거나 새로 등록할 수 있습니다.
 

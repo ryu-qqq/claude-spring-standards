@@ -16,12 +16,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class Layer(str, Enum):
-    """레이어 타입"""
+    """레이어 타입 (DB 레이어 코드와 일치)"""
 
     DOMAIN = "DOMAIN"
     APPLICATION = "APPLICATION"
-    PERSISTENCE = "PERSISTENCE"
-    REST_API = "REST_API"
+    ADAPTER_OUT = "ADAPTER_OUT"
+    ADAPTER_IN = "ADAPTER_IN"
+    BOOTSTRAP = "BOOTSTRAP"
     SCHEDULER = "SCHEDULER"
     COMMON = "COMMON"
     TESTING = "TESTING"
@@ -180,7 +181,6 @@ class CodingRuleApiResponse(BaseModel):
     rationale: Optional[str] = None
     auto_fixable: bool = Field(alias="autoFixable")
     applies_to: Optional[list[str]] = Field(None, alias="appliesTo")
-    sdk_constraint: Optional[str] = Field(None, alias="sdkConstraint")
     created_at: Optional[str] = Field(None, alias="createdAt")
     updated_at: Optional[str] = Field(None, alias="updatedAt")
 
@@ -212,7 +212,7 @@ class CodingRuleWithExamplesApiResponse(BaseModel):
     severity: str
     category: str
     description: str
-    rationale: str
+    rationale: Optional[str] = None
     auto_fixable: bool = Field(alias="autoFixable")
     applies_to: Optional[list[str]] = Field(None, alias="appliesTo")
     examples: list[RuleExampleApiResponse] = Field(default_factory=list)
@@ -517,7 +517,7 @@ class IntentResult(BaseModel):
 
     intent_type: str = Field(description="분류된 의도 타입")
     target_layer: Optional[str] = Field(
-        None, description="대상 레이어 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)"
+        None, description="대상 레이어 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)"
     )
     class_type: Optional[str] = Field(None, description="생성할 클래스 타입")
     confidence: float = Field(description="분류 신뢰도 (0.0 ~ 1.0)")
@@ -572,6 +572,27 @@ class ArchitectureApiResponse(BaseModel):
     pattern_principles: list[str] = Field(default_factory=list, alias="patternPrinciples")
     created_at: Optional[str] = Field(None, alias="createdAt")
     updated_at: Optional[str] = Field(None, alias="updatedAt")
+
+
+# ============================================
+# ClassType Models (Spring API 응답)
+# ============================================
+
+
+class ClassTypeApiResponse(BaseModel):
+    """ClassType API 응답 모델
+
+    Spring /api/v1/templates/class-types 응답 매핑
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: int
+    category_id: int = Field(alias="categoryId")
+    code: str
+    name: str
+    description: Optional[str] = None
+    order_index: int = Field(alias="orderIndex")
 
 
 # ============================================

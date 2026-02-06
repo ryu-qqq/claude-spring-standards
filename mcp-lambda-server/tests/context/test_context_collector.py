@@ -270,7 +270,7 @@ class TestGetMinimalContextWithMock:
         ctx = get_minimal_context("CREATE_CONTROLLER")
 
         assert ctx.intent_type == "CREATE_CONTROLLER"
-        assert ctx.target_layer == "REST_API"
+        assert ctx.target_layer == "ADAPTER_IN"
         assert ctx.class_type == "CONTROLLER"
 
     @patch("src.context.context_collector.get_api_client")
@@ -286,7 +286,7 @@ class TestGetMinimalContextWithMock:
         ctx = get_minimal_context("CREATE_ENTITY")
 
         assert ctx.intent_type == "CREATE_ENTITY"
-        assert ctx.target_layer == "PERSISTENCE"
+        assert ctx.target_layer == "ADAPTER_OUT"
         assert ctx.class_type == "ENTITY"
 
     @patch("src.context.context_collector.get_api_client")
@@ -503,7 +503,7 @@ class TestContextCollectionIntegration:
         ]
         for intent in per_intents:
             req = INTENT_CONTEXT_REQUIREMENTS[intent]
-            assert req["target_layer"] == "PERSISTENCE", f"Failed for {intent}"
+            assert req["target_layer"] == "ADAPTER_OUT", f"Failed for {intent}"
 
     def test_all_rest_api_intents(self):
         """REST API 레이어 의도들의 요구사항 확인"""
@@ -514,7 +514,7 @@ class TestContextCollectionIntegration:
         ]
         for intent in api_intents:
             req = INTENT_CONTEXT_REQUIREMENTS[intent]
-            assert req["target_layer"] == "REST_API", f"Failed for {intent}"
+            assert req["target_layer"] == "ADAPTER_IN", f"Failed for {intent}"
 
     def test_modification_intents_have_no_fixed_layer(self):
         """수정 의도들은 레이어가 동적으로 결정됨"""

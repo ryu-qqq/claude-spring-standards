@@ -7,15 +7,13 @@ Context Service
 from typing import Any, Optional
 
 from ..api_client import get_api_client
+from ..layer_registry import get_layer_registry
 
 
 class ContextService:
     """컨벤션 컨텍스트 서비스 (v2.0 API 기반)"""
 
-    # 유효한 레이어 목록
-    VALID_LAYERS = {"DOMAIN", "APPLICATION", "PERSISTENCE", "REST_API"}
-
-    # 레이어별 안티패턴 매핑
+    # 레이어별 안티패턴 (정적 교육 컨텐츠, DB 레이어 코드와 매핑)
     ANTI_PATTERNS = {
         "DOMAIN": [
             {"code": "AP-001", "name": "Anemic Domain Model", "description": "도메인 객체에 로직 없이 getter/setter만 존재"},
@@ -25,11 +23,11 @@ class ContextService:
             {"code": "AP-003", "name": "God Service", "description": "하나의 서비스가 너무 많은 책임"},
             {"code": "AP-004", "name": "Transaction Script", "description": "절차적 코드로 도메인 로직 분산"},
         ],
-        "PERSISTENCE": [
+        "ADAPTER_OUT": [
             {"code": "AP-005", "name": "N+1 Query", "description": "반복적인 쿼리로 성능 저하"},
             {"code": "AP-006", "name": "Lazy Loading Trap", "description": "지연 로딩으로 인한 예외"},
         ],
-        "REST_API": [
+        "ADAPTER_IN": [
             {"code": "AP-007", "name": "Chatty API", "description": "과도하게 세분화된 API"},
             {"code": "AP-008", "name": "Missing Validation", "description": "입력값 검증 누락"},
         ],
@@ -41,6 +39,11 @@ class ContextService:
 
     def __init__(self) -> None:
         self._client = get_api_client()
+        self._layer_registry = get_layer_registry()
+
+    def _get_all_layer_codes(self) -> list[str]:
+        """DB에서 레이어 코드를 동적으로 조회 (LayerRegistry 위임)"""
+        return self._layer_registry.get_db_layer_codes()
 
     def get_context(
         self,
@@ -52,10 +55,10 @@ class ContextService:
         """컨벤션 컨텍스트 조회 (v2.0 API 기반)
 
         v2.0 validation_context API를 사용하여 layer 기반 조회 지원.
-        기존의 broken convention_id 체인을 제거하고 직접 layers 파라미터 사용.
+        레이어 검증은 Spring API에 위임하고, 기본 레이어 목록은 동적으로 조회.
 
         Args:
-            layer: 레이어 코드 (DOMAIN|APPLICATION|PERSISTENCE|REST_API)
+            layer: 레이어 코드 (DB에서 관리되는 동적 코드)
             class_type: 클래스 타입 (AGGREGATE|USE_CASE|ENTITY|CONTROLLER 등)
             tech_stack_id: 기술 스택 ID (기본값: 1)
             architecture_id: 아키텍처 ID (기본값: 1)
@@ -67,15 +70,16 @@ class ContextService:
         effective_tech_stack_id = tech_stack_id or self.DEFAULT_TECH_STACK_ID
         effective_architecture_id = architecture_id or self.DEFAULT_ARCHITECTURE_ID
 
-        # 레이어 정규화
+        # 레이어 정규화 (검증은 Spring API에 위임)
         normalized_layer = layer.upper() if layer else None
-        if normalized_layer and normalized_layer not in self.VALID_LAYERS:
-            return {
-                "error": f"Invalid layer: {normalized_layer}. Valid: {sorted(self.VALID_LAYERS)}"
-            }
 
-        # 조회할 레이어 목록 결정
-        layers_to_query = [normalized_layer] if normalized_layer else list(self.VALID_LAYERS)
+        # 조회할 레이어 목록 결정 (동적으로 가져옴)
+        if normalized_layer:
+            layers_to_query = [normalized_layer]
+        else:
+            layers_to_query = self._get_all_layer_codes()
+            if not layers_to_query:
+                return {"error": "레이어 목록을 조회할 수 없습니다. list_tech_stacks()로 레이어를 확인하세요."}
 
         # class_types 정규화
         class_types = [class_type.upper()] if class_type else None
@@ -100,38 +104,40 @@ class ContextService:
             zt_rules = validation_result.get("zeroToleranceRules", [])
             result["zero_tolerance_rules"] = [
                 {
-                    "code": r.get("code", ""),
-                    "name": r.get("name", ""),
-                    "severity": r.get("severity", ""),
-                    "description": r.get("description", ""),
+                    "code": r.get("ruleCode", ""),
+                    "name": r.get("ruleTitle", ""),
+                    "layer": r.get("layer", ""),
+                    "class_types": r.get("classTypes", []),
                     "detection_type": r.get("detectionType", ""),
                     "detection_pattern": r.get("detectionPattern", ""),
                     "auto_reject_pr": r.get("autoRejectPr", False),
+                    "message": r.get("message", ""),
                 }
                 for r in zt_rules
             ]
 
             # 체크리스트 추출
-            checklists = validation_result.get("checklists", [])
+            checklist = validation_result.get("checklist", [])
             result["checklist_items"] = [
                 {
-                    "id": c.get("id", 0),
-                    "content": c.get("content", ""),
-                    "priority": c.get("priority", ""),
+                    "rule_code": c.get("ruleCode", ""),
+                    "check_description": c.get("checkDescription", ""),
+                    "severity": c.get("severity", ""),
                     "auto_checkable": c.get("autoCheckable", False),
                 }
-                for c in checklists
+                for c in checklist
             ]
 
             # 레이어별 통계
-            layer_stats = validation_result.get("layerStats", [])
+            summary = validation_result.get("summary", {})
+            by_layer = summary.get("byLayer", {})
             result["layer_stats"] = [
                 {
-                    "layer": s.get("layerCode", ""),
-                    "zero_tolerance_count": s.get("zeroToleranceCount", 0),
-                    "checklist_count": s.get("checklistCount", 0),
+                    "layer": layer_code,
+                    "zero_tolerance_count": stats.get("zeroTolerance", 0),
+                    "checklist_count": stats.get("checklist", 0),
                 }
-                for s in layer_stats
+                for layer_code, stats in by_layer.items()
             ]
 
         except Exception as e:

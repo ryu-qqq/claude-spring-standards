@@ -191,7 +191,7 @@ class TestZeroToleranceRules:
     def test_get_rules_for_persistence_layer(self):
         """Persistence 레이어 규칙 조회"""
         rules = get_zero_tolerance_rules()
-        persistence_rules = rules.get_rules_for_layer("PERSISTENCE")
+        persistence_rules = rules.get_rules_for_layer("ADAPTER_OUT")
         rule_codes = [r.code for r in persistence_rules]
         assert "ENT-002" in rule_codes  # JPA 관계 어노테이션 금지
         assert "ENT-001" in rule_codes  # Entity Lombok 금지
@@ -199,7 +199,7 @@ class TestZeroToleranceRules:
     def test_get_rules_for_rest_api_layer(self):
         """REST API 레이어 규칙 조회"""
         rules = get_zero_tolerance_rules()
-        rest_rules = rules.get_rules_for_layer("REST_API")
+        rest_rules = rules.get_rules_for_layer("ADAPTER_IN")
         rule_codes = [r.code for r in rest_rules]
         assert "CTR-005" in rule_codes  # Controller @Transactional 금지
         assert "CTR-001" in rule_codes  # MockMvc 금지
@@ -243,7 +243,7 @@ class TestZeroToleranceRules:
             private List<OrderItemEntity> items;
         }
         """
-        violations = rules.validate(code, "PERSISTENCE")
+        violations = rules.validate(code, "ADAPTER_OUT")
         assert len(violations) > 0
         assert any(v.rule_code == "ENT-002" for v in violations)
 
@@ -258,7 +258,7 @@ class TestZeroToleranceRules:
             public void createOrder() {}
         }
         """
-        violations = rules.validate(code, "REST_API")
+        violations = rules.validate(code, "ADAPTER_IN")
         assert len(violations) > 0
         assert any(v.rule_code == "CTR-005" for v in violations)
 
@@ -432,7 +432,7 @@ class TestValidationEngine:
             public void getOrder() {}
         }
         """
-        result, final_code, attempts = engine.validate_and_regenerate(code, "REST_API")
+        result, final_code, attempts = engine.validate_and_regenerate(code, "ADAPTER_IN")
         # 자동 수정 후 @Transactional 제거 확인
         if result.is_valid:
             assert "@Transactional" not in final_code or attempts > 1

@@ -133,7 +133,7 @@ class ZeroToleranceRules:
                 code="ENT-002",
                 name="JPA 관계 어노테이션 금지",
                 description="JPA Entity에서 @OneToMany, @ManyToOne 등 관계 어노테이션 금지. Long FK 전략 사용.",
-                layers=["PERSISTENCE"],
+                layers=["ADAPTER_OUT"],
                 check=self._check_jpa_relationship,
             )
         )
@@ -144,7 +144,7 @@ class ZeroToleranceRules:
                 code="ENT-001",
                 name="Entity Lombok 금지",
                 description="JPA Entity에서 Lombok 어노테이션 사용 금지.",
-                layers=["PERSISTENCE"],
+                layers=["ADAPTER_OUT"],
                 check=self._make_lombok_checker("ENT-001", "Entity Lombok 금지"),
             )
         )
@@ -158,7 +158,7 @@ class ZeroToleranceRules:
                 code="CTR-005",
                 name="Controller @Transactional 금지",
                 description="Controller에서 @Transactional 사용 금지. UseCase에서 처리.",
-                layers=["REST_API"],
+                layers=["ADAPTER_IN"],
                 check=self._check_controller_transactional,
             )
         )
@@ -169,7 +169,7 @@ class ZeroToleranceRules:
                 code="CTR-001",
                 name="MockMvc 테스트 금지",
                 description="Controller 테스트에서 MockMvc 사용 금지. TestRestTemplate 사용.",
-                layers=["REST_API"],
+                layers=["ADAPTER_IN"],
                 check=self._check_mock_mvc_usage,
             )
         )

@@ -185,7 +185,7 @@ INTENT_PATTERNS: dict[IntentType, dict] = {
             r"@entity\s*(class|클래스)",
             r"jpa\s*(entity|매핑)",
         ],
-        "layer": Layer.PERSISTENCE,
+        "layer": Layer.ADAPTER_OUT,
         "class_type": ClassType.ENTITY,
     },
     # Persistence Layer - Repository
@@ -202,7 +202,7 @@ INTENT_PATTERNS: dict[IntentType, dict] = {
             r"(repository|레포지토리)\s*(생성|만들|create)",
             r"querydsl\s*repository",
         ],
-        "layer": Layer.PERSISTENCE,
+        "layer": Layer.ADAPTER_OUT,
         "class_type": ClassType.JPA_REPOSITORY,
     },
     # Persistence Layer - Adapter
@@ -219,7 +219,7 @@ INTENT_PATTERNS: dict[IntentType, dict] = {
             r"(영속성|persistence)\s*adapter\s*(생성|만들|create)",
             r"hexagonal\s*adapter",
         ],
-        "layer": Layer.PERSISTENCE,
+        "layer": Layer.ADAPTER_OUT,
         "class_type": ClassType.ADAPTER,
     },
     # REST API Layer - Controller
@@ -238,7 +238,7 @@ INTENT_PATTERNS: dict[IntentType, dict] = {
             r"api\s*(endpoint|엔드포인트)",
             r"@restcontroller",
         ],
-        "layer": Layer.REST_API,
+        "layer": Layer.ADAPTER_IN,
         "class_type": ClassType.CONTROLLER,
     },
     # REST API Layer - Request DTO
@@ -256,7 +256,7 @@ INTENT_PATTERNS: dict[IntentType, dict] = {
             r"(request|요청)\s*(dto|객체)\s*(생성|만들|create)",
             r"api\s*request",
         ],
-        "layer": Layer.REST_API,
+        "layer": Layer.ADAPTER_IN,
         "class_type": ClassType.REQUEST_DTO,
     },
     # REST API Layer - Response DTO
@@ -274,7 +274,7 @@ INTENT_PATTERNS: dict[IntentType, dict] = {
             r"(response|응답)\s*(dto|객체)\s*(생성|만들|create)",
             r"api\s*response",
         ],
-        "layer": Layer.REST_API,
+        "layer": Layer.ADAPTER_IN,
         "class_type": ClassType.RESPONSE_DTO,
     },
     # Modification Intents

@@ -9,10 +9,110 @@ LLM이 직접 데이터를 수정하지 않고, 검토 큐를 통해 안전하�
 """
 
 import json
+import logging
 from typing import Any, Optional
 
 from ..api_client import get_api_client
 from ..models import FeedbackTargetType, FeedbackType
+
+logger = logging.getLogger(__name__)
+
+
+def _validate_coding_rule_add_payload(
+    payload: dict[str, Any],
+) -> Optional[dict[str, Any]]:
+    """CODING_RULE ADD 시 payload 사전 검증
+
+    conventionId, appliesTo 유효성을 검증하고, 실패 시 힌트를 포함한 에러를 반환합니다.
+    API 호출 실패 시 graceful pass-through (None 반환 → Spring에서 최종 검증).
+
+    Returns:
+        검증 실패 시 에러 dict, 성공 또는 skip 시 None
+    """
+    try:
+        client = get_api_client()
+    except Exception:
+        return None  # API 클라이언트 실패 → pass-through
+
+    errors = []
+    hints: dict[str, Any] = {}
+
+    # 1. conventionId 검증
+    convention_id = payload.get("conventionId")
+    if convention_id is not None:
+        try:
+            conventions = client.get_all_conventions_with_modules()
+            valid_ids = {c["id"] for c in conventions}
+            if convention_id not in valid_ids:
+                errors.append(f"conventionId={convention_id}는 존재하지 않습니다.")
+                hints["available_conventions"] = [
+                    {"id": c["id"], "module_name": c["module_name"], "layer_code": c["layer_code"]}
+                    for c in conventions
+                    if c.get("active", True)
+                ]
+
+                # code prefix 기반 convention 추천
+                code = payload.get("code", "")
+                if code and conventions:
+                    suggested = _suggest_convention_by_code_prefix(code, conventions)
+                    if suggested:
+                        hints["suggested_convention"] = suggested
+        except Exception as e:
+            logger.warning(f"Convention 검증 실패 (graceful skip): {e}")
+
+    # 2. appliesTo 검증
+    applies_to = payload.get("appliesTo")
+    if applies_to and isinstance(applies_to, list):
+        try:
+            class_types = client.get_class_types()
+            valid_codes = {ct.code for ct in class_types}
+            invalid_codes = [code for code in applies_to if code not in valid_codes]
+            if invalid_codes:
+                errors.append(f"appliesTo 값 {invalid_codes}는 유효한 class_type 코드가 아닙니다.")
+                hints["available_class_types"] = [
+                    {"code": ct.code, "name": ct.name}
+                    for ct in class_types
+                ]
+        except Exception as e:
+            logger.warning(f"ClassType 검증 실패 (graceful skip): {e}")
+
+    if errors:
+        return {
+            "success": False,
+            "error": " ".join(errors),
+            "hints": hints,
+            "tip": "get_feedback_schema('CODING_RULE')로 유효한 값을 먼저 확인하세요.",
+        }
+
+    return None
+
+
+def _suggest_convention_by_code_prefix(
+    code: str, conventions: list[dict[str, Any]]
+) -> Optional[dict[str, Any]]:
+    """코드 prefix로 convention 추천 (간단 버전)"""
+    prefix_layer_map = {
+        "DOM": "DOMAIN", "AGG": "DOMAIN", "VO": "DOMAIN", "EVT": "DOMAIN",
+        "APP": "APPLICATION", "SVC": "APPLICATION", "UC": "APPLICATION",
+        "PER": "ADAPTER_OUT", "ENT": "ADAPTER_OUT", "JPA": "ADAPTER_OUT",
+        "API": "ADAPTER_IN", "CTR": "ADAPTER_IN",
+        "BOOT": "BOOTSTRAP", "CFG": "BOOTSTRAP",
+    }
+
+    code_upper = code.upper()
+    for prefix, layer_code in prefix_layer_map.items():
+        if code_upper.startswith(prefix):
+            for conv in conventions:
+                if conv.get("layer_code") == layer_code and conv.get("active", True):
+                    return {
+                        "id": conv["id"],
+                        "module_name": conv["module_name"],
+                        "layer_code": conv["layer_code"],
+                        "reason": f"코드 prefix '{prefix}' 기반 추천",
+                    }
+            break
+
+    return None
 
 
 def feedback(
@@ -82,6 +182,12 @@ def feedback(
             "success": False,
             "error": f"target_id is required for {feedback_type} operation",
         }
+
+    # CODING_RULE ADD 사전 검증
+    if target_type == "CODING_RULE" and feedback_type == FeedbackType.ADD.value:
+        validation_error = _validate_coding_rule_add_payload(payload)
+        if validation_error:
+            return validation_error
 
     # payload를 JSON 문자열로 변환
     try:

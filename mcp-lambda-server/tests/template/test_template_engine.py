@@ -203,10 +203,10 @@ class TestBaseTemplates:
             assert CLASS_TYPE_TO_LAYER[class_type] == "APPLICATION"
 
         for class_type in persistence_types:
-            assert CLASS_TYPE_TO_LAYER[class_type] == "PERSISTENCE"
+            assert CLASS_TYPE_TO_LAYER[class_type] == "ADAPTER_OUT"
 
         for class_type in rest_api_types:
-            assert CLASS_TYPE_TO_LAYER[class_type] == "REST_API"
+            assert CLASS_TYPE_TO_LAYER[class_type] == "ADAPTER_IN"
 
 
 class TestTemplateEngine:
@@ -303,12 +303,12 @@ class TestTemplateRendering:
             class_name="OrderEntity",
             package_name="com.example.persistence.order",
             class_type="ENTITY",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
         )
         result = engine.render(ctx)
 
         assert result.class_name == "OrderEntity"
-        assert result.layer == "PERSISTENCE"
+        assert result.layer == "ADAPTER_OUT"
         assert "@Entity" in result.code
         assert "@Table" in result.code
 
@@ -319,12 +319,12 @@ class TestTemplateRendering:
             class_name="OrderController",
             package_name="com.example.api.order",
             class_type="CONTROLLER",
-            layer="REST_API",
+            layer="ADAPTER_IN",
         )
         result = engine.render(ctx)
 
         assert result.class_name == "OrderController"
-        assert result.layer == "REST_API"
+        assert result.layer == "ADAPTER_IN"
         assert "@RestController" in result.code
         assert "@RequestMapping" in result.code
 
@@ -335,7 +335,7 @@ class TestTemplateRendering:
             class_name="CreateOrderRequest",
             package_name="com.example.api.order.dto",
             class_type="REQUEST_DTO",
-            layer="REST_API",
+            layer="ADAPTER_IN",
             fields=[
                 FieldDefinition(name="customerId", type="Long"),
                 FieldDefinition(name="productId", type="Long"),
@@ -412,7 +412,7 @@ class TestTemplateRendering:
             class_name="OrderPersistenceAdapter",
             package_name="com.example.persistence.order",
             class_type="ADAPTER",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
             interfaces=["OrderRepository", "OrderQueryPort"],
         )
         result = engine.render(ctx)
@@ -527,8 +527,8 @@ class TestFilePathGeneration:
                 "USE_CASE",
                 "APPLICATION",
             ),
-            ("OrderEntity", "com.example.persistence.order", "ENTITY", "PERSISTENCE"),
-            ("OrderController", "com.example.api.order", "CONTROLLER", "REST_API"),
+            ("OrderEntity", "com.example.persistence.order", "ENTITY", "ADAPTER_OUT"),
+            ("OrderController", "com.example.api.order", "CONTROLLER", "ADAPTER_IN"),
         ]
 
         for class_name, package, class_type, layer in test_cases:

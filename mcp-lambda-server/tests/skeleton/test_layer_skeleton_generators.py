@@ -252,13 +252,13 @@ class TestPersistenceLayerSkeletonGenerators:
             class_name="OrderEntity",
             package_name="com.example.order.adapter.out.persistence",
             class_type="ENTITY",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
         )
         result = engine.render(ctx)
 
         assert result.class_name == "OrderEntity"
         assert result.class_type == "ENTITY"
-        assert result.layer == "PERSISTENCE"
+        assert result.layer == "ADAPTER_OUT"
         assert "@Entity" in result.code
         assert "@Table" in result.code
         assert "OrderEntity.java" in result.file_path
@@ -270,7 +270,7 @@ class TestPersistenceLayerSkeletonGenerators:
             class_name="OrderEntity",
             package_name="com.example.order.adapter.out.persistence",
             class_type="ENTITY",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
             description="주문 JPA 엔티티",
             fields=[
                 FieldDefinition(name="orderId", type="Long", description="주문 ID"),
@@ -301,7 +301,7 @@ class TestPersistenceLayerSkeletonGenerators:
             class_name="OrderJpaRepository",
             package_name="com.example.order.adapter.out.persistence",
             class_type="JPA_REPOSITORY",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
             methods=[
                 MethodDefinition(
                     name="findByCustomerId",
@@ -314,7 +314,7 @@ class TestPersistenceLayerSkeletonGenerators:
 
         assert result.class_name == "OrderJpaRepository"
         assert result.class_type == "JPA_REPOSITORY"
-        assert result.layer == "PERSISTENCE"
+        assert result.layer == "ADAPTER_OUT"
         assert "interface" in result.code
         assert "JpaRepository" in result.code
 
@@ -325,7 +325,7 @@ class TestPersistenceLayerSkeletonGenerators:
             class_name="OrderPersistenceAdapter",
             package_name="com.example.order.adapter.out.persistence",
             class_type="ADAPTER",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
             interfaces=["LoadOrderPort", "SaveOrderPort"],
             fields=[
                 FieldDefinition(name="orderRepository", type="OrderJpaRepository"),
@@ -348,7 +348,7 @@ class TestPersistenceLayerSkeletonGenerators:
 
         assert result.class_name == "OrderPersistenceAdapter"
         assert result.class_type == "ADAPTER"
-        assert result.layer == "PERSISTENCE"
+        assert result.layer == "ADAPTER_OUT"
         assert "@Repository" in result.code
         assert "implements LoadOrderPort, SaveOrderPort" in result.code
 
@@ -363,13 +363,13 @@ class TestRestApiLayerSkeletonGenerators:
             class_name="OrderController",
             package_name="com.example.order.adapter.in.rest",
             class_type="CONTROLLER",
-            layer="REST_API",
+            layer="ADAPTER_IN",
         )
         result = engine.render(ctx)
 
         assert result.class_name == "OrderController"
         assert result.class_type == "CONTROLLER"
-        assert result.layer == "REST_API"
+        assert result.layer == "ADAPTER_IN"
         assert "@RestController" in result.code
         assert "@RequestMapping" in result.code
         # @Transactional 금지 확인 (주석이 아닌 실제 코드에서)
@@ -386,7 +386,7 @@ class TestRestApiLayerSkeletonGenerators:
             class_name="OrderController",
             package_name="com.example.order.adapter.in.rest",
             class_type="CONTROLLER",
-            layer="REST_API",
+            layer="ADAPTER_IN",
             description="주문 REST API",
             fields=[
                 FieldDefinition(name="createOrderUseCase", type="CreateOrderUseCase"),
@@ -418,7 +418,7 @@ class TestRestApiLayerSkeletonGenerators:
             class_name="CreateOrderRequest",
             package_name="com.example.order.adapter.in.rest.dto",
             class_type="REQUEST_DTO",
-            layer="REST_API",
+            layer="ADAPTER_IN",
             fields=[
                 FieldDefinition(name="customerId", type="Long"),
                 FieldDefinition(name="productId", type="Long"),
@@ -429,7 +429,7 @@ class TestRestApiLayerSkeletonGenerators:
 
         assert result.class_name == "CreateOrderRequest"
         assert result.class_type == "REQUEST_DTO"
-        assert result.layer == "REST_API"
+        assert result.layer == "ADAPTER_IN"
         assert "public record CreateOrderRequest" in result.code
         assert "customerId" in result.code
 
@@ -440,7 +440,7 @@ class TestRestApiLayerSkeletonGenerators:
             class_name="OrderResponse",
             package_name="com.example.order.adapter.in.rest.dto",
             class_type="RESPONSE_DTO",
-            layer="REST_API",
+            layer="ADAPTER_IN",
             fields=[
                 FieldDefinition(name="orderId", type="Long"),
                 FieldDefinition(name="status", type="String"),
@@ -451,7 +451,7 @@ class TestRestApiLayerSkeletonGenerators:
 
         assert result.class_name == "OrderResponse"
         assert result.class_type == "RESPONSE_DTO"
-        assert result.layer == "REST_API"
+        assert result.layer == "ADAPTER_IN"
         assert "public record OrderResponse" in result.code
 
     def test_generate_mapper_skeleton(self):
@@ -461,7 +461,7 @@ class TestRestApiLayerSkeletonGenerators:
             class_name="OrderMapper",
             package_name="com.example.order.adapter.in.rest",
             class_type="MAPPER",
-            layer="REST_API",
+            layer="ADAPTER_IN",
             methods=[
                 MethodDefinition(
                     name="toResponse",
@@ -479,7 +479,7 @@ class TestRestApiLayerSkeletonGenerators:
 
         assert result.class_name == "OrderMapper"
         assert result.class_type == "MAPPER"
-        assert result.layer == "REST_API"
+        assert result.layer == "ADAPTER_IN"
         assert "@Component" in result.code
         assert "toResponse" in result.code
         assert "toCommand" in result.code
@@ -508,7 +508,7 @@ class TestSkeletonGeneratorAppliedRules:
             class_name="OrderEntity",
             package_name="com.example.persistence",
             class_type="ENTITY",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
         )
         result = engine.render(ctx)
 
@@ -521,7 +521,7 @@ class TestSkeletonGeneratorAppliedRules:
             class_name="OrderController",
             package_name="com.example.api",
             class_type="CONTROLLER",
-            layer="REST_API",
+            layer="ADAPTER_IN",
         )
         result = engine.render(ctx)
 
@@ -567,7 +567,7 @@ class TestFilePathGeneration:
             class_name="OrderEntity",
             package_name="com.example.order.adapter.out.persistence",
             class_type="ENTITY",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
         )
         result = engine.render(ctx)
 
@@ -583,7 +583,7 @@ class TestFilePathGeneration:
             class_name="OrderController",
             package_name="com.example.order.adapter.in.rest",
             class_type="CONTROLLER",
-            layer="REST_API",
+            layer="ADAPTER_IN",
         )
         result = engine.render(ctx)
 
@@ -641,7 +641,7 @@ class TestInterfaceImplementation:
             class_name="OrderPersistenceAdapter",
             package_name="com.example.order.adapter.out.persistence",
             class_type="ADAPTER",
-            layer="PERSISTENCE",
+            layer="ADAPTER_OUT",
             interfaces=["LoadOrderPort", "SaveOrderPort", "DeleteOrderPort"],
         )
         result = engine.render(ctx)
@@ -672,16 +672,16 @@ class TestClassTypeToLayerMapping:
         """Persistence 타입 매핑 확인"""
         persistence_types = ["ENTITY", "JPA_REPOSITORY", "ADAPTER"]
         for class_type in persistence_types:
-            assert CLASS_TYPE_TO_LAYER[class_type] == "PERSISTENCE", (
-                f"{class_type} should map to PERSISTENCE"
+            assert CLASS_TYPE_TO_LAYER[class_type] == "ADAPTER_OUT", (
+                f"{class_type} should map to ADAPTER_OUT"
             )
 
     def test_rest_api_types_mapped_correctly(self):
         """REST API 타입 매핑 확인"""
         rest_api_types = ["CONTROLLER", "REQUEST_DTO", "RESPONSE_DTO", "MAPPER"]
         for class_type in rest_api_types:
-            assert CLASS_TYPE_TO_LAYER[class_type] == "REST_API", (
-                f"{class_type} should map to REST_API"
+            assert CLASS_TYPE_TO_LAYER[class_type] == "ADAPTER_IN", (
+                f"{class_type} should map to ADAPTER_IN"
             )
 
 

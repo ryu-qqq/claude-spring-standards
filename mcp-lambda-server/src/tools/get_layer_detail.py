@@ -12,7 +12,7 @@ from ..api_client import get_api_client
 def get_layer_detail(
     layer_id: Optional[int] = None, layer_code: Optional[str] = None
 ) -> dict[str, Any]:
-    """레이어 상세 조회. DOMAIN, APPLICATION, PERSISTENCE, REST_API 등 레이어 정보 반환"""
+    """레이어 상세 조회. DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN 등 레이어 정보 반환"""
     client = get_api_client()
 
     if layer_id:

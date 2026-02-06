@@ -25,7 +25,7 @@ class DetectionResult(BaseModel):
     """레이어/클래스 타입 감지 결과 모델"""
 
     layer: Optional[str] = Field(
-        None, description="감지된 레이어 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)"
+        None, description="감지된 레이어 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)"
     )
     class_type: Optional[str] = Field(None, description="감지된 클래스 타입")
     confidence: float = Field(description="감지 신뢰도 (0.0 ~ 1.0)")
@@ -52,7 +52,7 @@ PATH_LAYER_PATTERNS: dict[Layer, list[str]] = {
         r"/command/",
         r"/query/",
     ],
-    Layer.PERSISTENCE: [
+    Layer.ADAPTER_OUT: [
         r"/persistence/",
         r"/infrastructure/",
         r"/adapter/out/",
@@ -61,7 +61,7 @@ PATH_LAYER_PATTERNS: dict[Layer, list[str]] = {
         r"/jpa/",
         r"/mapper/",
     ],
-    Layer.REST_API: [
+    Layer.ADAPTER_IN: [
         r"/adapter/in/",
         r"/web/",
         r"/rest/",
@@ -250,13 +250,13 @@ CLASS_TYPE_TO_LAYER: dict[ClassType, Layer] = {
     ClassType.QUERY_SERVICE: Layer.APPLICATION,
     ClassType.PORT_IN: Layer.APPLICATION,
     ClassType.PORT_OUT: Layer.APPLICATION,
-    ClassType.ENTITY: Layer.PERSISTENCE,
-    ClassType.JPA_REPOSITORY: Layer.PERSISTENCE,
-    ClassType.ADAPTER: Layer.PERSISTENCE,
-    ClassType.MAPPER: Layer.PERSISTENCE,
-    ClassType.CONTROLLER: Layer.REST_API,
-    ClassType.REQUEST_DTO: Layer.REST_API,
-    ClassType.RESPONSE_DTO: Layer.REST_API,
+    ClassType.ENTITY: Layer.ADAPTER_OUT,
+    ClassType.JPA_REPOSITORY: Layer.ADAPTER_OUT,
+    ClassType.ADAPTER: Layer.ADAPTER_OUT,
+    ClassType.MAPPER: Layer.ADAPTER_OUT,
+    ClassType.CONTROLLER: Layer.ADAPTER_IN,
+    ClassType.REQUEST_DTO: Layer.ADAPTER_IN,
+    ClassType.RESPONSE_DTO: Layer.ADAPTER_IN,
 }
 
 

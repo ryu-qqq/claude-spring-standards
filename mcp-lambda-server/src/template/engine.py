@@ -33,12 +33,12 @@ LAYER_CLASS_TYPES = {
         "PORT_IN",
         "PORT_OUT",
     ],
-    "PERSISTENCE": [
+    "ADAPTER_OUT": [
         "ENTITY",
         "JPA_REPOSITORY",
         "ADAPTER",
     ],
-    "REST_API": [
+    "ADAPTER_IN": [
         "CONTROLLER",
         "REQUEST_DTO",
         "RESPONSE_DTO",
@@ -833,8 +833,8 @@ class TemplateEngine:
         layer_rules = {
             "DOMAIN": ["AGG-001", "AGG-014"],  # Lombok 금지, Law of Demeter
             "APPLICATION": ["APP-001", "APP-002"],  # CQRS, Transaction 관리
-            "PERSISTENCE": ["ENT-002", "ENT-003"],  # Long FK, No JPA Relations
-            "REST_API": ["CTR-001", "CTR-005"],  # @Valid 필수, Transaction 금지
+            "ADAPTER_OUT": ["ENT-002", "ENT-003"],  # Long FK, No JPA Relations
+            "ADAPTER_IN": ["CTR-001", "CTR-005"],  # @Valid 필수, Transaction 금지
         }
 
         if layer in layer_rules:

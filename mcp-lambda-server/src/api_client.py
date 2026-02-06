@@ -14,6 +14,7 @@ from .models import (
     ArchUnitTestApiResponse,
     ChecklistItemApiResponse,
     ClassTemplateApiResponse,
+    ClassTypeApiResponse,
     CodingRuleApiResponse,
     CodingRuleWithExamplesApiResponse,
     ConventionApiResponse,
@@ -146,6 +147,38 @@ class ConventionApiClient:
         module_ids = [m.id for m in modules]
         conventions = self.get_conventions(module_ids=module_ids, limit=1)
         return conventions[0] if conventions else None
+
+    def get_all_conventions_with_modules(self) -> list[dict[str, Any]]:
+        """convention + module + layer 조합 조회
+
+        Returns:
+            convention별 module_name, layer_code를 포함한 딕셔너리 목록
+
+        Note:
+            목록 API로 일괄 조회 후 lookup dict로 조합 (단건 API 호환성 이슈 방지)
+        """
+        conventions = self.get_conventions(limit=100)
+
+        # 목록 API로 일괄 조회 → lookup dict
+        modules = self.get_modules(limit=100)
+        module_map = {m.module_id: m for m in modules}
+
+        layers = self.get_layers(limit=100)
+        layer_map = {l.id: l for l in layers}
+
+        result = []
+        for conv in conventions:
+            module = module_map.get(conv.module_id)
+            layer = layer_map.get(module.layer_id) if module else None
+            result.append({
+                "id": conv.id,
+                "module_id": conv.module_id,
+                "module_name": module.name if module else "unknown",
+                "layer_code": layer.code if layer else "unknown",
+                "description": conv.description,
+                "active": conv.active,
+            })
+        return result
 
     # ============================================
     # CodingRule API
@@ -588,6 +621,30 @@ class ConventionApiClient:
             return ArchitectureApiResponse(**data)
         except httpx.HTTPStatusError:
             return None
+
+    # ============================================
+    # ClassType API
+    # ============================================
+
+    def get_class_types(
+        self,
+        limit: int = 100,
+        cursor: Optional[str] = None,
+    ) -> list[ClassTypeApiResponse]:
+        """클래스 타입 목록 조회
+
+        Returns:
+            ClassType 목록 (AGGREGATE_ROOT, REQUEST_DTO 등)
+        """
+        params: dict[str, Any] = {"size": limit}
+        if cursor:
+            params["cursor"] = cursor
+
+        response = self._get("/api/v1/templates/class-types", params)
+        data = self._extract_data(response)
+
+        content = data.get("content", [])
+        return [ClassTypeApiResponse(**item) for item in content]
 
     # ============================================
     # Layer API

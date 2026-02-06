@@ -18,7 +18,7 @@ def planning_context(
     사용 시점: /epic, /plan 단계에서 "어떤 컴포넌트를 어디에 만들지" 결정
 
     Args:
-        layers: 조회할 레이어 목록 (DOMAIN|APPLICATION|PERSISTENCE|REST_API)
+        layers: 조회할 레이어 목록 (DOMAIN|APPLICATION|ADAPTER_OUT|ADAPTER_IN)
         tech_stack_id: 기술 스택 ID (선택, 기본값: 활성 스택)
 
     Returns:
@@ -26,15 +26,8 @@ def planning_context(
     """
     client = get_api_client()
 
-    # 레이어 유효성 검사
-    valid_layers = {"DOMAIN", "APPLICATION", "PERSISTENCE", "REST_API"}
+    # 레이어 정규화 (유효성 검증은 Spring API에 위임)
     normalized_layers = [layer.upper() for layer in layers]
-
-    invalid_layers = [layer for layer in normalized_layers if layer not in valid_layers]
-    if invalid_layers:
-        return {
-            "error": f"Invalid layers: {invalid_layers}. Valid: {valid_layers}"
-        }
 
     if not normalized_layers:
         return {"error": "At least one layer must be specified"}

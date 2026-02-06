@@ -45,7 +45,7 @@ class TemplateContext(BaseModel):
     package_name: str = Field(description="패키지 이름 (예: com.example.domain)")
     class_type: str = Field(description="클래스 타입 (AGGREGATE, VALUE_OBJECT, 등)")
     layer: str = Field(
-        description="레이어 (DOMAIN, APPLICATION, PERSISTENCE, REST_API)"
+        description="레이어 (DOMAIN, APPLICATION, ADAPTER_OUT, ADAPTER_IN)"
     )
 
     # 선택적 정보
