@@ -3,29 +3,31 @@ layout: default
 title: Spring Standards Documentation
 ---
 
-# Spring Standards - Coding Conventions
+# Spring Standards — Coding Conventions
 
-> **Spring Boot 3.5.x + Java 21 헥사고날 아키텍처 엔터프라이즈 표준**
+Spring Boot 3.5.x + Java 21 + Hexagonal Architecture 기준 코딩 컨벤션 모음.
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal-blue.svg)](https://alistair.cockburn.us/hexagonal-architecture/)
 [![Claude Skills](https://img.shields.io/badge/Claude%20Skills-14-purple.svg)](https://github.com/ryu-qqq/claude-spring-standards)
 
+> 이 컨벤션 문서들과 별개로, **AI 가 이를 자동으로 적용** 시키는 시도 (MCP 서버 + conventionHub) 의 운영 결과는 [메인 README 의 운영 회고](../README.md#-운영-회고) 참고. "AI 100% 준수" 는 실패. 다만 컨벤션 문서 자체는 사람 리뷰 + 보조 가이드로서 가치가 있음.
+
 ---
 
 ## 프로젝트 소개
 
-**14개 전문 Claude Skills**와 **146개 코딩 컨벤션 문서**가 일관된 고품질 코드 생성을 보장하는 엔터프라이즈 표준 프로젝트입니다.
+14개 Claude Skills 와 146개 코딩 컨벤션 문서로 구성된 Spring + Hexagonal 컨벤션 모음.
 
-### 핵심 철학
+### 구성 원칙
 
 | 원칙 | 설명 |
-|------|------|
-| **Documentation-Driven** | 146개 코딩 컨벤션 문서가 설계를 강제 |
-| **Smart Strategy** | 기존 코드 수정 → TDD, 신규 코드 생성 → Doc-Driven |
-| **Zero-Tolerance** | Lombok 금지, Law of Demeter, Long FK 전략 |
-| **AI-First** | Claude Code + Serena MCP + 14개 전문 Skills |
+|---|---|
+| Documentation-Driven | 146개 컨벤션 문서로 설계 기준을 정리. 사람 리뷰의 근거 자료 |
+| Smart Strategy | 기존 코드 수정은 TDD, 신규 코드 생성은 Doc-Driven 가이드 |
+| Zero-Tolerance | Lombok 금지, Law of Demeter, Long FK 전략 (자동 reject 가능한 규칙) |
+| AI-First | Claude Code + Serena MCP + 14개 Skills 로 컨벤션 적용 시도 (한계 있음 — 운영 회고 참고) |
 
 ---
 
@@ -188,7 +190,7 @@ UseCase + Transaction 관리
 
 ## Claude Skills (14개)
 
-프로젝트에 특화된 14개 전문 Skills:
+프로젝트에 맞춰 만든 14개 Skills:
 
 | 카테고리 | Skill | 역할 |
 |----------|-------|------|
